@@ -1,17 +1,12 @@
 // ================== Type Definitions ==================
 import React from 'react';
 import {createNativeStackNavigator} from '@react-navigation/native-stack';
-// import HomeScreen from '../screens/Home';
-// import ShowProduct from '../screens/ShowProduct';
-// import LoginScreen from '../screens/LoginScreen';
-// import SignUpScreen from '../screens/SignUpScreen';
+
 import {useSelector} from 'react-redux';
 import {RootState} from '../redux/store';
 // import SuccessScreen from '../screens/SuccessScreen';
-import {ActivityIndicator, Text, View} from 'react-native';
 import SplashScreen from '../screens/SplashScreen';
 import OnboardingScreen from '../screens/OnboardingData';
-import FirmAccordion from '../screens/FirmAccordion';
 import Login from '../screens/LoginScreen';
 import Signup from '../screens/CreateAccountScreen';
 import OptVerification from '../screens/OtpVerificationScreen';
@@ -21,20 +16,37 @@ import HomeScreen from '../screens/FirmAccordion';
 import NotificationScreen from '../screens/NotificationScreen';
 import AddNewFirmScreen from '../screens/AddNewFirmScreen';
 import FirmAddedScreen from '../screens/FirmAddedScreen';
+import SetUpClientScreen from '../screens/SetUpClientScreen';
+import AddClientScreen from '../screens/AddClientScreen';
+import ClientListScreen from '../screens/ClientListScreen';
+import ClientDetailsScreen from '../screens/ClientDetailsScreen';
+import ClientFabricDetailsScreen from '../screens/ClientFabricDetailsScreen';
+import OrderProductSelectionScreen from '../screens/OrderProductSelectionScreen';
+import ProductDetailCard from '../screens/ProductDetailCard';
+import OrderSummaryScreen from '../screens/OrderSummaryScreen';
+import PaymentScreen from '../screens/PaymentScreen';
 
 // Params for Home Stack
 export type HomeStackParamList = {
   FirmAddedScreen: undefined;
+  PaymentScreen: undefined;
   AddNewFirmScreen: undefined;
   Notification: undefined;
-  Test: undefined;
+  ClientListScreen: undefined;
+  SetUpClientScreen: undefined;
+  ClientDetailsScreen: undefined;
   NewPassword: undefined;
+  OrderProductSelectionScreen: undefined;
+  OrderSummaryScreen: undefined;
   OptVerification: undefined;
   ResetPassword: undefined;
+  ClientFabricDetailsScreen: undefined;
+  AddClientScreen: undefined;
   Home: undefined; // No parameters expected
   Splash: undefined; // No parameters expected
   Onboarding: undefined; // No parameters expected
   Login: undefined; // No parameters expected
+  ProductDetailCard: undefined;
   Signup: undefined; // No parameters expected
   SuccessScreen: undefined; // No parameters expected
   Details: {productId: string};
@@ -123,6 +135,57 @@ function HomeStackNavigator() {
       <HomeStack.Screen
         name="FirmAddedScreen"
         component={FirmAddedScreen}
+        options={{headerShown: false}}
+      />
+
+      <HomeStack.Screen
+        name="SetUpClientScreen"
+        component={SetUpClientScreen}
+        options={{headerShown: false}}
+      />
+
+      <HomeStack.Screen
+        name="AddClientScreen"
+        component={AddClientScreen}
+        options={{headerShown: false}}
+      />
+
+      <HomeStack.Screen
+        name="ClientListScreen"
+        component={ClientListScreen}
+        options={{headerShown: false}}
+      />
+
+      <HomeStack.Screen
+        name="ClientDetailsScreen"
+        component={ClientDetailsScreen}
+        options={{headerShown: false}}
+      />
+
+      <HomeStack.Screen
+        name="ClientFabricDetailsScreen"
+        component={ClientFabricDetailsScreen}
+        options={{headerShown: false}}
+      />
+      <HomeStack.Screen
+        name="OrderProductSelectionScreen"
+        component={OrderProductSelectionScreen}
+        options={{headerShown: false}}
+      />
+
+      <HomeStack.Screen
+        name="ProductDetailCard"
+        component={ProductDetailCard}
+        options={{headerShown: false}}
+      />
+      <HomeStack.Screen
+        name="OrderSummaryScreen"
+        component={OrderSummaryScreen}
+        options={{headerShown: false}}
+      />
+      <HomeStack.Screen
+        name="PaymentScreen"
+        component={PaymentScreen}
         options={{headerShown: false}}
       />
     </HomeStack.Navigator>

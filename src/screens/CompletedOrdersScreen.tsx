@@ -57,10 +57,6 @@ const CompletedOrdersScreen = ({navigation}: CompletedOrderProps) => {
       {/* Orders List */}
       {orders.map(order => (
         <LinearGradient
-          //   colors={['#db9245', '#FAD9B3']}
-          //   start={{x: 0, y: 0}}
-          //   end={{x: 1, y: 0}}
-          //   locations={[0.4904, 1]} // Corresponds to 49.04% and 100%
           key={order.id}
           colors={['#C7742D', '#FAD9B3']}
           start={{x: 0, y: 0}}

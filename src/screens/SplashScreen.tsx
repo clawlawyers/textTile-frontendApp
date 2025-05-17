@@ -32,7 +32,7 @@ const SplashScreen = ({navigation}: SplashProps) => {
         ]),
       ]).start(() => {
         // Navigate to Onboarding after animations finish
-        navigation.navigate('Onboarding');
+        navigation.navigate('OrderSummaryScreen');
       });
     }, 1000);
   }, []);

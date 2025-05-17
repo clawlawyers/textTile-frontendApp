@@ -1,0 +1,94 @@
+import React, {useState} from 'react';
+import {View, Text, TouchableOpacity, ScrollView} from 'react-native';
+import Icon from 'react-native-vector-icons/MaterialIcons';
+import FontistoIcon from 'react-native-vector-icons/Fontisto';
+import {NativeStackScreenProps} from '@react-navigation/native-stack';
+import {AccountStackParamList} from '../stacks/Account';
+
+import LinearGradient from 'react-native-linear-gradient';
+
+import Icon1 from 'react-native-vector-icons/Feather';
+import DeleteConfirmation from '../components/DeleteConfirmation';
+
+type AddNewUserProps = NativeStackScreenProps<
+  AccountStackParamList,
+  'UsersScreen'
+>;
+
+const firms = new Array(3).fill({
+  date: 'Date Added : 02/05/2025',
+  permission: 'Partial Permission',
+  name: 'Rajarshi Das',
+});
+
+const UsersScreen = ({navigation}: AddNewUserProps) => {
+  const [showPermissionDialog, setShowPermissionDialog] = useState(false);
+
+  return (
+    <View className="flex-1 bg-[#FAD9B3] px-4 pt-14">
+      {/* Header */}
+      <View className="flex-row justify-between items-center mb-2">
+        <TouchableOpacity
+          onPress={() => navigation.goBack()}
+          className="w-10 h-10 rounded-full border border-[#292C33] justify-center items-center">
+          <Icon1 name="arrow-left" size={20} color="#292C33" />
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          onPress={() => navigation.navigate('Notification')}
+          className="relative">
+          <FontistoIcon name="bell" size={25} color={'#DB9245'} />
+          <View className="absolute top-0 right-0 w-2 h-2 rounded-full bg-green-500" />
+        </TouchableOpacity>
+      </View>
+
+      {/* Title */}
+      <Text className="text-lg font-bold text-black mb-4 mt-10">
+        Your Firms
+      </Text>
+
+      {/* Firms List */}
+      <ScrollView className="flex-1 mb-4">
+        {firms.map((item, index) => (
+          <LinearGradient
+            key={index}
+            colors={['#DB9245', '#FAD9B3']}
+            start={{x: 0, y: 0}}
+            end={{x: 1, y: 0}}
+            className="p-3 rounded-xl mb-3 flex-row justify-between items-center">
+            <View>
+              <Text className="text-xs text-white mb-1">{item.permission}</Text>
+              <Text className="text-lg font-bold text-white">{item.name}</Text>
+              <Text className="text-xs text-white mb-1">{item.date}</Text>
+            </View>
+            <View className="flex-row space-x-3 mt-2 self-end gap-2">
+              <TouchableOpacity
+                onPress={() => navigation.navigate('UserDetailsScreen')}
+                className="w-7 h-7 mb-4 rounded-full border border-[#292C33] justify-center items-center">
+                <Icon name="visibility" size={18} color="#292C33" />
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                onPress={() => setShowPermissionDialog(true)}
+                className="w-7 h-7 mb-4 rounded-full border border-[#292C33] justify-center items-center">
+                <Icon name="delete" size={18} color="#292C33" />
+              </TouchableOpacity>
+            </View>
+          </LinearGradient>
+        ))}
+      </ScrollView>
+
+      <DeleteConfirmation
+        visible={showPermissionDialog}
+        onClose={() => setShowPermissionDialog(false)}
+      />
+
+      {/* Add New Firm Button */}
+      <TouchableOpacity className="bg-black rounded-xl py-4 items-center mb-6">
+        <Text className="text-white font-semibold text-base">Add New Firm</Text>
+      </TouchableOpacity>
+    </View>
+  );
+};
+
+export default UsersScreen;

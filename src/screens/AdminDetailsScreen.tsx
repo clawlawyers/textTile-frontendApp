@@ -10,11 +10,12 @@ import {
 import Feather from 'react-native-vector-icons/Feather';
 import FontistoIcon from 'react-native-vector-icons/Fontisto';
 import Icon from 'react-native-vector-icons/Feather';
-import {useNavigation} from '@react-navigation/native';
+import {NativeStackScreenProps} from '@react-navigation/native-stack';
+import {AccountStackParamList} from '../stacks/Account';
 
-const AdminDetailsScreen = () => {
-  const navigation = useNavigation();
+type AddNewUserProps = NativeStackScreenProps<AccountStackParamList, 'Account'>;
 
+const AdminDetailsScreen = ({navigation}: AddNewUserProps) => {
   const adminInfo = {
     name: 'Soumya Snigdha Banik',
     company: 'CLAW Design Enterprise',
@@ -67,15 +68,24 @@ const AdminDetailsScreen = () => {
       </View>
 
       {/* Action Buttons */}
-      <View className="mt-6">
-        <Pressable className="bg-[#DB9245] rounded-md py-3 mb-4">
+      <View className="mt-6 mb-20">
+        <Pressable
+          className="bg-[#DB9245] rounded-md py-3 mb-4"
+          onPress={() => navigation.navigate('FirmScreens')}>
           <Text className="text-center text-white font-semibold">
             View All Firms
           </Text>
         </Pressable>
-        <Pressable className="bg-[#DB9245] rounded-md py-3">
+        <Pressable
+          className="bg-[#DB9245] rounded-md py-3 mb-4"
+          onPress={() => navigation.navigate('UsersScreen')}>
           <Text className="text-center text-white font-semibold">
             View All Users
+          </Text>
+        </Pressable>
+        <Pressable className="bg-[#DB9245] rounded-md py-3">
+          <Text className="text-center text-white font-semibold">
+            Generate Insights{' '}
           </Text>
         </Pressable>
       </View>
