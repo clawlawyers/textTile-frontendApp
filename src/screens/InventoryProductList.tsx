@@ -32,10 +32,10 @@ const products = new Array(8).fill({
 
 type AddNewUserProps = NativeStackScreenProps<
   HomeStackParamList,
-  'OrderProductSelectionScreen'
+  'InventoryProductList'
 >;
 
-const OrderProductSelectionScreen = ({navigation}: AddNewUserProps) => {
+const InventoryProductList = ({navigation}: AddNewUserProps) => {
   // const [selectedBail, setSelectedBail] = React.useState(bailNumbers[0]);
   const [showDropdown, setShowDropdown] = React.useState(false);
   const [selectedBail, setSelectedBail] = useState('Bail No.');
@@ -54,11 +54,6 @@ const OrderProductSelectionScreen = ({navigation}: AddNewUserProps) => {
           <Text className="text-base font-bold text-black">
             Rameswaram Emporium
           </Text>
-          <View className="w-full">
-            <Text className="text-xs text-center text-black">
-              Order Number : 023568458464
-            </Text>
-          </View>
         </View>
       </View>
 
@@ -132,15 +127,10 @@ const OrderProductSelectionScreen = ({navigation}: AddNewUserProps) => {
       />
 
       {/* Bottom Actions */}
-      <View className="absolute bottom-4 left-4 right-4 flex-row gap-4 mb-1">
-        <TouchableOpacity className=" flex-1 py-4 rounded-xl items-center border border-[#292C33]">
-          <Text className="text-[#292C33] font-semibold text-base">
-            Cart (3)
-          </Text>
-        </TouchableOpacity>
-        <TouchableOpacity className="bg-[#D6872A] flex-1 py-4 rounded-xl items-center">
+      <View className="absolute bottom-4 left-4 right-4 flex-row gap-4 mb-1 flex-1">
+        <TouchableOpacity className=" flex-1 py-4 rounded-xl items-center border bg-[#292C33] border-[#292C33]">
           <Text className="text-white font-semibold text-base">
-            Create Order
+            Update Invenotry
           </Text>
         </TouchableOpacity>
       </View>
@@ -172,4 +162,4 @@ const OrderProductSelectionScreen = ({navigation}: AddNewUserProps) => {
   );
 };
 
-export default OrderProductSelectionScreen;
+export default InventoryProductList;

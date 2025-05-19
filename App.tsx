@@ -1,5 +1,5 @@
 /* eslint-disable react/no-unstable-nested-components */
-import React from 'react';
+import React, {useEffect} from 'react';
 import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
 import {NavigationContainer} from '@react-navigation/native';
 
@@ -7,10 +7,12 @@ import HomeStackNavigator from './src/stacks/Home';
 import AddNewUserStackNavigator from './src/stacks/AddNewUser';
 import OrderHistoryNavigator from './src/stacks/OrderHistory';
 import AccountStackNavigator from './src/stacks/Account';
-import {Provider} from 'react-redux';
-import {store} from './src/redux/store';
+import {Provider, useDispatch, useSelector} from 'react-redux';
+import {RootState, store} from './src/redux/store';
 
 import CustomTabBar from './src/components/CustomTabBar';
+import {ActivityIndicator} from 'react-native';
+import {logout, retrieveAuth} from './src/redux/authSlice';
 // import {store, RootState} from './redux/store';
 // import LoginScreen from './screens/LoginScreen';
 // import {retrieveAuth} from './redux/authSlice';
@@ -32,25 +34,25 @@ type RootTabParamList = {
 const Tab = createBottomTabNavigator<RootTabParamList>();
 
 const AppInner: React.FC = () => {
-  // const currentUser = useSelector((state: RootState) => state.auth.user);
-  // const loading = useSelector((state: RootState) => state.auth.status);
-  // console.log(currentUser);
-  // const dispatch = useDispatch();
+  const currentUser = useSelector((state: RootState) => state.auth.user);
+  const loading = useSelector((state: RootState) => state.auth.status);
+  console.log(currentUser);
+  const dispatch = useDispatch();
 
-  // useEffect(() => {
-  //   dispatch(retrieveAuth());
-  //   dispatch(fetchCartDetails());
-  // }, [dispatch]);
+  useEffect(() => {
+    // dispatch(logout());
+    dispatch(retrieveAuth());
+  }, [dispatch]);
 
-  // if (loading === 'loading') {
-  //   return (
-  //     <ActivityIndicator
-  //       size="large"
-  //       color="#0000ff"
-  //       style={{flex: 1, justifyContent: 'center'}}
-  //     />
-  //   );
-  // }
+  if (loading === 'loading') {
+    return (
+      <ActivityIndicator
+        size="large"
+        color="#0000ff"
+        style={{flex: 1, justifyContent: 'center'}}
+      />
+    );
+  }
 
   return (
     <NavigationContainer>

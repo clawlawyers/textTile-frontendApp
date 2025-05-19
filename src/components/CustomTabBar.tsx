@@ -32,6 +32,8 @@ const HIDDEN_ROUTES = [
   'OtpVerificationScreen',
   'SuccessScreen',
   'Details',
+  'StockManagement',
+  'EditInventoryProduct',
 ];
 
 const CustomTabBar: React.FC<BottomTabBarProps> = ({

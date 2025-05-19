@@ -47,13 +47,13 @@ const OnboardingScreen = ({navigation}: OnboardingProps) => {
       flatListRef.current?.scrollToIndex({index: currentIndex + 1});
     } else {
       // Navigate to the login screen when the last item is reached
-      navigation.navigate('Login');
+      navigation.replace('Login');
     }
   };
 
   const handleSkip = () => {
     // Handle skip navigation here
-    navigation.navigate('Login');
+    navigation.replace('Login');
   };
 
   const handleScroll = (event: any) => {

@@ -1,3 +1,4 @@
+/* eslint-disable react-native/no-inline-styles */
 import {NativeStackScreenProps} from '@react-navigation/native-stack';
 import React, {useState} from 'react';
 import {
@@ -81,8 +82,8 @@ const PaymentScreen = ({navigation}: AddNewUserProps) => {
 
       {/* Due Amount */}
       <View className="flex-row justify-between items-center border border-black rounded-lg mb-6 overflow-hidden">
-        <View className="bg-black px-4 py-4">
-          <Text className="text-white font-semibold">Due Amount</Text>
+        <View className="bg-black px-5 py-4">
+          <Text className="text-white font-semibold ">Due Amount</Text>
         </View>
         <View className="px-4 py-3 flex-1">
           <Text className="text-right text-base font-semibold">₹ 3,00,000</Text>
@@ -96,50 +97,74 @@ const PaymentScreen = ({navigation}: AddNewUserProps) => {
         <View key={item.id} className="flex-row items-center mb-3">
           <TextInput
             value={item.amount}
-            className="flex-1 border border-[#DB9245] rounded-lg px-4 py-2 mr-2 text-base bg-white"
+            className="flex-1 border border-[#DB9245] rounded-lg px-4 py-3 mr-2 text-base "
             editable={false}
           />
 
-          <Dropdown
+          <View
             style={{
-              backgroundColor: '#D1853A',
-              borderRadius: 8,
-              paddingHorizontal: 12,
-              height: 45,
-              width: 130,
+              width: '35%',
+              borderRadius: 10,
+              backgroundColor: '#D6872A',
               justifyContent: 'center',
-              zIndex: 10, // important
-            }}
-            containerStyle={{
-              backgroundColor: '#D1853A',
-              borderRadius: 8,
-              borderWidth: 0,
-              elevation: 10, // Android shadow fix
-              zIndex: 1000, // make sure it sits above
-            }}
-            itemTextStyle={{color: '#fff'}}
-            selectedTextStyle={{
-              color: '#fff',
-              fontWeight: '500',
-              fontSize: 14,
-            }}
-            placeholderStyle={{color: '#fff'}}
-            iconColor="#fff"
-            data={modeOptions}
-            labelField="label"
-            valueField="value"
-            value={item.mode}
-            onChange={item => handleModeChange(index, item.value)}
-            renderRightIcon={() => (
-              <Icon name="chevron-down" size={16} color="#fff" />
-            )}
-            dropdownPosition="bottom" // force dropdown to open downward
-          />
+              paddingHorizontal: 10,
+            }}>
+            <Dropdown
+              data={modeOptions}
+              labelField="label"
+              valueField="value"
+              value={item.mode}
+              onChange={item => handleModeChange(index, item.value)}
+              placeholder={item.mode}
+              style={{
+                height: 45,
+                backgroundColor: '#D6872A',
+              }}
+              activeColor="transparent" // fix white background issue
+              placeholderStyle={{
+                color: '#fff',
+                fontSize: 14,
+              }}
+              selectedTextStyle={{
+                color: '#fff',
+                fontSize: 14,
+              }}
+              containerStyle={{
+                backgroundColor: '#D6872A',
+                borderRadius: 10,
+              }}
+              iconStyle={{width: 20, height: 20, tintColor: '#fff'}}
+              renderRightIcon={() => (
+                <Icon name="chevron-down" size={18} color="#fff" />
+              )}
+              showsVerticalScrollIndicator={false}
+              renderItem={option => (
+                <View
+                  style={{
+                    width: '100%',
+                    borderRadius: 10,
+                    paddingVertical: 4,
+                    paddingHorizontal: 10,
+                    borderBottomWidth: 1,
+                    borderBottomColor: '#fff',
+                    backgroundColor: '#D6872A',
+                  }}>
+                  <Text
+                    style={{
+                      color: '#fff',
+                      fontSize: 14,
+                    }}>
+                    {option.label}
+                  </Text>
+                </View>
+              )}
+            />
+          </View>
         </View>
       ))}
 
       {/* Update Payment Button */}
-      <TouchableOpacity className="bg-[#D1853A] py-3 rounded-xl items-center mt-12">
+      <TouchableOpacity className="bg-[#D1853A] py-3 rounded-lg items-center mt-36">
         <Text className="text-white font-semibold text-base">
           Update Payment
         </Text>

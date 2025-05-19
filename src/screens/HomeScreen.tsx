@@ -17,6 +17,8 @@ import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityI
 import {NativeStackScreenProps} from '@react-navigation/native-stack';
 import {HomeStackParamList} from '../stacks/Home';
 import PermissionDeniedDialog from '../components/PermissionDeniedDialog'; // adjust path
+import {useSelector} from 'react-redux';
+import {RootState} from '../redux/store';
 
 if (Platform.OS === 'android') {
   UIManager.setLayoutAnimationEnabledExperimental &&
@@ -45,6 +47,8 @@ const HomeScreen = ({navigation}: HomeProps) => {
   const fadeAnim = useRef(new Animated.Value(1)).current; // Orders fade
   const opacityAnim = useRef(new Animated.Value(0)).current; // Firm list fade
   const [showPermissionDialog, setShowPermissionDialog] = useState(false);
+
+  const currentUser = useSelector((state: RootState) => state.auth.user);
 
   const toggleAccordion = () => {
     setExpanded(prev => !prev);
@@ -100,16 +104,22 @@ const HomeScreen = ({navigation}: HomeProps) => {
           <Text className="text-white text-base mb-1">Currently Viewing</Text>
 
           <View className="flex-row justify-between items-center mb-2">
-            <Text className="text-3xl font-semibold text-white">Firm Name</Text>
-            <TouchableOpacity
-              onPress={toggleAccordion}
-              className="border-[#ffff] border-2 rounded-full w-7 h-7 items-center justify-center">
-              <Icon
-                name={expanded ? 'expand-less' : 'expand-more'}
-                size={20}
-                color="white"
-              />
-            </TouchableOpacity>
+            <Text className="text-3xl font-semibold text-white">
+              {currentUser?.companies?.length === 0
+                ? 'No Firms Added'
+                : currentUser?.companies[0]}
+            </Text>
+            {currentUser?.companies?.length !== 0 && (
+              <TouchableOpacity
+                onPress={toggleAccordion}
+                className="border-[#ffff] border-2 rounded-full w-7 h-7 items-center justify-center">
+                <Icon
+                  name={expanded ? 'expand-less' : 'expand-more'}
+                  size={20}
+                  color="white"
+                />
+              </TouchableOpacity>
+            )}
           </View>
 
           {expanded && (
@@ -127,7 +137,7 @@ const HomeScreen = ({navigation}: HomeProps) => {
                 <ScrollView
                   horizontal={false}
                   showsVerticalScrollIndicator={false}>
-                  {FIRM_LIST.map((firm, idx) => (
+                  {currentUser?.companies?.splice(0, 1).map((firm, idx) => (
                     <Text
                       key={idx}
                       className="border-t-[1px] border-[#ffff] px-4 py-3 text-white font-semibold text-xl">
@@ -170,7 +180,9 @@ const HomeScreen = ({navigation}: HomeProps) => {
           <View className="bg-[#DB9245] rounded-xl p-4 mb-4">
             <Text className="text-white font-bold text-xl mb-3">Orders</Text>
             <View className="flex-row justify-between">
-              <TouchableOpacity className="items-center p-4 bg-[#FAD9B3] rounded-lg">
+              <TouchableOpacity
+                className="items-center p-4 bg-[#FAD9B3] rounded-lg"
+                onPress={() => navigation.navigate('SetUpClientScreen')}>
                 <Icon name="add-shopping-cart" size={30} color="#292C33" />
                 <Text className="text-[#292C33] mt-1 text-xs">
                   Create Order
@@ -214,7 +226,9 @@ const HomeScreen = ({navigation}: HomeProps) => {
         <View className="flex-row justify-between mb-4">
           <TouchableOpacity
             className="items-center py-6 px-3 bg-[#FAD9B3] rounded-lg"
-            onPress={() => setShowPermissionDialog(true)}>
+            // onPress={() => setShowPermissionDialog(true)}
+            // onPress={() => navigation.navigate('In')}
+          >
             <MaterialCommunityIcons
               name="text-search"
               size={25}
@@ -232,7 +246,9 @@ const HomeScreen = ({navigation}: HomeProps) => {
           </TouchableOpacity>
         </View>
 
-        <TouchableOpacity className="bg-[#292C33] py-3 rounded-lg items-center flex-row justify-center gap-4">
+        <TouchableOpacity
+          className="bg-[#292C33] py-3 rounded-lg items-center flex-row justify-center gap-4"
+          onPress={() => navigation.navigate('SetUpInventoryScreen')}>
           <SimpleLineIcons name="cloud-upload" size={20} color="#FBDBB5" />
           <Text className="text-[#FBDBB5] font-semibold">
             Upload New Inventory

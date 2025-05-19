@@ -6,8 +6,10 @@ import {NODE_API_ENDPOINT} from '../utils/util';
 interface User {
   userId: string;
   token: string;
-  name?: string;
-  email?: string;
+  name: string;
+  email: string;
+  type: string;
+  companies: string[];
   // add other fields as needed
 }
 
@@ -33,12 +35,14 @@ export const retrieveAuth = createAsyncThunk<
   {rejectValue: string}
 >('auth/retrieveAuth', async (_, {rejectWithValue}) => {
   try {
+    console.log('thunk is calling');
     // Retrieve stored auth data from AsyncStorage.
-    const storedAuth = await AsyncStorage.getItem('shop_auth_user');
+    const storedAuth = await AsyncStorage.getItem('clawInverntory_auth_user');
+    console.log(storedAuth);
     if (storedAuth) {
       const parsedUser: User = JSON.parse(storedAuth);
       // Call your backend endpoint to validate or fetch additional user properties.
-      const response = await fetch(`${NODE_API_ENDPOINT}/getUser`, {
+      const response = await fetch(`${NODE_API_ENDPOINT}/auth/getVerify`, {
         method: 'GET',
         headers: {
           Authorization: `Bearer ${parsedUser.token}`,
@@ -64,13 +68,17 @@ const authSlice = createSlice({
     // Login reducer: sets user and saves auth info to AsyncStorage.
     login: (state, action: PayloadAction<User>) => {
       state.user = action.payload;
+      console.log(action.payload);
       // Save the user data as a JSON string.
-      AsyncStorage.setItem('shop_auth_user', JSON.stringify(action.payload));
+      AsyncStorage.setItem(
+        'clawInverntory_auth_user',
+        JSON.stringify(action.payload),
+      );
     },
     // Logout reducer: clears user data and removes auth from AsyncStorage.
     logout: state => {
       state.user = null;
-      AsyncStorage.removeItem('shop_auth_user');
+      AsyncStorage.removeItem('clawInverntory_auth_user');
       console.log('User Logged Out');
     },
   },
