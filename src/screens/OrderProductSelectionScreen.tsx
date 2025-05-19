@@ -1,14 +1,15 @@
+/* eslint-disable react-native/no-inline-styles */
 import React, {useState} from 'react';
 import {
   View,
   Text,
   TextInput,
   TouchableOpacity,
-  ScrollView,
+  // ScrollView,
   Image,
   FlatList,
-  Modal,
-  Pressable,
+  // Modal,
+  // Pressable,
 } from 'react-native';
 import {Dropdown} from 'react-native-element-dropdown';
 import Ionicons from 'react-native-vector-icons/Ionicons';
@@ -37,7 +38,7 @@ type AddNewUserProps = NativeStackScreenProps<
 
 const OrderProductSelectionScreen = ({navigation}: AddNewUserProps) => {
   // const [selectedBail, setSelectedBail] = React.useState(bailNumbers[0]);
-  const [showDropdown, setShowDropdown] = React.useState(false);
+  // const [showDropdown, setShowDropdown] = React.useState(false);
   const [selectedBail, setSelectedBail] = useState('Bail No.');
 
   return (

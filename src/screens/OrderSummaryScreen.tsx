@@ -5,7 +5,7 @@ import {
   Text,
   TouchableOpacity,
   ScrollView,
-  TextInput,
+  // TextInput,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/Feather';
 import {HomeStackParamList} from '../stacks/Home';

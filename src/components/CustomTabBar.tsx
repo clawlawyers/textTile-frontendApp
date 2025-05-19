@@ -5,14 +5,14 @@ import {
   View,
   TouchableOpacity,
   Text,
-  StyleSheet,
-  Dimensions,
+  // StyleSheet,
+  // Dimensions,
 } from 'react-native';
 import FontAwesome from 'react-native-vector-icons/FontAwesome5';
 import {BottomTabBarProps} from '@react-navigation/bottom-tabs';
 import {useNavigationState} from '@react-navigation/native';
 
-const {width} = Dimensions.get('window');
+// const {width} = Dimensions.get('window');
 
 const iconsMap: Record<string, {icon: string; label: string}> = {
   Home: {icon: 'home', label: 'Home'},
@@ -36,7 +36,7 @@ const HIDDEN_ROUTES = [
 
 const CustomTabBar: React.FC<BottomTabBarProps> = ({
   state,
-  descriptors,
+  // descriptors,
   navigation,
 }) => {
   const CostomeState = useNavigationState(state => state);
@@ -59,7 +59,7 @@ const CustomTabBar: React.FC<BottomTabBarProps> = ({
   return (
     <View className="flex-row justify-around bg-[#26272c] py-3 ">
       {CostomeState?.routes.map((route, index) => {
-        const {options} = descriptors[route.key];
+        // const {options} = descriptors[route.key];
         const isFocused = state.index === index;
 
         const onPress = () => {

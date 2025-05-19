@@ -25,6 +25,8 @@ import OrderProductSelectionScreen from '../screens/OrderProductSelectionScreen'
 import ProductDetailCard from '../screens/ProductDetailCard';
 import OrderSummaryScreen from '../screens/OrderSummaryScreen';
 import PaymentScreen from '../screens/PaymentScreen';
+import InventoryEmptyScreen from '../screens/Inventory/InventoryEmptyScreen';
+import AddItemsToInventory1 from '../screens/Inventory/AddItemsToInventory1';
 
 // Params for Home Stack
 export type HomeStackParamList = {
@@ -50,6 +52,8 @@ export type HomeStackParamList = {
   Signup: undefined; // No parameters expected
   SuccessScreen: undefined; // No parameters expected
   Details: {productId: string};
+  InventoryEmptyScreen: undefined;
+  AddItemsToInventory1: undefined;
 };
 
 const HomeStack = createNativeStackNavigator<HomeStackParamList>();
@@ -181,6 +185,17 @@ function HomeStackNavigator() {
       <HomeStack.Screen
         name="OrderSummaryScreen"
         component={OrderSummaryScreen}
+        options={{headerShown: false}}
+      />
+
+      <HomeStack.Screen
+        name="InventoryEmptyScreen"
+        component={InventoryEmptyScreen}
+        options={{headerShown: false}}
+      />
+      <HomeStack.Screen
+        name="AddItemsToInventory1"
+        component={AddItemsToInventory1}
         options={{headerShown: false}}
       />
       <HomeStack.Screen

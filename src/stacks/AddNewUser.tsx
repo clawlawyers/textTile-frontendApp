@@ -1,7 +1,7 @@
 // ================== Type Definitions ==================
 import React from 'react';
 import {createNativeStackNavigator} from '@react-navigation/native-stack';
-import {Text, View} from 'react-native';
+// import {Text, View} from 'react-native';
 import AddNewUserScreen from '../screens/AddNewUserScreen';
 import UserPermissionScreen from '../screens/UserPermissionScreen';
 import AddNewUserAdded from '../screens/NewUserAddedScreen';
@@ -40,6 +40,7 @@ export type AddNewUserStackParamList = {
   AddNewUser: undefined;
   UserPermissions: undefined;
   AddNewUserAdded: undefined;
+  Notification: undefined;
 };
 
 const BagStack = createNativeStackNavigator<AddNewUserStackParamList>();
