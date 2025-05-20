@@ -35,6 +35,7 @@ import ProductListScreen from '../screens/Inventory/ProductList';
 import ProductDetailsInventoryScreen from '../screens/Inventory/ProductDetailsInventory';
 import SaveChangesScreen from '../screens/Inventory/SaveChangesScreen';
 import UpdateProductScreen from '../screens/Inventory/UpdateProduct';
+import InsightsEmpty from '../screens/Insights/InsightsEmpty';
 
 // Params for Home Stack
 export type HomeStackParamList = {
@@ -70,6 +71,7 @@ export type HomeStackParamList = {
   ProductDetailsInventoryScreen: undefined;
   SaveChangesScreen: undefined;
   UpdateProductScreen: undefined;
+  InsightsEmpty: undefined;
 };
 
 const HomeStack = createNativeStackNavigator<HomeStackParamList>();
@@ -261,6 +263,12 @@ function HomeStackNavigator() {
       <HomeStack.Screen
         name="PaymentScreen"
         component={PaymentScreen}
+        options={{headerShown: false}}
+      />
+
+      <HomeStack.Screen
+        name="InsightsEmpty"
+        component={InsightsEmpty}
         options={{headerShown: false}}
       />
     </HomeStack.Navigator>

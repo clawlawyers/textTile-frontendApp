@@ -3,70 +3,91 @@ import React, {useState} from 'react';
 import {
   View,
   Text,
-  Image,
   TextInput,
   TouchableOpacity,
   SafeAreaView,
-  ScrollView,
+  ScrollView, // Using ScrollView for consistency, even if not strictly needed for just empty message
+  Platform,
+  StatusBar,
 } from 'react-native';
 import {NativeStackScreenProps} from '@react-navigation/native-stack';
-import Icon from 'react-native-vector-icons/Feather';
+import Ionicons from 'react-native-vector-icons/Ionicons'; // For chevron-down, search, back arrow, and warning
+import Feather from 'react-native-vector-icons/Feather'; // For the calendar icon
+import {Dropdown} from 'react-native-element-dropdown'; // For the dropdown component
+
+// Import the HomeStackParamList from your navigation types file
 import {HomeStackParamList} from '../../stacks/Home';
-import {Dropdown} from 'react-native-element-dropdown';
-import Ionicons from 'react-native-vector-icons/Ionicons';
 
-const data = Array(8).fill({
-  category: 'Category Name',
-  name: 'Product Name Line Goes Here ...',
-  designCode: '3355669',
-  stock: '250 Bails',
-  image: require('../../assets/t-shirt.png'),
-});
+// Define the type for items in the Insight Category dropdown
+interface InsightCategoryDropdownItem {
+  label: string;
+  value: string | null; // Value can be string or null for the placeholder
+}
 
-const bailNumbers = [
-  {label: 'Bail No.', value: 'Bail No.'},
-  {label: 'Category No.', value: 'Category No.'},
-  {label: 'Design Code', value: 'Design Code'},
-  {label: 'Design Code', value: 'Design Code'},
-];
-
-type ProductListScreenProps = NativeStackScreenProps<
+// Define the navigation props type for InsightScreen
+type InsightScreenProps = NativeStackScreenProps<
   HomeStackParamList,
-  'ProductListScreen'
+  'InsightsEmpty'
 >;
 
-const ProductListScreen = ({navigation}: ProductListScreenProps) => {
-  const [selectedBail, setSelectedBail] = useState('Bail No.');
+const InsightsEmpty: React.FC<InsightScreenProps> = ({navigation}) => {
+  const [selectedInsightCategory, setSelectedInsightCategory] = useState<
+    string | null
+  >(null);
+  const [searchProduct, setSearchProduct] = useState<string>('');
+
+  // Data for the Insight Category dropdown
+  const insightCategories: InsightCategoryDropdownItem[] = [
+    {label: 'Select Insight Category', value: null},
+    {label: 'Sales Performance', value: 'sales_performance'},
+    {label: 'Customer Demographics', value: 'customer_demographics'},
+    {label: 'Product Trends', value: 'product_trends'},
+    {label: 'Marketing Effectiveness', value: 'marketing_effectiveness'},
+  ];
 
   return (
-    <SafeAreaView className="flex-1 bg-[#F4D5B2] px-4 pt-4 pb-6">
+    <SafeAreaView
+      className="flex-1 bg-[#F9E7D4] px-4 pt-4 pb-6" // Using consistent padding/background color scheme
+      style={{
+        paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0,
+      }}>
       <View className="flex-1 justify-between">
-        {/* Header + Search */}
+        {/* Header */}
         <View>
-          {/* Header */}
           <View className="flex-row justify-between items-center mb-4">
             <TouchableOpacity
               onPress={() => navigation.goBack()}
               className="w-10 h-10 rounded-full border border-[#292C33] justify-center items-center">
-              <Icon name="arrow-left" size={20} color="#292C33" />
+              <Ionicons name="arrow-back" size={20} color="#292C33" />{' '}
+              {/* Using Ionicons for back */}
             </TouchableOpacity>
-            <View className="flex-1 items-end -ml-4">
-              <Text className="text-sm text-black">Inventory For</Text>
-              <Text className="text-base font-bold text-black">
-                CLAW Textile Manufacturing
+            {/* Insights For May 2025 section, similar to "Inventory For CLAW" */}
+            <View className="flex-row items-center bg-white rounded-lg py-2 px-4 shadow-md">
+              <Text className="text-black text-sm mr-1.5">Insights For</Text>
+              <Text className="text-black text-sm font-bold mr-2.5">
+                May 2025
               </Text>
+              <TouchableOpacity onPress={() => console.log('Open calendar')}>
+                <Feather
+                  name="calendar"
+                  size={20}
+                  color="#000"
+                  className="ml-1.5"
+                />
+              </TouchableOpacity>
             </View>
           </View>
 
-          {/* Dropdown + Search */}
+          {/* Dropdown + Search Input */}
           <View className="flex-row items-center mb-4 mt-2">
+            {/* Dropdown for Insight Category, occupying 30% width */}
             <View className="w-[30%] bg-[#D6872A] rounded-l-lg px-2">
               <Dropdown
                 style={{height: 40}}
                 containerStyle={{
-                  borderRadius: 0,
-                  borderTopLeftRadius: 8,
-                  borderBottomLeftRadius: 8,
+                  borderRadius: 0, // No border radius for the dropdown list container itself
+                  borderTopLeftRadius: 8, // Applied to the dropdown box itself
+                  borderBottomLeftRadius: 8, // Applied to the dropdown box itself
                 }}
                 placeholderStyle={{
                   color: '#fff',
@@ -79,79 +100,59 @@ const ProductListScreen = ({navigation}: ProductListScreenProps) => {
                   textAlign: 'center',
                 }}
                 iconStyle={{width: 20, height: 20, tintColor: '#fff'}}
-                data={bailNumbers}
+                data={insightCategories}
                 labelField="label"
                 valueField="value"
-                placeholder={selectedBail}
-                value={selectedBail}
-                onChange={item => setSelectedBail(item.value)}
+                placeholder={
+                  selectedInsightCategory || 'Select Insight Category'
+                } // Fallback for placeholder
+                value={selectedInsightCategory}
+                onChange={(item: InsightCategoryDropdownItem) =>
+                  setSelectedInsightCategory(item.value)
+                }
                 renderRightIcon={() => (
                   <Ionicons name="chevron-down" size={18} color="#fff" />
                 )}
               />
             </View>
-            <View className="flex-1 bg-white rounded-r-md px-3 flex-row items-center">
+            {/* Search Product Input, taking remaining width and rounded-r-md */}
+            <View className="flex-1 bg-white rounded-r-md px-3 flex-row items-center h-[40px]">
+              {' '}
+              {/* Adjusted height to match dropdown */}
               <TextInput
-                placeholder="Search..."
+                placeholder="Search Product"
+                placeholderTextColor="#888"
                 className="flex-1 text-black"
+                value={searchProduct}
+                onChangeText={(text: string) => setSearchProduct(text)}
               />
               <Ionicons name="search" size={18} color="black" />
             </View>
           </View>
-
-          <TouchableOpacity
-            onPress={() => console.log('Download List')}
-            className="flex-row justify-end items-center px-4 w-full mb-2">
-            <Image
-              source={require('../../assets/icons/upload.png')}
-              className="w-[15px] h-[15px] mr-2"
-              resizeMode="contain"
-            />
-            <Text className="text-[12px] text-black font-medium">
-              Download List
-            </Text>
-          </TouchableOpacity>
+          {/* No "Download List" button for InsightScreen based on previous context */}
         </View>
 
-        {/* Cards */}
+        {/* Content Area - Insights Parameter Empty Message */}
+        {/* Using ScrollView for consistency with ProductListScreen, but no scrolling content here */}
         <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
-          <View className="flex-row flex-wrap justify-between">
-            {data.map((item, index) => (
-              <View
-                key={index}
-                className="w-[48%] bg-white rounded-lg mb-3 border border-[#ccc] overflow-hidden">
-                <Image
-                  source={item.image}
-                  className="w-full h-[120px] bg-white"
-                  resizeMode="contain"
-                />
-                <View className="bg-[#DE925C] p-3">
-                  <Text className="text-[12px] text-white">
-                    {item.category}
-                  </Text>
-                  <Text className="text-[14px] font-bold text-black my-1">
-                    {item.name}
-                  </Text>
-                  <Text className="text-[12px] text-white p-1">
-                    Design Code: {item.designCode}
-                  </Text>
-                  <View className="border border-white px-2 py-1 rounded-lg mt-1 self-center items-center justify-center">
-                    <Text className="text-[12px] text-white">
-                      Stock: {item.stock}
-                    </Text>
-                  </View>
-                </View>
-              </View>
-            ))}
+          <View className="flex-1 justify-center items-center -mt-20">
+            <Ionicons name="warning-outline" size={50} color="#D6872A" />
+            <Text className="text-xl font-bold text-gray-700 mt-2.5">
+              Insights Parameter Empty
+            </Text>
+            <Text className="text-sm text-gray-500 mt-1.5">
+              Please enter a search term
+            </Text>
           </View>
         </ScrollView>
 
-        {/* Fixed Button */}
+        {/* Fixed Button - "Update Inventory" button is from ProductListScreen,
+            replace with appropriate button for InsightScreen or remove if not needed */}
         <TouchableOpacity
           className="bg-[#292C33] py-4 rounded-xl items-center justify-center mt-4"
-          onPress={() => navigation.navigate('ProductDetailsInventoryScreen')}>
+          onPress={() => console.log('Generate Insights')}>
           <Text className="text-white font-semibold text-base">
-            Update Inventory
+            Generate Insights
           </Text>
         </TouchableOpacity>
       </View>
@@ -159,4 +160,4 @@ const ProductListScreen = ({navigation}: ProductListScreenProps) => {
   );
 };
 
-export default ProductListScreen;
+export default InsightsEmpty;

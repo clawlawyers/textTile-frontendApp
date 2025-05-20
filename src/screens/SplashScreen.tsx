@@ -39,7 +39,7 @@ const SplashScreen = ({navigation}: SplashProps) => {
         // navigation.navigate('UploadCSV');
         // navigation.navigate('CompleteUpload');
         // navigation.navigate('UploadProgressModal');
-        navigation.navigate('UpdateProductScreen');
+        navigation.navigate('InsightsEmpty');
       });
     }, 1000);
   }, []);
