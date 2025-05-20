@@ -108,7 +108,7 @@ const InventoryMappingScreen = ({navigation}: Props) => {
         </Text>
         {/* Bottom Button */}
         <TouchableOpacity
-          onPress={() => console.log('Start Mapping')}
+          onPress={() => navigation.navigate('ProductListScreen')}
           className="mt-6 bg-[#D6872A] py-4 rounded-xl items-center">
           <Text className="text-white font-semibold text-base">
             Start Mapping

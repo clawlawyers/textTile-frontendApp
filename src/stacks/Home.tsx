@@ -31,6 +31,10 @@ import AddItemsToInventory from '../screens/Inventory/AddItemsToInventory';
 import CompleteUpload from '../screens/Inventory/CompleteUpload';
 import UploadProgressModal from '../screens/Inventory/UploadPregressModal';
 import InventoryMappingScreen from '../screens/Inventory/InventoryMappingScreen';
+import ProductListScreen from '../screens/Inventory/ProductList';
+import ProductDetailsInventoryScreen from '../screens/Inventory/ProductDetailsInventory';
+import SaveChangesScreen from '../screens/Inventory/SaveChangesScreen';
+import UpdateProductScreen from '../screens/Inventory/UpdateProduct';
 
 // Params for Home Stack
 export type HomeStackParamList = {
@@ -62,6 +66,10 @@ export type HomeStackParamList = {
   CompleteUpload: undefined;
   UploadProgressModal: undefined;
   InventoryMappingScreen: undefined;
+  ProductListScreen: undefined;
+  ProductDetailsInventoryScreen: undefined;
+  SaveChangesScreen: undefined;
+  UpdateProductScreen: undefined;
 };
 
 const HomeStack = createNativeStackNavigator<HomeStackParamList>();
@@ -226,6 +234,27 @@ function HomeStackNavigator() {
       <HomeStack.Screen
         name="UploadProgressModal"
         component={UploadProgressModal}
+        options={{headerShown: false}}
+      />
+      <HomeStack.Screen
+        name="ProductListScreen"
+        component={ProductListScreen}
+        options={{headerShown: false}}
+      />
+      <HomeStack.Screen
+        name="ProductDetailsInventoryScreen"
+        component={ProductDetailsInventoryScreen}
+        options={{headerShown: false}}
+      />
+
+      <HomeStack.Screen
+        name="SaveChangesScreen"
+        component={SaveChangesScreen}
+        options={{headerShown: false}}
+      />
+      <HomeStack.Screen
+        name="UpdateProductScreen"
+        component={UpdateProductScreen}
         options={{headerShown: false}}
       />
 
