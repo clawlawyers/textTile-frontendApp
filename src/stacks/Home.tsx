@@ -26,7 +26,11 @@ import ProductDetailCard from '../screens/ProductDetailCard';
 import OrderSummaryScreen from '../screens/OrderSummaryScreen';
 import PaymentScreen from '../screens/PaymentScreen';
 import InventoryEmptyScreen from '../screens/Inventory/InventoryEmptyScreen';
-import AddItemsToInventory1 from '../screens/Inventory/AddItemsToInventory1';
+import UploadCSV from '../screens/Inventory/UploadCSV';
+import AddItemsToInventory from '../screens/Inventory/AddItemsToInventory';
+import CompleteUpload from '../screens/Inventory/CompleteUpload';
+import UploadProgressModal from '../screens/Inventory/UploadPregressModal';
+import InventoryMappingScreen from '../screens/Inventory/InventoryMappingScreen';
 
 // Params for Home Stack
 export type HomeStackParamList = {
@@ -53,7 +57,11 @@ export type HomeStackParamList = {
   SuccessScreen: undefined; // No parameters expected
   Details: {productId: string};
   InventoryEmptyScreen: undefined;
-  AddItemsToInventory1: undefined;
+  AddItemsToInventory: undefined;
+  UploadCSV: undefined;
+  CompleteUpload: undefined;
+  UploadProgressModal: undefined;
+  InventoryMappingScreen: undefined;
 };
 
 const HomeStack = createNativeStackNavigator<HomeStackParamList>();
@@ -194,10 +202,33 @@ function HomeStackNavigator() {
         options={{headerShown: false}}
       />
       <HomeStack.Screen
-        name="AddItemsToInventory1"
-        component={AddItemsToInventory1}
+        name="AddItemsToInventory"
+        component={AddItemsToInventory}
         options={{headerShown: false}}
       />
+      <HomeStack.Screen
+        name="UploadCSV"
+        component={UploadCSV}
+        options={{headerShown: false}}
+      />
+      <HomeStack.Screen
+        name="CompleteUpload"
+        component={CompleteUpload}
+        options={{headerShown: false}}
+      />
+
+      <HomeStack.Screen
+        name="InventoryMappingScreen"
+        component={InventoryMappingScreen}
+        options={{headerShown: false}}
+      />
+
+      <HomeStack.Screen
+        name="UploadProgressModal"
+        component={UploadProgressModal}
+        options={{headerShown: false}}
+      />
+
       <HomeStack.Screen
         name="PaymentScreen"
         component={PaymentScreen}

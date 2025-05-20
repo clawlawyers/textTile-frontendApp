@@ -33,8 +33,13 @@ const SplashScreen = ({navigation}: SplashProps) => {
       ]).start(() => {
         // Navigate to Onboarding after animations finish
         // navigation.navigate('OrderSummaryScreen');
-        navigation.navigate('AddItemsToInventory1');
-        // navigation.navigate('InventoryEmptyScreen');
+
+        navigation.navigate('InventoryEmptyScreen');
+        // navigation.navigate('AddItemsToInventory1');
+        // navigation.navigate('UploadCSV');
+        // navigation.navigate('CompleteUpload');
+        // navigation.navigate('UploadProgressModal');
+        // navigation.navigate('InventoryMappingScreen');
       });
     }, 1000);
   }, []);

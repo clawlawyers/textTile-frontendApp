@@ -5,12 +5,9 @@ import {NativeStackScreenProps} from '@react-navigation/native-stack';
 import Icon from 'react-native-vector-icons/Feather';
 import {HomeStackParamList} from '../../stacks/Home';
 
-type AddItemsToInventory1Props = NativeStackScreenProps<
-  HomeStackParamList,
-  'AddItemsToInventory1'
->;
+type UploadCSVProps = NativeStackScreenProps<HomeStackParamList, 'UploadCSV'>;
 
-const AddItemsToInventory1 = ({navigation}: AddItemsToInventory1Props) => {
+const UploadCSV = ({navigation}: UploadCSVProps) => {
   return (
     <SafeAreaView className="flex-1 bg-[#F4D5B2] px-4 pt-4 pb-6">
       <View className="flex-1 justify-between">
@@ -50,24 +47,28 @@ const AddItemsToInventory1 = ({navigation}: AddItemsToInventory1Props) => {
             </Text>
           </View>
 
-          {/* Buttons */}
-          <View className="gap-4 mx-2">
-            <TouchableOpacity
-              className="bg-[#B8601C] py-4 rounded-lg items-center"
-              onPress={() => navigation.navigate('AddSingleItem')}>
-              <Text className="text-white font-semibold">Add Single Item</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              className="bg-[#B8601C] py-4 rounded-lg items-center"
-              onPress={() => navigation.navigate('UploadCSV')}>
-              <Text className="text-white font-semibold">Upload CSV</Text>
-            </TouchableOpacity>
-          </View>
+          <TouchableOpacity
+            onPress={() => navigation.navigate('CompleteUpload')}
+            className="flex-row items-center mb-2 border justify-center rounded px-4 my-4 py-2"
+            style={{borderColor: '#DB9245'}}>
+            <Image
+              source={require('../../assets/icons/upload.png')}
+              style={{width: 20, height: 20, marginRight: 8}}
+              resizeMode="contain"
+            />
+            <Text className="text-base font-bold text-[#666666] p-2">
+              Click Here To Upload File
+            </Text>
+          </TouchableOpacity>
         </View>
+        <TouchableOpacity
+          className="bg-[#DB9245] py-4 rounded-xl items-center justify-center mt-4"
+          onPress={() => navigation.navigate('CompleteUpload')}>
+          <Text className="text-white font-semibold text-base">Upload CSV</Text>
+        </TouchableOpacity>
       </View>
     </SafeAreaView>
   );
 };
 
-export default AddItemsToInventory1;
+export default UploadCSV;

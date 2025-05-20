@@ -3,6 +3,7 @@ import React, {useState} from 'react';
 import {
   View,
   Text,
+  Image,
   TextInput,
   TouchableOpacity,
   SafeAreaView,
@@ -89,6 +90,26 @@ const InventoryEmptyScreen = ({navigation}: InventoryEmptyProps) => {
               <Ionicons name="search" size={18} color="black" />
             </View>
           </View>
+
+          <TouchableOpacity
+            onPress={() => console.log('Download List')}
+            style={{
+              flexDirection: 'row',
+              justifyContent: 'flex-end', // push content to the right
+              alignItems: 'center',
+              paddingHorizontal: 16,
+              width: '100%',
+              marginBottom: 8,
+            }}>
+            <Image
+              source={require('../../assets/icons/upload.png')}
+              style={{width: 15, height: 15, marginRight: 8}}
+              resizeMode="contain"
+            />
+            <Text style={{fontSize: 12, color: 'black', fontWeight: '500'}}>
+              Download List
+            </Text>
+          </TouchableOpacity>
         </View>
 
         {/* Empty State Message in Center */}
@@ -108,7 +129,7 @@ const InventoryEmptyScreen = ({navigation}: InventoryEmptyProps) => {
         {/* Fixed Bottom Button */}
         <TouchableOpacity
           className="bg-[#292C33] py-4 rounded-xl items-center justify-center mt-4"
-          onPress={() => navigation.navigate('InventoryemptyScreen')}>
+          onPress={() => navigation.navigate('AddItemsToInventory')}>
           <Text className="text-white font-semibold text-base">
             Add Items to Inventory
           </Text>
