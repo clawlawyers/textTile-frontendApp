@@ -8,6 +8,7 @@ import {
   SafeAreaView,
   Platform,
   StatusBar,
+  ScrollView,
 } from 'react-native';
 import {Dropdown} from 'react-native-element-dropdown';
 import Ionicons from 'react-native-vector-icons/Ionicons';
@@ -15,14 +16,21 @@ import {NativeStackScreenProps} from '@react-navigation/native-stack';
 import {HomeStackParamList} from '../../stacks/Home';
 import Feather from 'react-native-vector-icons/Feather';
 
-type InsightsEmptyProps = NativeStackScreenProps<
+type MonthlyProductwiseOrdersScreenProps = NativeStackScreenProps<
   HomeStackParamList,
-  'InsightsEmpty'
+  'MonthlyProductwiseOrdersScreen'
 >;
 
-const InsightScreen: React.FC<InsightsEmptyProps> = ({navigation}) => {
+const MonthlyProductwiseOrdersScreen: React.FC<
+  MonthlyProductwiseOrdersScreenProps
+> = ({navigation}) => {
   const [selectedInsightCategory, setSelectedInsightCategory] = useState(null);
   const [searchProduct, setSearchProduct] = useState('');
+  const products = Array(10).fill({
+    name: 'Reyon 22KG 32Btsd',
+    category: '22.5%',
+    quantity: '123.6 Mtr',
+  });
 
   const insightCategories = [
     {label: 'Select Insight Category', value: null}, // Default placeholder item
@@ -78,7 +86,7 @@ const InsightScreen: React.FC<InsightsEmptyProps> = ({navigation}) => {
               containerStyle={{borderRadius: 8}}
               placeholderStyle={{
                 color: '#fff',
-                fontSize: 16,
+                fontSize: 15,
                 textAlign: 'left',
               }}
               selectedTextStyle={{
@@ -90,7 +98,7 @@ const InsightScreen: React.FC<InsightsEmptyProps> = ({navigation}) => {
               data={insightCategories}
               labelField="label"
               valueField="value"
-              placeholder={'Select Insight Category'}
+              placeholder={'Monthly product wise order percentage'}
               value={selectedInsightCategory}
               onChange={item => setSelectedInsightCategory(item.value)}
               renderRightIcon={() => (
@@ -108,29 +116,55 @@ const InsightScreen: React.FC<InsightsEmptyProps> = ({navigation}) => {
               value={searchProduct}
               onChangeText={setSearchProduct}
             />
-            <TouchableOpacity
-              onPress={() =>
-                navigation.navigate('MonthlyProductwiseOrdersScreen')
-              }>
+            <TouchableOpacity onPress={() => console.log('Search product')}>
               <Ionicons name="search" size={20} color="#888" />
             </TouchableOpacity>
           </View>
         </View>
 
-        <View className="items-center justify-center flex-1">
-          <View className="w-10 h-10 rounded-full bg-[#D6872A] items-center justify-center">
-            <Text className="text-white text-2xl font-bold">!</Text>
-          </View>
-          <Text className="text-lg font-bold text-black mt-4">
-            Insights Parameter Empty
+        {/* Table */}
+        <View className="bg-[#2D2D2D] rounded-t-lg px-3 py-2 flex-row justify-between">
+          <Text className="text-white text-center text-sm font-semibold w-[25%]">
+            Product Name
           </Text>
-          <Text className="text-sm text-black text-center mt-1 px-8">
-            Please enter a search term
+          <Text className="text-white text-center text-sm font-semibold w-[25%]">
+            Order Placed
           </Text>
+          <Text className="text-white text-sm text-center font-semibold w-[25%]">
+            Quantity
+          </Text>
+        </View>
+
+        <ScrollView className="bg-[#D1853A] rounded-b-lg px-3 py-2 max-h-[250px]">
+          {products.map((item, index) => (
+            <View
+              key={index}
+              className="flex-row items-center justify-between mb-2">
+              <Text className="text-xs w-[25%]  text-center text-white">
+                {item.name}
+              </Text>
+              <Text className="text-xs text-center w-[25%] text-white">
+                {item.category}
+              </Text>
+              <Text className="text-xs w-[25%]  text-center text-white">
+                {item.quantity}
+              </Text>
+            </View>
+          ))}
+        </ScrollView>
+
+        <View className="absolute bottom-0 left-0 right-0 px-5 pb-5">
+          <TouchableOpacity
+            onPress={() => navigation.navigate('MonthlyDesignwiseOrdersScreen')}
+            className="bg-[#D6872A] py-4 rounded-xl items-center">
+            <Text className="text-white font-semibold text-base">
+              Download Report
+            </Text>
+          </TouchableOpacity>
         </View>
       </View>
     </SafeAreaView>
   );
 };
 
-export default InsightScreen;
+export default MonthlyProductwiseOrdersScreen;

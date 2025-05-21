@@ -36,6 +36,12 @@ import ProductDetailsInventoryScreen from '../screens/Inventory/ProductDetailsIn
 import SaveChangesScreen from '../screens/Inventory/SaveChangesScreen';
 import UpdateProductScreen from '../screens/Inventory/UpdateProduct';
 import InsightsEmpty from '../screens/Insights/InsightsEmpty';
+import MonthlyProductwiseOrdersScreen from '../screens/Insights/MonthlyProductwiseOrders';
+import MonthlyDesignwiseOrdersScreen from '../screens/Insights/MonthlyDesignwiseOrders';
+import MonthlyAdvanceVsDuesProductwiseScreen from '../screens/Insights/MonthlyAdvanceVsDuesProductwise';
+import MonthlyOrderPlacementAnalyticsScreen from '../screens/Insights/MonthlyOrderPlacementAnaytics';
+import LeftoverstockproductwiseScreen from '../screens/Insights/LeftOverStockProductwise';
+import LeftoverstockDesignwiseScreen from '../screens/Insights/LeftOverStockDesignwise';
 
 // Params for Home Stack
 export type HomeStackParamList = {
@@ -72,6 +78,12 @@ export type HomeStackParamList = {
   SaveChangesScreen: undefined;
   UpdateProductScreen: undefined;
   InsightsEmpty: undefined;
+  MonthlyProductwiseOrdersScreen: undefined;
+  MonthlyDesignwiseOrdersScreen: undefined;
+  MonthlyAdvanceVsDuesProductwiseScreen: undefined;
+  MonthlyOrderPlacementAnalyticsScreen: undefined;
+  LeftoverstockproductwiseScreen: undefined;
+  LeftoverstockDesignwiseScreen: undefined;
 };
 
 const HomeStack = createNativeStackNavigator<HomeStackParamList>();
@@ -263,6 +275,39 @@ function HomeStackNavigator() {
       <HomeStack.Screen
         name="PaymentScreen"
         component={PaymentScreen}
+        options={{headerShown: false}}
+      />
+
+      <HomeStack.Screen
+        name="MonthlyProductwiseOrdersScreen"
+        component={MonthlyProductwiseOrdersScreen}
+        options={{headerShown: false}}
+      />
+
+      <HomeStack.Screen
+        name="MonthlyDesignwiseOrdersScreen"
+        component={MonthlyDesignwiseOrdersScreen}
+        options={{headerShown: false}}
+      />
+
+      <HomeStack.Screen
+        name="MonthlyAdvanceVsDuesProductwiseScreen"
+        component={MonthlyAdvanceVsDuesProductwiseScreen}
+        options={{headerShown: false}}
+      />
+      <HomeStack.Screen
+        name="MonthlyOrderPlacementAnalyticsScreen"
+        component={MonthlyOrderPlacementAnalyticsScreen}
+        options={{headerShown: false}}
+      />
+      <HomeStack.Screen
+        name="LeftoverstockproductwiseScreen"
+        component={LeftoverstockproductwiseScreen}
+        options={{headerShown: false}}
+      />
+      <HomeStack.Screen
+        name="LeftoverstockDesignwiseScreen"
+        component={LeftoverstockDesignwiseScreen}
         options={{headerShown: false}}
       />
 

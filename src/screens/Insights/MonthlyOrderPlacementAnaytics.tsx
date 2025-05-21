@@ -14,13 +14,16 @@ import Ionicons from 'react-native-vector-icons/Ionicons';
 import {NativeStackScreenProps} from '@react-navigation/native-stack';
 import {HomeStackParamList} from '../../stacks/Home';
 import Feather from 'react-native-vector-icons/Feather';
+import {PieChart} from 'react-native-svg-charts';
 
-type InsightsEmptyProps = NativeStackScreenProps<
+type MonthlyOrderPlacementAnalyticsScreenProps = NativeStackScreenProps<
   HomeStackParamList,
-  'InsightsEmpty'
+  'MonthlyOrderPlacementAnalyticsScreen'
 >;
 
-const InsightScreen: React.FC<InsightsEmptyProps> = ({navigation}) => {
+const MonthlyOrderPlacementAnalyticsScreen: React.FC<
+  MonthlyOrderPlacementAnalyticsScreenProps
+> = ({navigation}) => {
   const [selectedInsightCategory, setSelectedInsightCategory] = useState(null);
   const [searchProduct, setSearchProduct] = useState('');
 
@@ -78,8 +81,8 @@ const InsightScreen: React.FC<InsightsEmptyProps> = ({navigation}) => {
               containerStyle={{borderRadius: 8}}
               placeholderStyle={{
                 color: '#fff',
-                fontSize: 16,
-                textAlign: 'left',
+                fontSize: 13,
+                textAlign: 'center',
               }}
               selectedTextStyle={{
                 color: '#fff',
@@ -90,7 +93,7 @@ const InsightScreen: React.FC<InsightsEmptyProps> = ({navigation}) => {
               data={insightCategories}
               labelField="label"
               valueField="value"
-              placeholder={'Select Insight Category'}
+              placeholder={'Monthly Order Placement Analytics'}
               value={selectedInsightCategory}
               onChange={item => setSelectedInsightCategory(item.value)}
               renderRightIcon={() => (
@@ -108,29 +111,101 @@ const InsightScreen: React.FC<InsightsEmptyProps> = ({navigation}) => {
               value={searchProduct}
               onChangeText={setSearchProduct}
             />
-            <TouchableOpacity
-              onPress={() =>
-                navigation.navigate('MonthlyProductwiseOrdersScreen')
-              }>
+            <TouchableOpacity onPress={() => console.log('Search product')}>
               <Ionicons name="search" size={20} color="#888" />
             </TouchableOpacity>
           </View>
         </View>
 
-        <View className="items-center justify-center flex-1">
-          <View className="w-10 h-10 rounded-full bg-[#D6872A] items-center justify-center">
-            <Text className="text-white text-2xl font-bold">!</Text>
+        {/* Receivables Summary */}
+        <View className="bg-[#D6872A] rounded-xl p-4 mb-5">
+          {/* Receivables Summary */}
+          <View className="bg-[#D6872A] rounded-xl  mb-5">
+            {[
+              {label: 'Total Orders', value: '895'},
+              {label: 'Orders Completed', value: '3685'},
+              {label: 'Orders Active', value: '30000'},
+            ].map((item, index) => (
+              <View
+                key={index}
+                className="flex-row justify-between mb-1 rounded-xl bg-[#E89A4D]">
+                <View className="w-1/2 bg-[#292C33] p-2 justify-center items-center rounded-l-lg">
+                  <Text className="text-white font-semibold text-sm">
+                    {item.label}
+                  </Text>
+                </View>
+                <View className="w-1/2 bg-[#FBDBB5] justify-center items-center rounded-r-lg">
+                  <Text className="font-semibold text-sm">{item.value}</Text>
+                </View>
+              </View>
+            ))}
           </View>
-          <Text className="text-lg font-bold text-black mt-4">
-            Insights Parameter Empty
-          </Text>
-          <Text className="text-sm text-black text-center mt-1 px-8">
-            Please enter a search term
-          </Text>
+
+          {/* Donut Chart */}
+          <View style={{alignItems: 'center', justifyContent: 'center'}}>
+            <View style={{height: 200, width: 200}}>
+              <PieChart
+                style={{height: 200}}
+                outerRadius="90%"
+                innerRadius="50%"
+                padAngle={0}
+                data={[
+                  {
+                    key: 1,
+                    value: 30,
+                    svg: {fill: '#292C33'},
+                  },
+                  {
+                    key: 2,
+                    value: 70,
+                    svg: {fill: '#666666'},
+                  },
+                ]}
+              />
+              <View
+                style={{
+                  position: 'absolute',
+                  top: '40%',
+                  left: 0,
+                  right: 0,
+                  alignItems: 'center',
+                }}>
+                <Text
+                  style={{fontSize: 10}}
+                  className="text-white font-semibold text-center">
+                  Analytics on{'\n'}Order Placed
+                </Text>
+              </View>
+            </View>
+
+            {/* Legend */}
+            <View className="flex-row justify-center gap-x-10  mt-3">
+              <View className="flex-row items-center">
+                <View className="w-5 h-5  bg-[#292C33] mr-1.5" />
+                <Text className="text-white text-sm">Orders Completed</Text>
+              </View>
+              <View className="flex-row items-center">
+                <View className="w-5 h-5  bg-[#666666] mr-1.5" />
+                <Text className="text-white text-sm">Orders Active</Text>
+              </View>
+            </View>
+          </View>
+        </View>
+
+        <View className="absolute bottom-0 left-0 right-0 px-5 pb-5">
+          <TouchableOpacity
+            onPress={() =>
+              navigation.navigate('LeftoverstockproductwiseScreen')
+            }
+            className="bg-[#D6872A] py-4 rounded-xl items-center">
+            <Text className="text-white font-semibold text-base">
+              Download Report
+            </Text>
+          </TouchableOpacity>
         </View>
       </View>
     </SafeAreaView>
   );
 };
 
-export default InsightScreen;
+export default MonthlyOrderPlacementAnalyticsScreen;
