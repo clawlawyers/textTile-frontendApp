@@ -1,16 +1,150 @@
 import {NativeStackScreenProps} from '@react-navigation/native-stack';
-import React from 'react';
-import {View, Text, TouchableOpacity, ScrollView, Image} from 'react-native';
+import React, {useEffect, useState} from 'react';
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  ScrollView,
+  Image,
+  Alert,
+  ToastAndroid,
+} from 'react-native';
 import Icon from 'react-native-vector-icons/Feather';
 import FontistoIcon from 'react-native-vector-icons/Fontisto';
 import {AddNewUserStackParamList} from '../stacks/AddNewUser';
+import {NODE_API_ENDPOINT} from '../utils/util';
+import {RootState} from '../redux/store';
+import {useSelector} from 'react-redux';
 
 type UserPermissionsProps = NativeStackScreenProps<
   AddNewUserStackParamList,
   'UserPermissions'
 >;
 
-const UserPermissionScreen = ({navigation}: UserPermissionsProps) => {
+interface PermissionState {
+  _id: string;
+  addFirm: boolean;
+  deleteClient: boolean;
+  addClient: boolean;
+  generateInvoice: boolean;
+  viewInventory: boolean;
+  editInventory: boolean;
+  createOrder: boolean;
+  addInvetory: boolean;
+  editClient: boolean;
+  description: string;
+  __v: number;
+  salesman: string;
+}
+
+const UserPermissionScreen = ({navigation, route}: UserPermissionsProps) => {
+  const currentUser = useSelector((state: RootState) => state.auth.user);
+  const [permissions, setPermissions] = useState<PermissionState | null>(null);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    const getPermissions = async () => {
+      if (currentUser?.type !== 'manager') {
+        return;
+      }
+      try {
+        const response = await fetch(
+          `${NODE_API_ENDPOINT}/salesmen/${route.params.salesmanId}/getPermissions`,
+          {
+            method: 'GET',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${currentUser?.token}`,
+            },
+          },
+        );
+        if (!response.ok) {
+          const errorText = await response.text();
+          throw new Error(
+            `Failed to fetch user permissions: ${response.status} ${errorText}`,
+          );
+        }
+        const data = await response.json();
+        setPermissions(data);
+        console.log(data);
+      } catch (error) {
+        console.error('Error fetching permissions:', error);
+        Alert.alert('Error', 'Failed to fetch user permissions');
+      }
+    };
+    getPermissions();
+  }, [currentUser?.token, currentUser?.type, route.params.salesmanId]);
+
+  const togglePermission = (key: keyof PermissionState) => {
+    if (permissions && typeof permissions[key] === 'boolean') {
+      setPermissions({
+        ...permissions,
+        [key]: !permissions[key],
+      });
+    }
+  };
+
+  const updatePermissions = async () => {
+    if (!permissions || currentUser?.type !== 'manager') {
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const response = await fetch(
+        `${NODE_API_ENDPOINT}/salesmen/${route.params.salesmanId}/updatePermissions`,
+        {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${currentUser?.token}`,
+          },
+          body: JSON.stringify({permissions: permissions}),
+        },
+      );
+
+      console.log(response);
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(
+          `Failed to update permissions: ${response.status} ${errorText}`,
+        );
+      }
+
+      const data = await response.json();
+      console.log('Permissions updated:', data);
+      ToastAndroid.show('Permissions Updated', ToastAndroid.SHORT);
+      navigation.replace('AddNewUserAdded');
+    } catch (error) {
+      console.error('Error updating permissions:', error);
+      Alert.alert('Error', 'Failed to update user permissions');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const renderCheckbox = (
+    label: string,
+    permissionKey: keyof PermissionState,
+  ) => {
+    const isChecked = permissions ? permissions[permissionKey] : false;
+
+    return (
+      <TouchableOpacity
+        key={label}
+        className="flex-row items-center mb-1 ml-5"
+        onPress={() => togglePermission(permissionKey)}>
+        <View
+          className={`w-4 h-4 border border-[#DB9245] rounded-full mr-3 ${
+            isChecked ? 'bg-[#DB9245]' : ''
+          }`}
+        />
+        <Text className="text-[#FBDBB5] text-sm">{label}</Text>
+      </TouchableOpacity>
+    );
+  };
+
   return (
     <ScrollView className="flex-1 bg-[#FAD7AF] px-6 pt-12">
       {/* Top Header */}
@@ -18,25 +152,14 @@ const UserPermissionScreen = ({navigation}: UserPermissionsProps) => {
         <TouchableOpacity
           onPress={() => navigation.goBack()}
           className="w-10 h-10 rounded-full border border-[#292C33] justify-center items-center mb-6">
-          <Icon name="arrow-left" size={20} color="#292C33" />{' '}
-        </TouchableOpacity>
-        <TouchableOpacity
-          className="mb-8"
-          onPress={() => {
-            navigation.navigate('Notification');
-          }}>
-          {/* <FontistoIcon name="bell" size={25} color={'#DB9245'} /> */}
-          <View className="relative">
-            <FontistoIcon name="bell" size={25} color={'#DB9245'} />
-            <View className="absolute top-0 left-6 right-0 w-2 h-2 rounded-full bg-green-500" />
-          </View>
+          <Icon name="arrow-left" size={20} color="#292C33" />
         </TouchableOpacity>
       </View>
 
       {/* Logo */}
       <View className="items-start mt-4 mb-6">
         <Image
-          source={require('../assets/logo.png')} // Replace with actual logo
+          source={require('../assets/logo.png')}
           className="w-20 h-20"
           resizeMode="contain"
         />
@@ -52,7 +175,35 @@ const UserPermissionScreen = ({navigation}: UserPermissionsProps) => {
         can be allowed to access and modify.
       </Text>
 
-      {/* Permissions Sections */}
+      {/* Firm Management Section */}
+      <View className="bg-[#1E1E1E] rounded-xl p-4 mb-2">
+        <View className="text-[#FAD7AF] font-semibold flex flex-row">
+          <View className="w-4 h-4 border border-[#DB9245] rounded-full mr-3" />
+          <View>
+            <Text className="text-[#CA6800] font-semibold mb-2 ">
+              Firm Management
+            </Text>
+          </View>
+        </View>
+        {renderCheckbox('Add Firm', 'addFirm')}
+      </View>
+
+      {/* Client Management Section */}
+      <View className="bg-[#1E1E1E] rounded-xl p-4 mb-2">
+        <View className="text-[#FAD7AF] font-semibold flex flex-row">
+          <View className="w-4 h-4 border border-[#DB9245] rounded-full mr-3" />
+          <View>
+            <Text className="text-[#CA6800] font-semibold mb-2 ">
+              Client Management
+            </Text>
+          </View>
+        </View>
+        {renderCheckbox('Add Client', 'addClient')}
+        {renderCheckbox('Edit Client', 'editClient')}
+        {renderCheckbox('Delete Client', 'deleteClient')}
+      </View>
+
+      {/* Order Management Section */}
       <View className="bg-[#1E1E1E] rounded-xl p-4 mb-2">
         <View className="text-[#FAD7AF] font-semibold flex flex-row">
           <View className="w-4 h-4 border border-[#DB9245] rounded-full mr-3" />
@@ -62,21 +213,11 @@ const UserPermissionScreen = ({navigation}: UserPermissionsProps) => {
             </Text>
           </View>
         </View>
-        {[
-          'Add / Delete Client',
-          'Create / Delete Order',
-          'Complete Order',
-          'Invoice Generation',
-        ].map((item, index) => (
-          <TouchableOpacity
-            key={index}
-            className="flex-row items-center mb-1 ml-5">
-            <View className="w-4 h-4 border border-[#DB9245] rounded-full mr-3" />
-            <Text className="text-[#FBDBB5] text-sm">{item}</Text>
-          </TouchableOpacity>
-        ))}
+        {renderCheckbox('Create Order', 'createOrder')}
+        {renderCheckbox('Generate Invoice', 'generateInvoice')}
       </View>
 
+      {/* Inventory Management Section */}
       <View className="bg-[#1E1E1E] rounded-xl p-4 mb-5">
         <View className="text-[#FAD7AF] font-semibold flex flex-row">
           <View className="w-4 h-4 border border-[#DB9245] rounded-full mr-3" />
@@ -86,25 +227,18 @@ const UserPermissionScreen = ({navigation}: UserPermissionsProps) => {
             </Text>
           </View>
         </View>
-
-        {['View Inventory', 'Edit Inventory', 'Create / Remove Inventory'].map(
-          (item, index) => (
-            <TouchableOpacity
-              key={index}
-              className="flex-row items-center mb-1 ml-5">
-              <View className="w-4 h-4 border border-[#DB9245] rounded-full mr-3" />
-              <Text className="text-[#FBDBB5] text-sm">{item}</Text>
-            </TouchableOpacity>
-          ),
-        )}
+        {renderCheckbox('View Inventory', 'viewInventory')}
+        {renderCheckbox('Add Inventory', 'addInvetory')}
+        {renderCheckbox('Edit Inventory', 'editInventory')}
       </View>
 
       {/* Submit Button */}
       <TouchableOpacity
-        className="bg-[#D6872A] py-4 rounded-xl items-center justify-center"
-        onPress={() => navigation.navigate('AddNewUserAdded')}>
+        className="bg-[#D6872A] py-4 rounded-xl items-center justify-center mb-6"
+        disabled={loading}
+        onPress={updatePermissions}>
         <Text className="text-white font-semibold text-base">
-          Update User Permission
+          {loading ? 'Updating...' : 'Update User Permission'}
         </Text>
       </TouchableOpacity>
     </ScrollView>

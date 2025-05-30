@@ -8,6 +8,8 @@ import {HomeStackParamList} from '../stacks/Home';
 import {Dropdown} from 'react-native-element-dropdown';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import Icon1 from 'react-native-vector-icons/Feather'; // You can change this to Ionicons, FontAwesome, etc.
+import {RootState} from '../redux/store';
+import {useSelector} from 'react-redux';
 
 const bailNumbers = [
   {label: 'Bail No.', value: 'Bail No.'},
@@ -29,6 +31,10 @@ const InventoryEmptyScreen = ({navigation}: AddNewUserProps) => {
     navigation.navigate('AddInventoryScreen');
   };
 
+  const currentInventoryName = useSelector(
+    (state: RootState) => state.common.inventoryName,
+  );
+
   return (
     <View className="flex-1 bg-[#fdd8ac] pt-12 px-4">
       {/* Header */}
@@ -42,7 +48,7 @@ const InventoryEmptyScreen = ({navigation}: AddNewUserProps) => {
         <View className="items-end">
           <Text className="text-xs text-black">Inventory For</Text>
           <Text className="text-base font-bold text-black">
-            CLAW Textile Manufacturing
+            {currentInventoryName}
           </Text>
         </View>
       </View>

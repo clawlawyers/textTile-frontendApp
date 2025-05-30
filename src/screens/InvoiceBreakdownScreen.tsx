@@ -4,6 +4,8 @@ import {View, Text, TouchableOpacity, ScrollView} from 'react-native';
 import Icon from 'react-native-vector-icons/Feather';
 import FontistoIcon from 'react-native-vector-icons/Fontisto';
 import {OrderHistoryParamList} from '../stacks/OrderHistory';
+import {useSelector} from 'react-redux';
+import {RootState} from '../redux/store';
 
 const paymentDetails = [
   {label: 'Total Amount', value: '₹ 63000'},
@@ -18,7 +20,18 @@ type InvoiceBreakdownScreenProps = NativeStackScreenProps<
   'InvoiceBreakdownScreen'
 >;
 
-const InvoiceBreakdownScreen = ({navigation}: InvoiceBreakdownScreenProps) => {
+const InvoiceBreakdownScreen = ({
+  navigation,
+  route,
+}: InvoiceBreakdownScreenProps) => {
+  console.log(route.params.orderDetails);
+
+  const [orderDetails, setOrderDetails] = React.useState(
+    route.params.orderDetails,
+  );
+
+  // const commonSlice = useSelector((state: RootState) => state.common);
+
   return (
     <ScrollView className="flex-1 bg-[#FAD7AF] px-6 pt-12">
       {/* Header */}
@@ -47,7 +60,11 @@ const InvoiceBreakdownScreen = ({navigation}: InvoiceBreakdownScreenProps) => {
             Invoice Date & Time
           </Text>
           <Text className="text-sm text-black text-right">
-            01/05/2025 &nbsp; 14:32
+            {new Date(orderDetails.createdAt).toLocaleDateString('en-US', {
+              year: 'numeric',
+              month: '2-digit',
+              day: '2-digit',
+            })}
           </Text>
         </View>
       </View>
@@ -56,7 +73,9 @@ const InvoiceBreakdownScreen = ({navigation}: InvoiceBreakdownScreenProps) => {
       <View className="mb-4 ">
         <View className="flex flex-row gap-6">
           <Text className="text-sm text-black font-bold">Firm Name :</Text>
-          <Text className="text-sm text-black mb-1">RR Enterprise</Text>
+          <Text className="text-sm text-black mb-1">
+            {orderDetails.client.firmName}
+          </Text>
         </View>
 
         <View className="flex flex-row gap-12">
@@ -66,53 +85,52 @@ const InvoiceBreakdownScreen = ({navigation}: InvoiceBreakdownScreenProps) => {
         <View className="flex flex-row gap-11">
           <Text className="text-sm text-black font-bold">Address :</Text>
           <Text className="text-sm text-black mb-2">
-            AF–56, Prasanta Apartment,{'\n'}
-            Kestopur, Kolkata– 700101 , India
+            {orderDetails.client.address}
           </Text>
         </View>
 
         <View className="flex flex-row gap-5">
           <Text className="text-sm text-black font-bold">Client Name :</Text>
-          <Text className="text-sm text-black mb-1">Soumya Snigdha Banik</Text>
+          <Text className="text-sm text-black mb-1">
+            {orderDetails.client.name}
+          </Text>
         </View>
 
         <View className="flex flex-row gap-7">
           <Text className="text-sm text-black font-bold">Contact No :</Text>
-          <Text className="text-sm text-black mb-2">+917384242486</Text>
+          <Text className="text-sm text-black mb-2">
+            {orderDetails.client.phone}
+          </Text>
         </View>
       </View>
 
-      {/* Breakdown Section */}
-      {/* <View className="rounded-xl overflow-hidden mb-6">
-        {paymentDetails.map((item, index) => (
-          <View key={index} className="flex-row justify-around">
-            <View className="bg-[#1F1F1F]">
-              <Text className="text-sm text-white font-semibold">
-                {item.label}
-              </Text>
-            </View>
-            <View className="bg-[#DA8B2C]">
-              <Text className="text-text-white text-black font-semibold">
-                {item.value}
-              </Text>
-            </View>
-          </View>
-        ))}
-      </View> */}
-
       <View className="rounded-xl overflow-hidden mb-6">
-        {paymentDetails.map((item, index) => (
+        <View className="flex-row mb-1">
+          {/* Label (left side) */}
+          <View className="flex-1 bg-[#1F1F1F] px-4 py-3">
+            <Text className="text-white font-semibold text-sm">
+              Total Amount
+            </Text>
+          </View>
+          {/* Value (right side) */}
+          <View className="flex-1 bg-[#DA8B2C] px-4 py-3">
+            <Text className="text-black font-semibold text-sm text-right">
+              {orderDetails.totalAmount}
+            </Text>
+          </View>
+        </View>
+        {orderDetails.payments.map((item, index) => (
           <View key={index} className="flex-row mb-1">
             {/* Label (left side) */}
             <View className="flex-1 bg-[#1F1F1F] px-4 py-3">
               <Text className="text-white font-semibold text-sm">
-                {item.label}
+                {item.paymentMethod}
               </Text>
             </View>
             {/* Value (right side) */}
             <View className="flex-1 bg-[#DA8B2C] px-4 py-3">
               <Text className="text-black font-semibold text-sm text-right">
-                {item.value}
+                {item.amount}
               </Text>
             </View>
           </View>
@@ -120,7 +138,9 @@ const InvoiceBreakdownScreen = ({navigation}: InvoiceBreakdownScreenProps) => {
       </View>
 
       {/* Buttons */}
-      <TouchableOpacity className="bg-[#D6872A] py-3 rounded-xl">
+      <TouchableOpacity
+        className="bg-[#D6872A] py-3 rounded-xl"
+        onPress={() => navigation.goBack()}>
         <Text className="text-center text-white font-semibold text-base">
           View Invoice Items
         </Text>

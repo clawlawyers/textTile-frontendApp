@@ -21,17 +21,16 @@ const FirmAddedScreen = ({navigation}: FirmAddedScreenProps) => {
           className="w-10 h-10 rounded-full border border-[#292C33] justify-center items-center mb-6">
           <Icon name="arrow-left" size={20} color="#292C33" />{' '}
         </TouchableOpacity>
-        <TouchableOpacity
+        {/* <TouchableOpacity
           className="mb-8"
           onPress={() => {
             navigation.navigate('Notification');
           }}>
-          {/* <FontistoIcon name="bell" size={25} color={'#DB9245'} /> */}
           <View className="relative">
             <FontistoIcon name="bell" size={25} color={'#DB9245'} />
             <View className="absolute top-0 left-6 right-0 w-2 h-2 rounded-full bg-green-500" />
           </View>
-        </TouchableOpacity>
+        </TouchableOpacity> */}
       </View>
 
       {/* Centered Content */}

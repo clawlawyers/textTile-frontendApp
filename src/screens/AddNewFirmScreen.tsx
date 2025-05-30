@@ -7,10 +7,16 @@ import {
   TouchableOpacity,
   ScrollView,
   Image,
+  ToastAndroid,
+  ActivityIndicator,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/Feather';
 import FontistoIcon from 'react-native-vector-icons/Fontisto';
 import {HomeStackParamList} from '../stacks/Home';
+import {NODE_API_ENDPOINT} from '../utils/util';
+import {useDispatch, useSelector} from 'react-redux';
+import {RootState} from '../redux/store';
+import {updateCompanies} from '../redux/authSlice';
 
 type AddNewFirmScreenProps = NativeStackScreenProps<
   HomeStackParamList,
@@ -18,6 +24,51 @@ type AddNewFirmScreenProps = NativeStackScreenProps<
 >;
 
 const AddNewFirmScreen = ({navigation}: AddNewFirmScreenProps) => {
+  const [formdata, setFormData] = React.useState({
+    name: '',
+    address: '',
+    GSTNumber: '',
+  });
+
+  const dispatch = useDispatch();
+  const currentUser = useSelector((state: RootState) => state.auth.user);
+
+  const [loading, setLoading] = React.useState(false);
+  const addNewFirmHandler = async () => {
+    if (!formdata.name || !formdata.address || !formdata.GSTNumber) {
+      ToastAndroid.show('Please fill all the fields', ToastAndroid.SHORT);
+      return;
+    }
+    console.log(formdata);
+    setLoading(true);
+    try {
+      const response = await fetch(`${NODE_API_ENDPOINT}/companies/create`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${currentUser?.token}`,
+        },
+        body: JSON.stringify(formdata),
+      });
+
+      if (!response.ok) {
+        throw new Error(data?.message || 'Failed to add new firm');
+      }
+      const data = await response.json();
+      console.log('Response status:', response.status);
+      console.log('Response body:', data);
+
+      setFormData({name: '', address: '', GSTNumber: ''});
+      ToastAndroid.show('New Firm Added', ToastAndroid.SHORT);
+      dispatch(updateCompanies([...currentUser?.companies, data]));
+      navigation.replace('FirmAddedScreen');
+    } catch (error) {
+      console.error('Error while adding firm:', error);
+      ToastAndroid.show('Error adding firm', ToastAndroid.SHORT);
+    } finally {
+      setLoading(false);
+    }
+  };
   return (
     <ScrollView className="flex-1 bg-[#FAD9B3] px-6 pt-12">
       {/* Top Navigation */}
@@ -27,17 +78,16 @@ const AddNewFirmScreen = ({navigation}: AddNewFirmScreenProps) => {
           className="w-10 h-10 rounded-full border border-[#292C33] justify-center items-center mb-6">
           <Icon name="arrow-left" size={20} color="#292C33" />{' '}
         </TouchableOpacity>
-        <TouchableOpacity
+        {/* <TouchableOpacity
           className="mb-8"
           onPress={() => {
             navigation.navigate('Notification');
           }}>
-          {/* <FontistoIcon name="bell" size={25} color={'#DB9245'} /> */}
           <View className="relative">
             <FontistoIcon name="bell" size={25} color={'#DB9245'} />
             <View className="absolute top-0 left-6 right-0 w-2 h-2 rounded-full bg-green-500" />
           </View>
-        </TouchableOpacity>
+        </TouchableOpacity> */}
       </View>
 
       {/* Logo */}
@@ -58,16 +108,22 @@ const AddNewFirmScreen = ({navigation}: AddNewFirmScreenProps) => {
 
       {/* Input Fields */}
       <TextInput
+        onChangeText={text => setFormData({...formdata, name: text})}
+        value={formdata.name}
         placeholder="Enter Firm Name"
         placeholderTextColor="#666666"
         className="border border-[#D9A676] rounded-md px-4 py-3 mb-4 text-[#666666]"
       />
       <TextInput
+        onChangeText={text => setFormData({...formdata, address: text})}
+        value={formdata.address}
         placeholder="Enter Firm Address"
         placeholderTextColor="#666666"
         className="border border-[#D9A676] rounded-md px-4 py-3 mb-4 text-[#666666]"
       />
       <TextInput
+        onChangeText={text => setFormData({...formdata, GSTNumber: text})}
+        value={formdata.GSTNumber}
         placeholder="Enter Firm GST Number"
         placeholderTextColor="#666666"
         className="border border-[#D9A676] rounded-md px-4 py-3 mb-10 text-[#666666]"
@@ -76,9 +132,9 @@ const AddNewFirmScreen = ({navigation}: AddNewFirmScreenProps) => {
       {/* Submit Button */}
       <TouchableOpacity
         className="bg-[#D6872A] py-4 rounded-xl items-center justify-center"
-        onPress={() => navigation.navigate('FirmAddedScreen')}>
+        onPress={() => addNewFirmHandler()}>
         <Text className="text-white font-semibold text-base">
-          Save New Firm
+          {loading ? <ActivityIndicator color="#fff" /> : 'Save New Firm'}
         </Text>
       </TouchableOpacity>
     </ScrollView>

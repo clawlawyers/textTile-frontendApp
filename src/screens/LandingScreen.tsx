@@ -8,8 +8,8 @@ type SplashProps = NativeStackScreenProps<HomeStackParamList, 'LandingScreen'>;
 const LandingScreen = ({navigation}: SplashProps) => {
   useEffect(() => {
     setTimeout(() => {
-      navigation.navigate('Home');
-      // navigation.navigate('EditInventoryProduct');
+      navigation.replace('Home');
+      // navigation.replace('TextileImageGenerator');
     }, 500);
   }, [navigation]);
   return (

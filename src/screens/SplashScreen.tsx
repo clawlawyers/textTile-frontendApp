@@ -1,7 +1,9 @@
 import React, {useEffect, useRef} from 'react';
-import {View, Image, Text, Animated} from 'react-native';
+import {View, Image, Text, Animated, ActivityIndicator} from 'react-native';
 import {NativeStackScreenProps} from '@react-navigation/native-stack';
 import {HomeStackParamList} from '../stacks/Home';
+import {useSelector} from 'react-redux';
+import {RootState} from '../redux/store';
 
 type SplashProps = NativeStackScreenProps<HomeStackParamList, 'Splash'>;
 
@@ -32,8 +34,8 @@ const SplashScreen = ({navigation}: SplashProps) => {
         ]),
       ]).start(() => {
         // Navigate to Onboarding after animations finish
-        navigation.replace('Onboarding');
         // navigation.navigate('InventoryMappingScreen');
+        navigation.replace('Onboarding');
       });
     }, 1000);
   }, []);

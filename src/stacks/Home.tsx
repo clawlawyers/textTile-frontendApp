@@ -22,7 +22,7 @@ import ClientListScreen from '../screens/ClientListScreen';
 import ClientDetailsScreen from '../screens/ClientDetailsScreen';
 import ClientFabricDetailsScreen from '../screens/ClientFabricDetailsScreen';
 import OrderProductSelectionScreen from '../screens/OrderProductSelectionScreen';
-import ProductDetailCard from '../screens/ProductDetailCard';
+import ProductDetailCard from '../screens/OrderProductDetailCard';
 import OrderSummaryScreen from '../screens/OrderSummaryScreen';
 import PaymentScreen from '../screens/PaymentScreen';
 import OrderConfirmationScreen from '../screens/OrderConfirmationScreen';
@@ -30,7 +30,7 @@ import OrderUpdateConfirmationScreen from '../screens/OrderUpdateConfirmation';
 import SetUpInventoryScreen from '../screens/SetUpInventoryScreen';
 import InventoryEmptyScreen from '../screens/InventoryEmptyScreen';
 import landingScreen from '../screens/LandingScreen';
-import {ActivityIndicator} from 'react-native';
+import {ActivityIndicator, View} from 'react-native';
 import AddInventoryScreen from '../screens/AddInventoryScreen';
 import UploadCSVScreen from '../screens/UploadCSVScreen';
 import InventoryUpdatingScreen from '../screens/InventoryUpdatingScreen';
@@ -38,22 +38,43 @@ import InventoryMappingScreen from '../screens/InventoryMappingScreen';
 import InventoryProductList from '../screens/InventoryProductList';
 import InventoryProductDetails from '../screens/InventoryProductDetails';
 import StockManagement from '../screens/StockManagement';
-// import EditInventoryProduct from '../screens/EditInventoryProduct';
+import CompletedOrdersScreen from '../screens/CompletedOrdersScreen';
+import ActiveOrdersScreen from '../screens/ActiveOrderScreen';
+import EditInventoryProduct from '../screens/EditInventoryProduct';
+import AddInventoryProduct from '../screens/AddInventoryProduct';
+import EditClientScreen from '../screens/EditClientScreen';
+import OrderProductDetailCard from '../screens/OrderProductDetailCard';
+import PendingOrderScreen from '../screens/PendingOrderScreen';
+import InvoiceScreen from '../screens/InvoiceScreen';
+import AlertSendScreen from '../screens/AlertSendScreen';
+import InvoiceBreakdownScreen from '../screens/InvoiceBreakdownScreen';
+import TextileImageGenerator from '../screens/TextileImageGenerator';
+import GenerateImageScreen from '../screens/GenerateImageScreen';
+import EditImageScreen from '../screens/EditImageScreen';
+import PatternToGridScreen from '../screens/PatternToGridScreen';
+import GeneratedImageScreen from '../screens/GeneratedImageScreen';
+import GeneratedImageGrid from '../screens/GeneratedImageGrid';
+import ImagePaletteScreen from '../screens/ImagePaletteScreen';
+import PaletteGeneratedScreen from '../screens/PaletteGeneratedScreen';
+import EditPaletteScreen from '../screens/EditPaletteScreen';
+import WalletScreen from '../screens/WalletScreen';
+import MagicLoadingScreen from '../screens/MagicLoadingScreen';
 
 // Params for Home Stack
 export type HomeStackParamList = {
+  PendingOrderScreen: {orderDetails: {}};
   FirmAddedScreen: undefined;
-  PaymentScreen: undefined;
+  PaymentScreen: {paymentDetails: {}; paymentHistory: []};
   AddNewFirmScreen: undefined;
   Notification: undefined;
   ClientListScreen: undefined;
   SetUpClientScreen: undefined;
-  ClientDetailsScreen: undefined;
+  ClientDetailsScreen: {clientId: string};
   NewPassword: undefined;
-  OrderConfirmationScreen: undefined;
-  OrderUpdateConfirmationScreen: undefined;
+  OrderConfirmationScreen: {orderId: string};
+  OrderUpdateConfirmationScreen: {orderId: string};
   SetUpInventoryScreen: undefined;
-  OrderProductSelectionScreen: undefined;
+  OrderProductSelectionScreen: {clientName: string};
   OrderSummaryScreen: undefined;
   OptVerification: undefined;
   ResetPassword: undefined;
@@ -64,7 +85,7 @@ export type HomeStackParamList = {
   LandingScreen: undefined; // No parameters expected
   Onboarding: undefined; // No parameters expected
   Login: undefined; // No parameters expected
-  ProductDetailCard: undefined;
+  ProductDetailCard: {productDetails: {}};
   Signup: undefined; // No parameters expected
   SuccessScreen: undefined; // No parameters expected
   Details: {productId: string};
@@ -72,30 +93,37 @@ export type HomeStackParamList = {
   AddInventoryScreen: undefined;
   UploadCSVScreen: undefined;
   InventoryUpdatingScreen: undefined;
-  InventoryMappingScreen: undefined;
-  InventoryProductList: undefined;
-  InventoryProductDetails: undefined;
-  StockManagement: undefined;
-  EditInventoryProduct: undefined;
+  InventoryMappingScreen: {mapping: []};
+  InventoryProductList: {companyId: string};
+  InventoryProductDetails: {productDetails: {}};
+  EditInventoryProduct: {productDetails: {}};
+  CompletedOrder: undefined;
+  ActiveOrdersScreen: undefined;
+  AlertSendScreen: undefined;
+  AddInventoryProduct: undefined;
+  StockManagement: {productDetails: {}};
+  EditClientScreen: {clientDetails: {}};
+  OrderProductDetailCard: {productDetails: {}};
+  InvoiceScreen: {orderDetails: {}};
+  InvoiceBreakdownScreen: {orderDetails: {}};
+  TextileImageGenerator: undefined;
+  GenerateImageScreen: undefined;
+  EditImageScreen: {imageUrl: string | null};
+  PatternToGridScreen: undefined;
+  ImagePaletteScreen: {imageUrl: string | null};
+  GeneratedImageGrid: {imageUrls: string[]};
+  GeneratedImageScreen: {imageUrl: string};
+  PaletteGeneratedScreen: undefined;
+  EditPaletteScreen: undefined;
+  MagicLoadingScreen: undefined;
+  Wallet: undefined;
 };
 
 const HomeStack = createNativeStackNavigator<HomeStackParamList>();
 
 function HomeStackNavigator() {
   const currentUser = useSelector((state: RootState) => state.auth.user);
-  const loading = useSelector((state: RootState) => state.auth.status);
   console.log(currentUser);
-
-  if (loading === 'loading') {
-    return (
-      <ActivityIndicator
-        size="large"
-        color="#0000ff"
-        // eslint-disable-next-line react-native/no-inline-styles
-        style={{flex: 1, justifyContent: 'center'}}
-      />
-    );
-  }
 
   return (
     // <HomeStack.Navigator initialRouteName={currentUser ? 'Home' : 'Login'}>
@@ -109,6 +137,23 @@ function HomeStackNavigator() {
       <HomeStack.Screen
         name="LandingScreen"
         component={landingScreen}
+        options={{headerShown: false}}
+      />
+
+      <HomeStack.Screen
+        name="CompletedOrder"
+        component={CompletedOrdersScreen}
+        options={{headerShown: false}}
+      />
+
+      <HomeStack.Screen
+        name="ActiveOrdersScreen"
+        component={ActiveOrdersScreen}
+        options={{headerShown: false}}
+      />
+      <HomeStack.Screen
+        name="AlertSendScreen"
+        component={AlertSendScreen}
         options={{headerShown: false}}
       />
       <HomeStack.Screen
@@ -192,8 +237,8 @@ function HomeStackNavigator() {
         options={{headerShown: false}}
       />
       <HomeStack.Screen
-        name="ProductDetailCard"
-        component={ProductDetailCard}
+        name="OrderProductDetailCard"
+        component={OrderProductDetailCard}
         options={{headerShown: false}}
       />
       <HomeStack.Screen
@@ -268,11 +313,105 @@ function HomeStackNavigator() {
         component={StockManagement}
         options={{headerShown: false}}
       />
-      {/* <HomeStack.Screen
+      <HomeStack.Screen
         name="EditInventoryProduct"
         component={EditInventoryProduct}
         options={{headerShown: false}}
-      /> */}
+      />
+
+      <HomeStack.Screen
+        name="AddInventoryProduct"
+        component={AddInventoryProduct}
+        options={{headerShown: false}}
+      />
+
+      <HomeStack.Screen
+        name="EditClientScreen"
+        component={EditClientScreen}
+        options={{headerShown: false}}
+      />
+      <HomeStack.Screen
+        name="PendingOrderScreen"
+        component={PendingOrderScreen}
+        options={{headerShown: false}}
+      />
+      <HomeStack.Screen
+        name="InvoiceScreen"
+        component={InvoiceScreen}
+        options={{headerShown: false}}
+      />
+      <HomeStack.Screen
+        name="InvoiceBreakdownScreen"
+        component={InvoiceBreakdownScreen}
+        options={{headerShown: false}}
+      />
+
+      {/* Image Gen AI */}
+      <HomeStack.Screen
+        name="TextileImageGenerator"
+        component={TextileImageGenerator}
+        options={{headerShown: false}}
+      />
+
+      <HomeStack.Screen
+        name="GenerateImageScreen"
+        component={GenerateImageScreen}
+        options={{headerShown: false}}
+      />
+
+      <HomeStack.Screen
+        name="EditImageScreen"
+        component={EditImageScreen}
+        options={{headerShown: false}}
+      />
+
+      <HomeStack.Screen
+        name="PatternToGridScreen"
+        component={PatternToGridScreen}
+        options={{headerShown: false}}
+      />
+
+      <HomeStack.Screen
+        name="ImagePaletteScreen"
+        component={ImagePaletteScreen}
+        options={{headerShown: false}}
+      />
+
+      <HomeStack.Screen
+        name="GeneratedImageGrid"
+        component={GeneratedImageGrid}
+        options={{headerShown: false}}
+      />
+
+      <HomeStack.Screen
+        name="GeneratedImageScreen"
+        component={GeneratedImageScreen}
+        options={{headerShown: false}}
+      />
+
+      <HomeStack.Screen
+        name="PaletteGeneratedScreen"
+        component={PaletteGeneratedScreen}
+        options={{headerShown: false}}
+      />
+
+      <HomeStack.Screen
+        name="EditPaletteScreen"
+        component={EditPaletteScreen}
+        options={{headerShown: false}}
+      />
+
+      <HomeStack.Screen
+        name="Wallet"
+        component={WalletScreen}
+        options={{headerShown: false}}
+      />
+
+      <HomeStack.Screen
+        name="MagicLoadingScreen"
+        component={MagicLoadingScreen}
+        options={{headerShown: false}}
+      />
     </HomeStack.Navigator>
   );
 }

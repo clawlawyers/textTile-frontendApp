@@ -7,12 +7,19 @@ import {
   TouchableOpacity,
   Alert,
   Image,
+  ToastAndroid,
+  ActivityIndicator,
 } from 'react-native';
 
 import FontistoIcon from 'react-native-vector-icons/Fontisto';
 import Icon1 from 'react-native-vector-icons/Feather';
 import {NativeStackScreenProps} from '@react-navigation/native-stack';
 import {HomeStackParamList} from '../stacks/Home';
+import {NODE_API_ENDPOINT} from '../utils/util';
+import {useDispatch, useSelector} from 'react-redux';
+import {RootState} from '../redux/store';
+import {setActiveFirm} from '../redux/commonSlice';
+import {company, updateCompanies} from '../redux/authSlice';
 
 type AddNewUserProps = NativeStackScreenProps<
   HomeStackParamList,
@@ -22,15 +29,44 @@ type AddNewUserProps = NativeStackScreenProps<
 const SetUpInventoryScreen = ({navigation}: AddNewUserProps) => {
   const [inventoryName, setInventoryName] = useState('');
 
-  const handleCreateInventory = () => {
-    navigation.navigate('InventoryEmptyScreen');
-    // if (!inventoryName.trim()) {
-    //   Alert.alert('Validation', 'Please enter inventory name');
-    //   return;
-    // }
+  const [loading, setLoading] = useState(false);
 
-    // // Handle inventory creation logic here
-    // Alert.alert('Success', `Inventory "${inventoryName}" created successfully`);
+  const currentUser = useSelector((state: RootState) => state.auth.user);
+  const activeFirm = useSelector((state: RootState) => state.common.activeFirm);
+
+  const dispatch = useDispatch();
+
+  const handleCreateInventory = async () => {
+    if (!inventoryName.trim()) {
+      Alert.alert('Validation', 'Please enter inventory name');
+      return;
+    }
+    setLoading(true);
+    const response = await fetch(`${NODE_API_ENDPOINT}/inventory/create`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${currentUser?.token}`,
+      },
+      body: JSON.stringify({inventoryName, companyId: activeFirm?._id}),
+    });
+    console.log(response);
+    if (!response.ok) {
+      setLoading(false);
+      ToastAndroid.show('Error in Inventory Creation', ToastAndroid.SHORT);
+    }
+    const data = await response.json();
+    console.log(data);
+    dispatch(setActiveFirm(data));
+    const allcomanies: company[] = currentUser?.companies;
+    const index = allcomanies?.findIndex(
+      (company: company) => company._id === activeFirm?._id,
+    );
+    allcomanies[index] = data;
+    console.log(allcomanies);
+    dispatch(updateCompanies(allcomanies));
+    setLoading(false);
+    navigation.replace('FirmAddedScreen');
   };
 
   return (
@@ -43,12 +79,12 @@ const SetUpInventoryScreen = ({navigation}: AddNewUserProps) => {
           <Icon1 name="arrow-left" size={20} color="#292C33" />
         </TouchableOpacity>
 
-        <TouchableOpacity
+        {/* <TouchableOpacity
           onPress={() => navigation.navigate('Notification')}
           className="relative">
           <FontistoIcon name="bell" size={25} color={'#DB9245'} />
           <View className="absolute top-0 right-0 w-2 h-2 rounded-full bg-green-500" />
-        </TouchableOpacity>
+        </TouchableOpacity> */}
       </View>
 
       {/* Icon */}
@@ -81,7 +117,13 @@ const SetUpInventoryScreen = ({navigation}: AddNewUserProps) => {
       <TouchableOpacity
         onPress={handleCreateInventory}
         className="mt-52 bg-[#DB9245] py-4 rounded-2xl items-center">
-        <Text className="text-white font-bold text-base">Create Inventory</Text>
+        {loading ? (
+          <ActivityIndicator color="#fff" />
+        ) : (
+          <Text className="text-white font-bold text-base">
+            Create Inventory
+          </Text>
+        )}
       </TouchableOpacity>
     </View>
   );

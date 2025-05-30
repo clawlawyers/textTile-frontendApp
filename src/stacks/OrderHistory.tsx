@@ -5,23 +5,31 @@ import {Text, View} from 'react-native';
 import CompletedOrdersScreen from '../screens/CompletedOrdersScreen';
 import InvoiceDetailScreen from '../screens/InvoiceDetailScreen';
 import InvoiceBreakdownScreen from '../screens/InvoiceBreakdownScreen';
+import ActiveOrdersScreen from '../screens/ActiveOrderScreen';
 // import Favorites from '../screens/Favorites';
 
 // Params for Home Stack
 export type OrderHistoryParamList = {
   CompletedOrder: undefined; // No parameters expected
-  InvoiceDetailScreen: undefined; // Example of a screen with parameters
-  InvoiceBreakdownScreen: undefined;
+  ActiveOrdersScreen: undefined;
+  InvoiceDetailScreen: {orderDetails: {}}; // Example of a screen with parameters
+  InvoiceBreakdownScreen: {orderDetails: {}};
 };
 
 const OrderHistory = createNativeStackNavigator<OrderHistoryParamList>();
 
 function OrderHistoryStackNavigator() {
   return (
-    <OrderHistory.Navigator initialRouteName="InvoiceDetailScreen">
+    <OrderHistory.Navigator initialRouteName="CompletedOrder">
       <OrderHistory.Screen
         name="CompletedOrder"
         component={CompletedOrdersScreen}
+        options={{headerShown: false}}
+      />
+
+      <OrderHistory.Screen
+        name="ActiveOrdersScreen"
+        component={ActiveOrdersScreen}
         options={{headerShown: false}}
       />
       <OrderHistory.Screen

@@ -11,8 +11,20 @@ import {Provider, useDispatch, useSelector} from 'react-redux';
 import {RootState, store} from './src/redux/store';
 
 import CustomTabBar from './src/components/CustomTabBar';
-import {ActivityIndicator} from 'react-native';
+import {ActivityIndicator, StatusBar, View} from 'react-native';
 import {logout, retrieveAuth} from './src/redux/authSlice';
+import {setActiveFirm} from './src/redux/commonSlice';
+import TextileImageGenerator from './src/screens/TextileImageGenerator';
+import GenerateImageScreen from './src/screens/GenerateImageScreen';
+import EditImageScreen from './src/screens/EditImageScreen';
+import PatternToGridScreen from './src/screens/PatternToGridScreen';
+import ImagePaletteScreen from './src/screens/ImagePaletteScreen';
+import GeneratedImageGrid from './src/screens/GeneratedImageGrid';
+import GeneratedImageScreen from './src/screens/GeneratedImageScreen';
+import PaletteGeneratedScreen from './src/screens/PaletteGeneratedScreen';
+import EditPaletteScreen from './src/screens/EditPaletteScreen';
+import WalletScreen from './src/screens/WalletScreen';
+import MagicLoadingScreen from './src/screens/MagicLoadingScreen';
 // import {store, RootState} from './redux/store';
 // import LoginScreen from './screens/LoginScreen';
 // import {retrieveAuth} from './redux/authSlice';
@@ -40,19 +52,28 @@ const AppInner: React.FC = () => {
   const dispatch = useDispatch();
 
   useEffect(() => {
-    // dispatch(logout());
     dispatch(retrieveAuth());
   }, [dispatch]);
 
-  if (loading === 'loading') {
-    return (
-      <ActivityIndicator
-        size="large"
-        color="#0000ff"
-        style={{flex: 1, justifyContent: 'center'}}
-      />
-    );
-  }
+  useEffect(() => {
+    if (currentUser) {
+      dispatch(setActiveFirm(currentUser.companies[0]));
+    }
+  }, [currentUser, dispatch]);
+
+  // if (loading === 'loading') {
+  //   console.log('loafing');
+  //   return (
+  //     <View className="flex-1 justify-center items-center bg-[#FAD9B3]">
+  //       <ActivityIndicator
+  //         size="large"
+  //         color="#DB9245"
+  //         // eslint-disable-next-line react-native/no-inline-styles
+  //         style={{flex: 1, justifyContent: 'center'}}
+  //       />
+  //     </View>
+  //   );
+  // }
 
   return (
     <NavigationContainer>
@@ -73,7 +94,9 @@ const App: React.FC = () => {
   return (
     <Provider store={store}>
       {/* <FirmAccordion /> */}
+      {/* <StatusBar backgroundColor="#FAD9B3" barStyle="light-content"  /> */}
       <AppInner />
+      {/* <MagicLoadingScreen /> */}
     </Provider>
   );
 };

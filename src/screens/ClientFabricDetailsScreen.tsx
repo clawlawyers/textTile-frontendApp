@@ -72,12 +72,12 @@ const ClientFabricDetailsScreen = ({navigation}: AddNewUserProps) => {
           <Icon1 name="arrow-left" size={20} color="#292C33" />
         </TouchableOpacity>
 
-        <TouchableOpacity
+        {/* <TouchableOpacity
           onPress={() => navigation.navigate('Notification')}
           className="relative">
           <FontistoIcon name="bell" size={25} color={'#DB9245'} />
           <View className="absolute top-0 right-0 w-2 h-2 rounded-full bg-green-500" />
-        </TouchableOpacity>
+        </TouchableOpacity> */}
       </View>
 
       {/* Client Name Section */}

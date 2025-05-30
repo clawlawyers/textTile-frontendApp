@@ -3,13 +3,18 @@ import {View, Text, TouchableOpacity, Image, StatusBar} from 'react-native';
 import Icon1 from 'react-native-vector-icons/Feather'; // You can change this to Ionicons, FontAwesome, etc.
 import {NativeStackScreenProps} from '@react-navigation/native-stack';
 import {HomeStackParamList} from '../stacks/Home';
+import {useSelector} from 'react-redux';
+import {RootState} from '../redux/store';
 
 type AddNewUserProps = NativeStackScreenProps<
   HomeStackParamList,
-  'InventoryEmptyScreen'
+  'AddInventoryScreen'
 >;
 
 const AddInventoryScreen = ({navigation}: AddNewUserProps) => {
+  const currentInventoryName = useSelector(
+    (state: RootState) => state.common.inventoryName,
+  );
   return (
     <View className="flex-1 bg-[#FAD9B3] px-6 pt-12">
       <StatusBar barStyle="dark-content" backgroundColor="#FAD9B3" />
@@ -25,7 +30,7 @@ const AddInventoryScreen = ({navigation}: AddNewUserProps) => {
         <View className="items-end">
           <Text className="text-xs text-black">Inventory For</Text>
           <Text className="text-base font-bold text-black">
-            CLAW Textile Manufacturing
+            {currentInventoryName}
           </Text>
         </View>
       </View>
@@ -37,6 +42,7 @@ const AddInventoryScreen = ({navigation}: AddNewUserProps) => {
           className="w-24 h-24"
           resizeMode="contain"
         />
+        a
       </View>
 
       {/* Heading */}
@@ -51,7 +57,7 @@ const AddInventoryScreen = ({navigation}: AddNewUserProps) => {
       {/* Buttons */}
       <TouchableOpacity
         className="bg-[#DB9245] py-3 rounded-lg mb-4 items-center"
-        onPress={() => navigation.navigate('AddSingleItem')}>
+        onPress={() => navigation.navigate('AddInventoryProduct')}>
         <Text className="text-white font-semibold">Add Single Item</Text>
       </TouchableOpacity>
 

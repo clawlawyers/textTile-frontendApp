@@ -5,19 +5,25 @@ import Icon1 from 'react-native-vector-icons/Feather'; // You can change this to
 import Icon from 'react-native-vector-icons/Ionicons'; // You can change this to Ionicons, FontAwesome, etc.
 import {NativeStackScreenProps} from '@react-navigation/native-stack';
 import {HomeStackParamList} from '../stacks/Home';
+import {useSelector} from 'react-redux';
+import {RootState} from '../redux/store';
 
 type AddNewUserProps = NativeStackScreenProps<
   HomeStackParamList,
   'OrderConfirmationScreen'
 >;
 
-const OrderConfirmationScreen = ({navigation}: AddNewUserProps) => {
-  const orderNumber = '0245695482';
-
+const OrderConfirmationScreen = ({navigation, route}: AddNewUserProps) => {
   const copyToClipboard = () => {
     Clipboard.setString(orderNumber);
     Alert.alert('Copied', 'Order number copied to clipboard.');
   };
+
+  const [orderNumber, setOrderNumber] = React.useState(route.params.orderId);
+
+  const currentClient = useSelector(
+    (state: RootState) => state.common.currentClient,
+  );
 
   return (
     <View className="flex-1 bg-[#fdd8ac] px-4 pt-12 relative">
@@ -31,7 +37,7 @@ const OrderConfirmationScreen = ({navigation}: AddNewUserProps) => {
         <View className="flex-1 items-end -ml-4">
           <Text className="text-sm text-black">Order Creation For</Text>
           <Text className="text-base font-bold text-black">
-            Rameswaram Emporium
+            {currentClient.name}
           </Text>
         </View>
       </View>

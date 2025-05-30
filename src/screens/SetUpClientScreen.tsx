@@ -12,7 +12,7 @@ type AddNewUserProps = NativeStackScreenProps<
 
 const SetUpClientScreen = ({navigation}: AddNewUserProps) => {
   return (
-    <View className="flex-1 bg-[#FBD7A2] px-6 pt-14 pb-8">
+    <View className="flex-1 bg-[#FAD9B3] px-6 pt-14 pb-8">
       {/* Header */}
       <View className="flex-row justify-between items-center mb-6">
         <TouchableOpacity
@@ -21,12 +21,12 @@ const SetUpClientScreen = ({navigation}: AddNewUserProps) => {
           <Icon1 name="arrow-left" size={20} color="#292C33" />
         </TouchableOpacity>
 
-        <TouchableOpacity
+        {/* <TouchableOpacity
           onPress={() => navigation.navigate('Notification')}
           className="relative">
           <FontistoIcon name="bell" size={25} color={'#DB9245'} />
           <View className="absolute top-0 right-0 w-2 h-2 rounded-full bg-green-500" />
-        </TouchableOpacity>
+        </TouchableOpacity> */}
       </View>
 
       {/* Centered Logo */}
@@ -42,21 +42,21 @@ const SetUpClientScreen = ({navigation}: AddNewUserProps) => {
         <Text className="text-black text-xl font-bold">Set Up Client</Text>
         <Text className="text-black text-sm mt-2">
           Set Up Your Client first to proceed with {'\n'}
-          <Text className="text-[#D6872A]">Order Placement</Text>
+          <Text className="text-[#DB9245]">Order Placement</Text>
         </Text>
       </View>
 
       {/* Action Buttons */}
       <View className="mt-10 space-y-4 gap-4">
         <TouchableOpacity
-          className="bg-[#D6872A] py-3 rounded-md items-center"
+          className="bg-[#DB9245] py-3 rounded-md items-center"
           onPress={() => navigation.navigate('AddClientScreen')}>
           <Text className="text-white font-semibold text-base">
             Add New Client
           </Text>
         </TouchableOpacity>
         <TouchableOpacity
-          className="bg-[#D6872A] py-3 rounded-md items-center"
+          className="bg-[#DB9245] py-3 rounded-md items-center"
           onPress={() => navigation.navigate('ClientListScreen')}>
           <Text className="text-white font-semibold text-base">
             Existing Client

@@ -6,9 +6,12 @@ import {
   FlatList,
   TouchableOpacity,
   Dimensions,
+  ActivityIndicator,
 } from 'react-native';
 import {HomeStackParamList} from '../stacks/Home';
 import {NativeStackScreenProps} from '@react-navigation/native-stack';
+import {useSelector} from 'react-redux';
+import {RootState} from '../redux/store';
 
 const {width} = Dimensions.get('window');
 
@@ -41,6 +44,25 @@ const onboardingData = [
 const OnboardingScreen = ({navigation}: OnboardingProps) => {
   const flatListRef = useRef<FlatList>(null);
   const [currentIndex, setCurrentIndex] = useState(0);
+
+  const currentUser = useSelector((state: RootState) => state.auth.user);
+  const loading = useSelector((state: RootState) => state.auth.status);
+
+  if (loading === 'loading') {
+    return (
+      <View className="flex-1 justify-center items-center bg-[#FAD9B3]">
+        <ActivityIndicator
+          size="large"
+          color="#DB9245"
+          // eslint-disable-next-line react-native/no-inline-styles
+          style={{flex: 1, justifyContent: 'center'}}
+        />
+      </View>
+    );
+  }
+  if (currentUser) {
+    navigation.replace('Home');
+  }
 
   const handleNext = () => {
     if (currentIndex < onboardingData.length - 1) {

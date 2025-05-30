@@ -18,7 +18,13 @@ type InvoiceDetailScreenProps = NativeStackScreenProps<
   'InvoiceDetailScreen'
 >;
 
-const InvoiceDetailScreen = ({navigation}: InvoiceDetailScreenProps) => {
+const InvoiceDetailScreen = ({navigation, route}: InvoiceDetailScreenProps) => {
+  const [orderDetails, setOrderDetails] = React.useState(
+    route.params.orderDetails,
+  );
+
+  console.log(orderDetails.payments);
+
   return (
     <ScrollView className="flex-1 bg-[#FAD7AF] px-6 pt-12">
       {/* Header */}
@@ -47,7 +53,11 @@ const InvoiceDetailScreen = ({navigation}: InvoiceDetailScreenProps) => {
             Invoice Date & Time
           </Text>
           <Text className="text-sm text-black text-right">
-            01/05/2025 &nbsp; 14:32
+            {new Date(orderDetails.createdAt).toLocaleDateString('en-US', {
+              year: 'numeric',
+              month: '2-digit',
+              day: '2-digit',
+            })}
           </Text>
         </View>
       </View>
@@ -56,7 +66,9 @@ const InvoiceDetailScreen = ({navigation}: InvoiceDetailScreenProps) => {
       <View className="mb-4 ">
         <View className="flex flex-row gap-6">
           <Text className="text-sm text-black font-bold">Firm Name :</Text>
-          <Text className="text-sm text-black mb-1">RR Enterprise</Text>
+          <Text className="text-sm text-black mb-1">
+            {orderDetails.client.firmName}
+          </Text>
         </View>
 
         <View className="flex flex-row gap-12">
@@ -66,19 +78,22 @@ const InvoiceDetailScreen = ({navigation}: InvoiceDetailScreenProps) => {
         <View className="flex flex-row gap-11">
           <Text className="text-sm text-black font-bold">Address :</Text>
           <Text className="text-sm text-black mb-2">
-            AF–56, Prasanta Apartment,{'\n'}
-            Kestopur, Kolkata– 700101 , India
+            {orderDetails.client.address}
           </Text>
         </View>
 
         <View className="flex flex-row gap-5">
           <Text className="text-sm text-black font-bold">Client Name :</Text>
-          <Text className="text-sm text-black mb-1">Soumya Snigdha Banik</Text>
+          <Text className="text-sm text-black mb-1">
+            {orderDetails.client.name}
+          </Text>
         </View>
 
         <View className="flex flex-row gap-7">
           <Text className="text-sm text-black font-bold">Contact No :</Text>
-          <Text className="text-sm text-black mb-2">+917384242486</Text>
+          <Text className="text-sm text-black mb-2">
+            {orderDetails.client.phone}
+          </Text>
         </View>
       </View>
 
@@ -93,20 +108,22 @@ const InvoiceDetailScreen = ({navigation}: InvoiceDetailScreenProps) => {
 
       {/* Table Rows */}
       <View className="bg-[#DA8B2C] px-3 py-2 rounded-b-xl">
-        {invoiceItems.map((item, index) => (
+        {orderDetails.products.map((item, index) => (
           <View key={index} className="flex-row justify-between py-1">
             <Text className="text-xs text-[#292C33] w-[20%]">
-              {item.bailNo}
+              {item?.inventoryProduct?.bail_number}
             </Text>
             <Text className="text-xs text-[#292C33] w-[25%]">
-              {item.designNo}
+              {item?.inventoryProduct?.design_code}
             </Text>
-            <Text className="text-xs text-[#292C33] w-[15%]">{item.lotNo}</Text>
+            <Text className="text-xs text-[#292C33] w-[15%]">
+              {item?.inventoryProduct?.lot_number}
+            </Text>
             <Text className="text-xs text-[#292C33] w-[25%]">
-              {item.category}
+              {item?.inventoryProduct?.category_code}
             </Text>
             <Text className="text-xs text-[#292C33] w-[15%] text-right">
-              {item.quantity}
+              {item?.quantity}
             </Text>
           </View>
         ))}
@@ -115,7 +132,11 @@ const InvoiceDetailScreen = ({navigation}: InvoiceDetailScreenProps) => {
       {/* Buttons */}
       <TouchableOpacity
         className="bg-[#D6872A] py-3 rounded-xl mt-6"
-        onPress={() => navigation.navigate('InvoiceBreakdownScreen')}>
+        onPress={() =>
+          navigation.navigate('InvoiceBreakdownScreen', {
+            orderDetails,
+          })
+        }>
         <Text className="text-center text-white font-semibold text-base py-1">
           View Invoice Price Breakup
         </Text>

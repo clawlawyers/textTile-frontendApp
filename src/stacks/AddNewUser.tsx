@@ -5,6 +5,8 @@ import {Text, View} from 'react-native';
 import AddNewUserScreen from '../screens/AddNewUserScreen';
 import UserPermissionScreen from '../screens/UserPermissionScreen';
 import AddNewUserAdded from '../screens/NewUserAddedScreen';
+import {useSelector} from 'react-redux';
+import {RootState} from '../redux/store';
 // import Cart from '../screens/CartScreen';
 // import Checkout from '../screens/CheckoutScreen';
 // import PaymentMethods from '../screens/PaymentMethodsScreen';
@@ -38,13 +40,23 @@ export type Card = {
 // Params for Home Stack
 export type AddNewUserStackParamList = {
   AddNewUser: undefined;
-  UserPermissions: undefined;
+  UserPermissions: {salesmanId: string};
   AddNewUserAdded: undefined;
 };
 
 const BagStack = createNativeStackNavigator<AddNewUserStackParamList>();
 
 function AddNewUserStackNavigator() {
+  const currentUser = useSelector((state: RootState) => state.auth.user);
+
+  if (currentUser?.type !== 'manager') {
+    return (
+      <View>
+        <Text>You are not authorized to view this screen</Text>
+      </View>
+    );
+  }
+
   return (
     <BagStack.Navigator>
       <BagStack.Screen
