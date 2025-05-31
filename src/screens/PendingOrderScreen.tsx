@@ -318,12 +318,12 @@ const PendingOrderScreen = ({navigation, route}: AddNewUserProps) => {
           <Text
             style={{fontSize, width: '25%'}}
             className="text-white font-semibold">
-            Product
+            Product Name
           </Text>
           <Text
             style={{fontSize, width: '20%'}}
             className="text-white font-semibold">
-            Category
+            Bale No
           </Text>
           <Text
             style={{fontSize, width: '15%'}}
@@ -333,7 +333,7 @@ const PendingOrderScreen = ({navigation, route}: AddNewUserProps) => {
           <Text
             style={{fontSize, width: '25%'}}
             className="text-white font-semibold text-center">
-            Price
+            Rate
           </Text>
         </View>
 
@@ -352,7 +352,7 @@ const PendingOrderScreen = ({navigation, route}: AddNewUserProps) => {
                   {item?.inventoryProduct?.design_code}
                 </Text>
                 <Text style={{fontSize, width: '20%'}} className="text-white">
-                  {item?.inventoryProduct?.category_code}
+                  {item?.inventoryProduct?.bail_number}
                 </Text>
                 <Text
                   style={{fontSize, width: '15%'}}

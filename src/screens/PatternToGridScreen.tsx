@@ -1,6 +1,6 @@
 /* eslint-disable react-native/no-inline-styles */
 import {NativeStackScreenProps} from '@react-navigation/native-stack';
-import React, {useState} from 'react';
+import React, {useState, useEffect} from 'react';
 import {
   View,
   Text,
@@ -26,13 +26,23 @@ type PatternToGridScreenProps = NativeStackScreenProps<
   'PatternToGridScreen'
 >;
 
-const PatternToGridScreen = ({navigation}: PatternToGridScreenProps) => {
+const PatternToGridScreen = ({navigation, route}: PatternToGridScreenProps) => {
   const [rows, setRows] = useState(4);
   const [columns, setColumns] = useState(4);
   const [imageUri, setImageUri] = useState('');
   const [imageFile, setImageFile] = useState<any>(null);
   const [loading, setLoading] = useState(false);
-  const [imageSource, setImageSource] = useState<'url' | 'file' | null>(null);
+  const [imageSource, setImageSource] = useState<'url' | 'file' | null>(
+    route.params?.imageUrl ? 'url' : null,
+  );
+
+  // Set initial image URI from route params if available
+  useEffect(() => {
+    if (route.params?.imageUrl) {
+      setImageUri(route.params.imageUrl);
+    }
+  }, [route.params?.imageUrl]);
+
   const MAX_IMAGE_SIZE = 200 * 1024; // 200KB in bytes
   const [keyboardVisible, setKeyboardVisible] = useState(false);
   const {width} = Dimensions.get('window');
@@ -188,7 +198,7 @@ const PatternToGridScreen = ({navigation}: PatternToGridScreenProps) => {
           <TouchableOpacity
             className="bg-white/20 p-2 rounded-full"
             onPress={() => navigation.navigate('Wallet')}>
-            <Icon name="wallet" size={24} color="white" />
+            <Icon name="wallet" size={24} color="#DB9245" />
           </TouchableOpacity>
         </SafeAreaView>
 
@@ -277,6 +287,8 @@ const PatternToGridScreen = ({navigation}: PatternToGridScreenProps) => {
               Reference Image{' '}
               {imageSource === 'file'
                 ? '(From Gallery)'
+                : imageSource === 'url' && route.params?.imageUrl
+                ? '(From Previous Screen)'
                 : imageSource === 'url'
                 ? '(From URL)'
                 : ''}
@@ -295,45 +307,34 @@ const PatternToGridScreen = ({navigation}: PatternToGridScreenProps) => {
                 }
                 placeholderTextColor="#666666"
                 className="flex-1 py-2 bg-[#FBDBB5] text-[#666666] text-xs px-2"
-                editable={imageSource !== 'file'} // Disable editing if image is from gallery
+                editable={!route.params?.imageUrl && imageSource !== 'file'} // Disable editing if image is from route params or gallery
               />
               <TouchableOpacity
                 className={`p-2 ${
-                  imageSource === 'url' && imageUri
+                  imageSource === 'url' && imageUri && !route.params?.imageUrl
                     ? 'bg-red-500'
                     : 'bg-[#292C33]'
                 }`}
                 onPress={
-                  imageSource === 'url' && imageUri
+                  imageSource === 'url' && imageUri && !route.params?.imageUrl
                     ? clearImage
                     : handleImageUpload
-                }>
+                }
+                disabled={!!route.params?.imageUrl} // Disable upload button if image is from route params
+                style={{
+                  opacity: route.params?.imageUrl ? 0.5 : 1, // Visual indication that button is disabled
+                }}>
                 <Icon
-                  name={imageSource === 'url' && imageUri ? 'close' : 'upload'}
+                  name={
+                    imageSource === 'url' && imageUri && !route.params?.imageUrl
+                      ? 'close'
+                      : 'upload'
+                  }
                   size={24}
-                  color="white"
+                  color={route.params?.imageUrl ? '#999' : 'white'}
                 />
               </TouchableOpacity>
             </View>
-
-            {imageSource === 'file' && imageUri && (
-              <View className="relative mb-4">
-                <Image
-                  source={{uri: imageUri}}
-                  style={{
-                    width: '100%',
-                    height: 150,
-                    borderRadius: 8,
-                  }}
-                  resizeMode="cover"
-                />
-                <TouchableOpacity
-                  onPress={clearImage}
-                  className="absolute top-2 right-2 bg-black/70 p-1.5 rounded-full">
-                  <Icon name="close-circle" size={20} color="#DB9245" />
-                </TouchableOpacity>
-              </View>
-            )}
           </View>
 
           {/* Generate Button */}

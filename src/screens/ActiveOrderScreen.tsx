@@ -46,18 +46,23 @@ const ActiveOrdersScreen = ({navigation}: CompletedOrderProps) => {
 
   const dispatch = useDispatch();
 
+  const activeFirm = useSelector((state: RootState) => state.common.activeFirm);
+
   useFocusEffect(
     useCallback(() => {
       const getOrders = async () => {
         setLoading(true);
         try {
-          const response = await fetch(`${NODE_API_ENDPOINT}/orders`, {
-            method: 'GET',
-            headers: {
-              'Content-Type': 'application/json',
-              Authorization: `Bearer ${currentUser?.token}`,
+          const response = await fetch(
+            `${NODE_API_ENDPOINT}/orders/${activeFirm?._id}`,
+            {
+              method: 'GET',
+              headers: {
+                'Content-Type': 'application/json',
+                Authorization: `Bearer ${currentUser?.token}`,
+              },
             },
-          });
+          );
           console.log(response);
 
           if (!response.ok) {
@@ -86,7 +91,7 @@ const ActiveOrdersScreen = ({navigation}: CompletedOrderProps) => {
 
       // Optional cleanup if needed
       return () => {};
-    }, [currentUser?.token]),
+    }, [currentUser?.token, activeFirm?._id]),
   );
 
   if (loading) {

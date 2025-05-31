@@ -41,19 +41,28 @@ const CompletedOrdersScreen = ({navigation}: CompletedOrderProps) => {
   const currentUser = useSelector((state: RootState) => state.auth.user);
   const [loading, setLoading] = React.useState(true);
 
+  const activeFirm = useSelector((state: RootState) => state.common.activeFirm);
+
   const [orders, setOrders] = React.useState([]);
+
+  console.log(activeFirm);
+
   useFocusEffect(
     useCallback(() => {
       const getOrders = async () => {
+        console.log(activeFirm);
         setLoading(true);
         try {
-          const response = await fetch(`${NODE_API_ENDPOINT}/orders`, {
-            method: 'GET',
-            headers: {
-              'Content-Type': 'application/json',
-              Authorization: `Bearer ${currentUser?.token}`,
+          const response = await fetch(
+            `${NODE_API_ENDPOINT}/orders/${activeFirm?._id}`,
+            {
+              method: 'GET',
+              headers: {
+                'Content-Type': 'application/json',
+                Authorization: `Bearer ${currentUser?.token}`,
+              },
             },
-          });
+          );
           console.log(response);
 
           if (!response.ok) {
@@ -82,7 +91,7 @@ const CompletedOrdersScreen = ({navigation}: CompletedOrderProps) => {
 
       // Optional cleanup function
       return () => {};
-    }, [currentUser?.token]),
+    }, [currentUser?.token, activeFirm?._id]),
   );
 
   if (loading) {

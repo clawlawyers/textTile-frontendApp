@@ -12,6 +12,7 @@ import {
   Dimensions,
   ScrollView,
   Platform,
+  ToastAndroid,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import {NODE_API_ENDPOINT} from '../utils/util';
@@ -142,6 +143,10 @@ const EditImageScreen = ({navigation, route}: EditImageScreenProps) => {
       const data = await response.json();
       console.log('Edited image data:', data);
 
+      if (data?.error === 'Editing failed') {
+        ToastAndroid.show('Editing failed', ToastAndroid.SHORT);
+        return;
+      }
       // Navigate to results screen with the edited image
       navigation.navigate('GeneratedImageScreen', {
         imageUrl: data.data.filename,
@@ -167,7 +172,7 @@ const EditImageScreen = ({navigation, route}: EditImageScreenProps) => {
           <TouchableOpacity
             className="bg-white/20 p-2 rounded-full"
             onPress={() => navigation.navigate('Wallet')}>
-            <Icon name="wallet" size={24} color="white" />
+            <Icon name="wallet" size={24} color="#DB9245" />
           </TouchableOpacity>
         </SafeAreaView>
 
@@ -223,7 +228,7 @@ const EditImageScreen = ({navigation, route}: EditImageScreenProps) => {
             </Text>
 
             {/* Reference Image Upload */}
-            <View className="mb-3">
+            {/* <View className="mb-3">
               <Text className="text-black font-semibold mb-1 text-sm">
                 Reference Image
               </Text>
@@ -256,39 +261,49 @@ const EditImageScreen = ({navigation, route}: EditImageScreenProps) => {
                   />
                 </TouchableOpacity>
               </View>
-            </View>
+            </View> */}
 
-            {/* Display selected reference image if available */}
-            {imgUrl && (
-              <View className="relative mb-4">
-                <Image
-                  source={{uri: imgUrl}}
-                  style={{
-                    width: '100%',
-                    height: width * 0.4,
-                    borderRadius: 8,
+            <View className="mb-2">
+              <Text className="text-black font-semibold mb-1 text-sm">
+                Reference Image{' '}
+              </Text>
+              <View className="flex-row items-center bg-[#DB9245] rounded-md overflow-hidden mb-2">
+                <Text className="text-white px-2 py-2 text-sm">
+                  Reference Image
+                </Text>
+                <TextInput
+                  value={imgUrl}
+                  onChangeText={text => {
+                    if (!route.params.imageUrl) {
+                      setImgUrl(text);
+                      setImageFile(null); // Clear file when URL is entered
+                    }
                   }}
-                  resizeMode="cover"
+                  editable={!route.params.imageUrl && !imageFile}
+                  placeholder="Paste Image URL or Upload Image"
+                  placeholderTextColor="#666666"
+                  className="flex-1 py-2 bg-[#FBDBB5] text-[#666666] text-xs px-2"
                 />
-                {!route.params.imageUrl && (
-                  <TouchableOpacity
-                    onPress={handleRemoveImage}
-                    className="absolute top-2 right-2 bg-black/70 p-1.5 rounded-full">
-                    <Icon
-                      name="close-circle"
-                      size={isSmallScreen ? 16 : 20}
-                      color="#DB9245"
-                    />
-                  </TouchableOpacity>
-                )}
+                <TouchableOpacity
+                  className={`p-2 rounded-r-lg ${
+                    route.params.imageUrl ? 'bg-gray-400' : 'bg-[#292C33]'
+                  }`}
+                  onPress={handleImageUpload}
+                  disabled={!!route.params.imageUrl}>
+                  <Icon
+                    name="upload"
+                    size={isSmallScreen ? 20 : 24}
+                    color={route.params.imageUrl ? '#999' : 'white'}
+                  />
+                </TouchableOpacity>
               </View>
-            )}
+            </View>
 
             {/* Generate Button */}
             <TouchableOpacity
               className={`bg-[#292C33] ${
                 isSmallScreen ? 'py-3' : 'py-4'
-              } rounded-xl mt-6`}
+              } rounded-xl `}
               onPress={editImage}
               disabled={loading}>
               {loading ? (

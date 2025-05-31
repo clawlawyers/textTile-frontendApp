@@ -39,18 +39,18 @@ const TextileImageGenerator = ({navigation}: TextileImageGeneratorProps) => {
         <TouchableOpacity
           className="bg-white/20 p-2 rounded-full"
           onPress={() => navigation.navigate('Home')}>
-          <Icon name="exit-to-app" size={24} color="white" />
+          <Icon name="exit-to-app" size={24} color="#DB9245" />
         </TouchableOpacity>
         <TouchableOpacity
           className="bg-white/20 p-2 rounded-full"
           onPress={() => navigation.navigate('Wallet')}>
-          <Icon name="wallet" size={24} color="white" />
+          <Icon name="wallet" size={24} color="#DB9245" />
         </TouchableOpacity>
       </SafeAreaView>
 
       {/* Title text over background */}
       <View className="absolute bottom-[45%] left-0 right-0 px-4">
-        <Text className="text-white text-3xl font-extrabold mb-1 text-center">
+        <Text className="text-white text-2xl font-extrabold mb-1 text-center">
           TEXTILE IMAGE GENERATION
         </Text>
         <Text className="text-white text-base text-center">
@@ -59,7 +59,7 @@ const TextileImageGenerator = ({navigation}: TextileImageGeneratorProps) => {
       </View>
 
       {/* Content card */}
-      <View className="absolute bottom-32 w-full px-6">
+      <View className="absolute bottom-24 w-full px-6">
         <View className="bg-[#DB9245] p-5 rounded-2xl shadow-lg">
           <Text className="text-center font-semibold text-[#FBDBB5] text-base mb-8">
             Bring Your Idea To Life
@@ -104,7 +104,9 @@ const TextileImageGenerator = ({navigation}: TextileImageGeneratorProps) => {
               } else if (selected === 'Tile To Grid') {
                 // ToastAndroid.show('Feature Coming Soon', ToastAndroid.SHORT);
                 // return;
-                navigation.navigate('PatternToGridScreen');
+                navigation.navigate('PatternToGridScreen', {
+                  imageUrl: null,
+                });
               }
             }}>
             <Text className="text-white text-center font-bold text-base">

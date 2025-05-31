@@ -1,5 +1,5 @@
 /* eslint-disable react-native/no-inline-styles */
-import React, {useState} from 'react';
+import React, {useState, useEffect, useRef} from 'react';
 import {
   View,
   Text,
@@ -11,6 +11,8 @@ import {
   ActivityIndicator,
   Dimensions,
   ScrollView,
+  KeyboardAvoidingView,
+  Keyboard,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import {NODE_API_ENDPOINT} from '../utils/util';
@@ -43,6 +45,28 @@ const GenerateImageScreen = ({navigation}: GenerateImageScreenProps) => {
   const MAX_IMAGE_SIZE = 200 * 1024; // 200KB in bytes
 
   const dispatch = useDispatch();
+
+  const [keyboardVisible, setKeyboardVisible] = useState(false);
+
+  useEffect(() => {
+    const keyboardDidShowListener = Keyboard.addListener(
+      'keyboardDidShow',
+      () => {
+        setKeyboardVisible(true);
+      },
+    );
+    const keyboardDidHideListener = Keyboard.addListener(
+      'keyboardDidHide',
+      () => {
+        setKeyboardVisible(false);
+      },
+    );
+
+    return () => {
+      keyboardDidShowListener.remove();
+      keyboardDidHideListener.remove();
+    };
+  }, []);
 
   const generateImage = async () => {
     if (!prompt) {
@@ -170,238 +194,235 @@ const GenerateImageScreen = ({navigation}: GenerateImageScreenProps) => {
   };
 
   return (
-    <ScrollView
-      className="flex-1 bg-[#FAD9B3]"
-      contentContainerStyle={{
-        paddingHorizontal: 16,
-        paddingTop: 16,
-        paddingBottom: 24,
-      }}
-      showsVerticalScrollIndicator={false}>
-      {/* Header Icons */}
-      <SafeAreaView className="flex-row justify-between items-center mb-2">
-        <TouchableOpacity
-          className="bg-white/20 p-2 rounded-full"
-          onPress={() => navigation.navigate('TextileImageGenerator')}>
-          <Icon name="home" size={24} color="#DB9245" />
-        </TouchableOpacity>
-        <TouchableOpacity
-          className="bg-white/20 p-2 rounded-full"
-          onPress={() => navigation.navigate('Wallet')}>
-          <Icon name="wallet" size={24} color="white" />
-        </TouchableOpacity>
-      </SafeAreaView>
-
-      {/* Illustration - responsive height */}
-      <View className="items-center mt-2 mb-3">
-        <Image
-          source={require('../assets/illustration.gif')}
-          resizeMode="contain"
-          style={{
-            width: Math.min(300, width * 0.85),
-            height: isSmallScreen ? 180 : 250,
-          }}
-        />
-      </View>
-
-      {/* Heading */}
-      <Text className="text-center text-[#DB9245] text-xl font-bold">
-        Bring Your Ideas To Life
-      </Text>
-      <Text className="text-center text-black text-sm mb-5">
-        Generate Image
-      </Text>
-
-      {/* Prompt Input */}
-      <TextInput
-        value={prompt}
-        onChangeText={setPrompt}
-        placeholder="Enter Your Design Generation Prompt Here ....."
-        placeholderTextColor="#666666"
-        multiline
-        textAlignVertical="top"
-        className="bg-[#EEBE88] border border-[#DB9245] text-[#666666] rounded-xl p-4 text-base mb-4"
-        style={{minHeight: 150}}
-      />
-      {/* Advanced Design Settings */}
-      <View className="bg-[#EEBE88] p-4 rounded-2xl">
-        <Text className="text-black font-semibold mb-3">
-          Advanced Design Settings
-        </Text>
-
-        {/* Style Selector - Responsive */}
-        <View
-          className={`flex-row justify-between mb-3 bg-[#DB9245] px-2 py-1 rounded-lg ${
-            isSmallScreen ? 'flex-wrap' : ''
-          }`}>
-          <View className={isSmallScreen ? 'w-full mb-1' : 'w-auto'}>
-            <Text className="text-white pt-1 px-2">Style</Text>
-          </View>
-          <View className="flex-row">
+    <SafeAreaView className="flex-1 bg-[#FAD9B3]">
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        className="flex-1">
+        <View className="flex-1 px-4 pt-4">
+          {/* Header Icons */}
+          <View className="flex-row justify-between items-center mb-2">
             <TouchableOpacity
-              onPress={() => setStyle('Standalone')}
-              className={`px-3 py-1.5 rounded-xl mr-2 ${
-                style === 'Standalone' ? 'bg-[#FBDBB5]' : ''
-              }`}>
-              <Text
-                className={`${
-                  style === 'Standalone' ? 'text-black' : 'text-white'
-                } ${isSmallScreen ? 'text-xs' : 'text-sm'}`}>
-                Standalone
-              </Text>
+              className="bg-white/20 p-2 rounded-full"
+              onPress={() => navigation.navigate('TextileImageGenerator')}>
+              <Icon name="home" size={24} color="#DB9245" />
             </TouchableOpacity>
             <TouchableOpacity
-              onPress={() => setStyle('Pattern')}
-              className={`px-3 py-1.5 rounded-xl ${
-                style === 'Pattern' ? 'bg-[#FBDBB5]' : ''
-              }`}>
-              <Text
-                className={`${
-                  style === 'Pattern' ? 'text-black' : 'text-white'
-                } ${isSmallScreen ? 'text-xs' : 'text-sm'}`}>
-                Pattern
-              </Text>
+              className="bg-white/20 p-2 rounded-full"
+              onPress={() => navigation.navigate('Wallet')}>
+              <Icon name="wallet" size={24} color="#DB9245" />
             </TouchableOpacity>
           </View>
-        </View>
-        {/* Colour Input - Responsive */}
-        <View
-          className={`flex-row items-center mb-3 bg-[#DB9245] px-2 py-1 rounded-lg ${
-            isSmallScreen ? 'flex-wrap' : ''
-          }`}>
-          <View className={isSmallScreen ? 'w-full mb-1' : 'w-[20%]'}>
-            <Text className="text-white px-2">Colour</Text>
-          </View>
-          <TextInput
-            value={colorInfo}
-            onChangeText={setColorInfo}
-            placeholder="e.g: 3 Shades Of Reddish Pastel"
-            placeholderTextColor="#666666"
-            className={`bg-[#FBDBB5] rounded-xl px-3 py-1.5 text-[#DB9245] ${
-              isSmallScreen ? 'text-xs w-full' : 'text-sm flex-1'
-            }`}
-          />
-        </View>
-        {/* Complexity & Image No */}
-        <View className="flex-row items-center gap-2 mb-3">
-          <View className="flex-1 flex-row items-center rounded-md bg-[#DB9245] overflow-hidden">
-            <Text className="text-white px-2 py-2">Complexity</Text>
-            <View className="flex-row rounded-md bg-[#FBDBB5] my-2 mr-3">
-              <TouchableOpacity
-                onPress={() => setComplexity(Math.max(1, complexity - 1))}
-                className="px-3 py-1 border-r border-gray-200">
-                <Text className="text-black text-lg">-</Text>
-              </TouchableOpacity>
-              <View>
-                <Text className="text-black px-3 mt-1 py-1 min-w-[30px] text-center">
-                  {complexity}
-                </Text>
-              </View>
-              <TouchableOpacity
-                onPress={() => setComplexity(Math.min(10, complexity + 1))}
-                className="px-3 py-1 border-l border-gray-200">
-                <Text className="text-black text-lg">+</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
 
-          <View className="flex-1 flex-row items-center rounded-md bg-[#DB9245] overflow-hidden">
-            <Text className="text-white px-2 py-2">Image Nos.</Text>
-            <View className="flex-row rounded-md bg-[#FBDBB5] my-2 mr-3">
-              <TouchableOpacity
-                onPress={() => setImageCount(Math.max(1, imageCount - 1))}
-                className="px-3 py-1 border-r border-gray-200">
-                <Text className="text-black text-lg">-</Text>
-              </TouchableOpacity>
-              <View>
-                <Text className="text-black px-3 mt-1 py-1 min-w-[30px] text-center">
-                  {imageCount}
-                </Text>
-              </View>
-              <TouchableOpacity
-                onPress={() => setImageCount(Math.min(2, imageCount + 1))}
-                className="px-3 py-1 border-l border-gray-200">
-                <Text className="text-black text-lg">+</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
-
-        {/* Reference Image Upload - Responsive Layout */}
-        <View className="mb-3">
-          <Text className="text-black font-semibold mb-1 text-sm">
-            Reference Image
-          </Text>
-          <View className="flex-row items-center">
-            <TextInput
-              value={referenceImg}
-              onChangeText={handleReferenceImgChange}
-              editable={!referenceImgFile}
-              placeholder="Paste Image URL or Upload Image"
-              placeholderTextColor="#666666"
-              className={`flex-1 py-2 px-3 bg-[#FBDBB5] text-[#666666] rounded-l-lg ${
-                isSmallScreen ? 'text-xs' : 'text-sm'
-              }`}
-            />
-            <TouchableOpacity
-              className="bg-[#292C33] p-2 rounded-r-lg"
-              onPress={handleReferenceImageUpload}>
-              <Icon
-                name="upload"
-                size={isSmallScreen ? 20 : 24}
-                color="white"
-              />
-            </TouchableOpacity>
-          </View>
-        </View>
-
-        {/* Display selected reference image if available - Responsive */}
-        {referenceImg && (
-          <View className="relative mb-4">
+          {/* Illustration - smaller height */}
+          <View className="items-center mt-1 mb-2">
             <Image
-              source={{uri: referenceImg}}
+              source={require('../assets/illustration.gif')}
+              resizeMode="contain"
               style={{
-                width: '100%',
-                height: width * 0.4, // Responsive height based on screen width
-                borderRadius: 8,
+                width: Math.min(300, width * 0.85),
+                height: 260,
               }}
-              resizeMode="cover"
             />
-            <TouchableOpacity
-              onPress={() => {
-                setReferenceImg('');
-                setReferenceImgFile(null);
-              }}
-              className="absolute top-2 right-2 bg-black/70 p-1.5 rounded-full">
-              <Icon
-                name="close-circle"
-                size={isSmallScreen ? 16 : 20}
-                color="#DB9245"
-              />
-            </TouchableOpacity>
           </View>
-        )}
-      </View>
 
-      {/* Generate Button - Responsive */}
-      <TouchableOpacity
-        onPress={generateImage}
-        disabled={loading}
-        className={`bg-[#292C33] rounded-xl py-3 mt-4 ${
-          loading ? 'opacity-70' : ''
-        }`}>
-        {loading ? (
-          <ActivityIndicator color="#FBDBB5" size="small" />
-        ) : (
-          <Text
-            className={`text-white text-center font-semibold ${
-              isSmallScreen ? 'text-sm' : 'text-base'
-            }`}>
+          {/* Heading - reduced margins */}
+          <Text className="text-center text-[#DB9245] text-xl font-bold">
+            Bring Your Ideas To Life
+          </Text>
+          <Text className="text-center text-black text-sm mb-2">
             Generate Image
           </Text>
-        )}
-      </TouchableOpacity>
-    </ScrollView>
+
+          <View className="mt-auto mb-4">
+            {/* Prompt Input - reduced height */}
+            <TextInput
+              value={prompt}
+              onChangeText={setPrompt}
+              placeholder="Enter Your Design Generation Prompt Here ....."
+              placeholderTextColor="#666666"
+              multiline
+              textAlignVertical="top"
+              className="bg-[#EEBE88] border border-[#DB9245] text-[#666666] rounded-xl p-3 text-base mb-2"
+              style={{minHeight: 60, height: 'auto'}}
+            />
+
+            {/* Advanced Design Settings - more compact */}
+            <View className="bg-[#EEBE88] p-3 rounded-2xl">
+              <Text className="text-black font-semibold mb-2 text-sm">
+                Advanced Design Settings
+              </Text>
+
+              {/* Style Selector */}
+              <View className="flex-row justify-between mb-1 bg-[#DB9245] px-2 py-1 rounded-lg">
+                <View className="w-auto">
+                  <Text className="text-white pt-1 px-2">Style</Text>
+                </View>
+                <View className="flex-row flex-1 justify-evenly">
+                  <TouchableOpacity
+                    onPress={() => setStyle('Standalone')}
+                    className={`px-3 py-1 rounded-xl mr-2 ${
+                      style === 'Standalone' ? 'bg-[#FBDBB5]' : ''
+                    }`}>
+                    <Text
+                      className={
+                        style === 'Standalone' ? 'text-black' : 'text-white'
+                      }>
+                      Standalone
+                    </Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    onPress={() => setStyle('Pattern')}
+                    className={`px-3 py-1 rounded-xl ${
+                      style === 'Pattern' ? 'bg-[#FBDBB5]' : ''
+                    }`}>
+                    <Text
+                      className={
+                        style === 'Pattern' ? 'text-black' : 'text-white'
+                      }>
+                      Pattern
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+
+              {/* Colour Input */}
+              <View className="flex-row items-center mb-1 bg-[#DB9245] px-2 py-1 rounded-lg">
+                <View className="w-[20%]">
+                  <Text className="text-white px-2">Colour</Text>
+                </View>
+                <TextInput
+                  value={colorInfo}
+                  onChangeText={setColorInfo}
+                  placeholder="e.g: 3 Shades Of Reddish Pastel"
+                  placeholderTextColor="#666666"
+                  className="bg-[#FBDBB5] rounded-xl px-3 py-1 text-[#DB9245] flex-1"
+                />
+              </View>
+
+              {/* Complexity & Image No */}
+              <View className="flex-row items-center gap-2 mb-2">
+                <View className="flex-1 flex-row items-center rounded-md bg-[#DB9245] overflow-hidden">
+                  <Text className="text-white px-1 py-1 text-sm">
+                    Complexity
+                  </Text>
+                  <View className="flex-row rounded-md bg-[#FBDBB5] my-1 mr-1 ml-auto">
+                    <TouchableOpacity
+                      onPress={() => setComplexity(Math.max(1, complexity - 1))}
+                      className="px-1 py-0.5 border-r border-gray-200">
+                      <Text className="text-black">-</Text>
+                    </TouchableOpacity>
+                    <View>
+                      <Text className="text-black px-1 py-0.5 min-w-[20px] text-center">
+                        {complexity}
+                      </Text>
+                    </View>
+                    <TouchableOpacity
+                      onPress={() =>
+                        setComplexity(Math.min(10, complexity + 1))
+                      }
+                      className="px-1 py-0.5 border-l border-gray-200">
+                      <Text className="text-black">+</Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
+
+                <View className="flex-1 flex-row items-center rounded-md bg-[#DB9245] overflow-hidden">
+                  <Text className="text-white px-1 py-1 text-sm">
+                    Image Nos.
+                  </Text>
+                  <View className="flex-row rounded-md bg-[#FBDBB5] my-1 mr-1 ml-auto">
+                    <TouchableOpacity
+                      onPress={() => setImageCount(Math.max(1, imageCount - 1))}
+                      className="px-1 py-0.5 border-r border-gray-200">
+                      <Text className="text-black">-</Text>
+                    </TouchableOpacity>
+                    <View>
+                      <Text className="text-black px-1 py-0.5 min-w-[20px] text-center">
+                        {imageCount}
+                      </Text>
+                    </View>
+                    <TouchableOpacity
+                      onPress={() => setImageCount(Math.min(2, imageCount + 1))}
+                      className="px-1 py-0.5 border-l border-gray-200">
+                      <Text className="text-black">+</Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              </View>
+
+              {/* Reference Image Upload */}
+              {/* <View className="mb-2 ">
+                <Text className="text-black font-semibold mb-1 text-xs">
+                  Reference Image
+                </Text>
+                <View className="flex-row items-center bg-[#DB9245] py-2 rounded-lg">
+                  <Text className="text-black font-semibold mb-1 text-sm px-2">
+                    Reference Image
+                  </Text>
+                  <TextInput
+                    value={referenceImg}
+                    onChangeText={handleReferenceImgChange}
+                    editable={!referenceImgFile}
+                    placeholder="Paste Image URL or Upload Image"
+                    placeholderTextColor="#666666"
+                    className="py- px-3 bg-[#FBDBB5] text-[#666666] rounded-l-lg text-xs flex-1"
+                  />
+                  <TouchableOpacity
+                    className="bg-[#292C33] p-2 rounded-r-lg"
+                    onPress={handleReferenceImageUpload}>
+                    <Icon name="upload" size={20} color="white" />
+                  </TouchableOpacity>
+                </View>
+              </View> */}
+
+              <View className="mb-2">
+                <Text className="text-black font-semibold mb-1 text-sm">
+                  Reference Image{' '}
+                </Text>
+                <View className="flex-row items-center bg-[#DB9245] rounded-md overflow-hidden mb-2">
+                  <Text className="text-white px-2 py-2 text-sm">
+                    Reference Image
+                  </Text>
+                  <TextInput
+                    value={referenceImg}
+                    onChangeText={handleReferenceImgChange}
+                    editable={!referenceImgFile}
+                    placeholder="Paste Image URL or Upload Image"
+                    placeholderTextColor="#666666"
+                    className="flex-1 py-2 bg-[#FBDBB5] text-[#666666] text-xs px-2"
+                  />
+                  <TouchableOpacity
+                    className={`p-2 rounded-r-lg bg-[#292C33]`}
+                    onPress={handleReferenceImageUpload}>
+                    <Icon
+                      name="upload"
+                      size={isSmallScreen ? 20 : 24}
+                      color="white"
+                    />
+                  </TouchableOpacity>
+                </View>
+              </View>
+            </View>
+
+            {/* Generate Button */}
+            <TouchableOpacity
+              onPress={generateImage}
+              disabled={loading}
+              className={`bg-[#292C33] rounded-xl py-3 mt-3 ${
+                loading ? 'opacity-70' : ''
+              }`}>
+              {loading ? (
+                <ActivityIndicator color="#FBDBB5" size="small" />
+              ) : (
+                <Text className="text-white text-center font-semibold">
+                  Generate Image
+                </Text>
+              )}
+            </TouchableOpacity>
+          </View>
+        </View>
+      </KeyboardAvoidingView>
+    </SafeAreaView>
   );
 };
 

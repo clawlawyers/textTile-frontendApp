@@ -8,10 +8,18 @@ import {
   TouchableOpacity,
   SafeAreaView,
   Dimensions,
+  Platform,
+  Alert,
+  PermissionsAndroid,
+  ActivityIndicator,
 } from 'react-native';
 import FontistoIcon from 'react-native-vector-icons/Fontisto';
 import Icon1 from 'react-native-vector-icons/Feather';
 import {HomeStackParamList} from '../stacks/Home';
+import RNFetchBlob from 'rn-fetch-blob';
+import {NODE_API_ENDPOINT} from '../utils/util';
+import {useSelector} from 'react-redux';
+import {RootState} from '../redux/store';
 
 const orderData = new Array(5).fill({
   bailNo: 'TX-BL-001',
@@ -36,6 +44,143 @@ const InvoiceScreen = ({navigation, route}: AddNewUserProps) => {
   );
 
   console.log(route.params.orderDetails);
+
+  const [downloading, setDownloading] = React.useState(false);
+
+  const currentUser = useSelector((state: RootState) => state.auth.user);
+
+  const checkPermission = async () => {
+    if (Platform.OS === 'ios') {
+      return true;
+    }
+
+    try {
+      const granted = await PermissionsAndroid.request(
+        PermissionsAndroid.PERMISSIONS.WRITE_EXTERNAL_STORAGE,
+        {
+          title: 'Storage Permission Required',
+          message: 'App needs access to your storage to download the invoice',
+          buttonNeutral: 'Ask Me Later',
+          buttonNegative: 'Cancel',
+          buttonPositive: 'OK',
+        },
+      );
+      return granted === PermissionsAndroid.RESULTS.GRANTED;
+    } catch (err) {
+      console.warn(err);
+      return false;
+    }
+  };
+
+  const downloadInvoice = async () => {
+    if (downloading) return;
+
+    // Check for storage permission on Android
+    if (Platform.OS === 'android') {
+      const hasPermission = await checkPermission();
+      if (!hasPermission) {
+        Alert.alert(
+          'Permission Denied',
+          'Storage permission is required to download invoices',
+        );
+        return;
+      }
+    }
+
+    setDownloading(true);
+
+    try {
+      // Get the order ID
+      const orderId = orderDetails._id;
+
+      // Set download path based on platform
+      const {dirs} = RNFetchBlob.fs;
+      const dirPath =
+        Platform.OS === 'ios' ? dirs.DocumentDir : dirs.DownloadDir;
+
+      // Create filename with timestamp
+      const timestamp = new Date().getTime();
+      const filename = `invoice_${orderId}_${timestamp}.pdf`;
+      const filePath = `${dirPath}/${filename}`;
+
+      const apiUrl = `${NODE_API_ENDPOINT}/orders/invoice/${orderId}`;
+      console.log(`Downloading invoice from: ${apiUrl}`);
+
+      // For Android, first check if the directory exists
+      if (Platform.OS === 'android') {
+        const exists = await RNFetchBlob.fs.exists(dirPath);
+        if (!exists) {
+          await RNFetchBlob.fs.mkdir(dirPath);
+        }
+      }
+
+      // Configure download with notification for Android
+      const downloadConfig =
+        Platform.OS === 'android'
+          ? {
+              fileCache: true,
+              path: filePath,
+              addAndroidDownloads: {
+                useDownloadManager: true,
+                notification: true,
+                title: 'Invoice Downloaded',
+                description: 'Your invoice has been downloaded successfully',
+                mime: 'application/pdf',
+                mediaScannable: true,
+                path: filePath,
+              },
+            }
+          : {
+              fileCache: true,
+              path: filePath,
+            };
+
+      // Download the file
+      const res = await RNFetchBlob.config(downloadConfig).fetch(
+        'GET',
+        apiUrl,
+        {
+          Authorization: `Bearer ${currentUser?.token}`,
+        },
+      );
+
+      // Check if we have a valid response
+      console.log('Response info:', res.info());
+
+      // Check if the file exists and has content
+      const fileExists = await RNFetchBlob.fs.exists(filePath);
+      if (!fileExists) {
+        throw new Error('File does not exist after download');
+      }
+
+      const fileSize = await RNFetchBlob.fs
+        .stat(filePath)
+        .then(stats => stats.size);
+      console.log(`File exists: ${fileExists}, size: ${fileSize}B`);
+
+      if (fileSize <= 0) {
+        throw new Error('Downloaded file is empty (0B)');
+      }
+
+      // Show success message
+      Alert.alert('Success', 'Invoice downloaded successfully');
+
+      // Open the PDF
+      if (Platform.OS === 'ios') {
+        RNFetchBlob.ios.openDocument(filePath);
+      } else {
+        // For Android, use the action view intent
+        // If using download manager, this might not be necessary as the notification will allow opening
+        // But we'll include it anyway for better user experience
+        RNFetchBlob.android.actionViewIntent(filePath, 'application/pdf');
+      }
+    } catch (error) {
+      console.error('Error downloading invoice:', error);
+      Alert.alert('Error', `Failed to download invoice: ${error.message}`);
+    } finally {
+      setDownloading(false);
+    }
+  };
 
   return (
     <SafeAreaView className="flex-1 bg-[#FBD7A2] pt-14 px-4 pb-12">
@@ -140,10 +285,17 @@ const InvoiceScreen = ({navigation, route}: AddNewUserProps) => {
       </View>
 
       {/* Download Button */}
-      <TouchableOpacity className="bg-[#DB9245] mx-6 mb-6 py-3 rounded-lg items-center justify-center mt-auto">
-        <Text className="text-white font-semibold text-base">
-          Download Invoice
-        </Text>
+      <TouchableOpacity
+        className="bg-[#DB9245] mx-6 mb-6 py-3 rounded-lg items-center justify-center mt-auto"
+        onPress={downloadInvoice}
+        disabled={downloading}>
+        {downloading ? (
+          <ActivityIndicator color="white" />
+        ) : (
+          <Text className="text-white font-semibold text-base">
+            Download Invoice
+          </Text>
+        )}
       </TouchableOpacity>
     </SafeAreaView>
   );

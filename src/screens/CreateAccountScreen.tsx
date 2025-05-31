@@ -85,7 +85,7 @@ const CreateAccountScreen = ({navigation}: SignupProps) => {
   };
 
   return (
-    <ScrollView className="flex-1 bg-[#FBD3A0] px-6 pt-10">
+    <ScrollView className="flex-1 bg-[#FAD9B3] px-6 pt-10">
       {/* Back Button */}
       <TouchableOpacity
         onPress={() => navigation.goBack()}

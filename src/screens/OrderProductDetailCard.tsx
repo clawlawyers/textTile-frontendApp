@@ -188,27 +188,41 @@ const OrderProductDetailCard = ({navigation, route}: AddNewUserProps) => {
         </View>
 
         {/* Product Info */}
-        {/* Product Info */}
-        <Text className="text-base font-bold mb-2 text-black">
-          {productDetails.lot_number}
-        </Text>
+        <View className=" mb-2 text-black flex-row flex">
+          <Text className="text-base font-bold">Item Name:{'  '}</Text>
+          <Text className="text-base mb-2 text-black">
+            {productDetails.category_code}
+          </Text>
+        </View>
 
         <View className="space-y-1 mb-6">
-          <Text className="text-sm text-black">
-            <Text className="">Category Name : </Text>
-            {'  '}
-            <Text className="font-bold">{productDetails.category_code}</Text>
-          </Text>
-          <Text className="text-sm text-black">
-            <Text className="">Design Number : </Text>
-            {'  '}
-            <Text className="font-bold">{productDetails.design_code}</Text>
-          </Text>
-          <Text className="text-sm text-black">
-            <Text className="">Textile Type : </Text>
-            {'        '}
+          <View className="text-sm text-black flex flex-row">
+            <Text className="">Full Bale No : </Text>
+            {'     '}
             <Text className="font-bold">{productDetails.bail_number}</Text>
-          </Text>
+          </View>
+          <View className="text-sm text-black flex flex-row">
+            <Text className="">Entry Date : </Text>
+            {'     '}
+            <Text className="font-bold">
+              {'   '}
+              {new Date(productDetails.bail_date).toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+              })}
+            </Text>
+          </View>
+          <View className="text-sm text-black flex flex-row">
+            <Text className="">Design No : {'  '}</Text>
+
+            <Text className="font-bold"> {productDetails.design_code}</Text>
+          </View>
+          <View className="text-sm text-black flex flex-row">
+            <Text className="">Lote No : </Text>
+            {'     '}
+            <Text className="font-bold">{productDetails.lot_number}</Text>
+          </View>
         </View>
 
         <View className="flex-1 justify-end">

@@ -6,6 +6,7 @@ import {
   TouchableOpacity,
   Image,
   ActivityIndicator,
+  ToastAndroid,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/Feather';
 import LinearGradient from 'react-native-linear-gradient';
@@ -27,23 +28,31 @@ type CompletedOrderProps = NativeStackScreenProps<
 const AlertSendScreen = ({navigation}: CompletedOrderProps) => {
   const currentUser = useSelector((state: RootState) => state.auth.user);
   const [loading, setLoading] = React.useState(true);
+  const [processingOrderId, setProcessingOrderId] = React.useState<
+    string | null
+  >(null);
 
   const [orders, setOrders] = React.useState([]);
 
   const dispatch = useDispatch();
+
+  const activeFirm = useSelector((state: RootState) => state.common.activeFirm);
 
   useFocusEffect(
     useCallback(() => {
       const getOrders = async () => {
         setLoading(true);
         try {
-          const response = await fetch(`${NODE_API_ENDPOINT}/orders`, {
-            method: 'GET',
-            headers: {
-              'Content-Type': 'application/json',
-              Authorization: `Bearer ${currentUser?.token}`,
+          const response = await fetch(
+            `${NODE_API_ENDPOINT}/orders/${activeFirm?._id}`,
+            {
+              method: 'GET',
+              headers: {
+                'Content-Type': 'application/json',
+                Authorization: `Bearer ${currentUser?.token}`,
+              },
             },
-          });
+          );
           console.log(response);
 
           if (!response.ok) {
@@ -72,8 +81,39 @@ const AlertSendScreen = ({navigation}: CompletedOrderProps) => {
 
       // Optional cleanup if needed
       return () => {};
-    }, [currentUser?.token]),
+    }, [currentUser?.token, activeFirm?._id]),
   );
+
+  const sendAlertHandle = async id => {
+    try {
+      setProcessingOrderId(id);
+      const response = await fetch(
+        `${NODE_API_ENDPOINT}/whatsapp/payment/${id}`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${currentUser?.token}`,
+          },
+        },
+      );
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(
+          `Failed to send alert: ${response.status} ${errorText}`,
+        );
+      }
+      const data = await response.json();
+      console.log(data);
+      ToastAndroid.show('Alert Sent', ToastAndroid.SHORT);
+    } catch (error) {
+      console.error('Error sending alert:', error);
+      ToastAndroid.show('Failed to send alert', ToastAndroid.SHORT);
+    } finally {
+      setProcessingOrderId(null);
+    }
+  };
 
   if (loading) {
     return (
@@ -137,10 +177,26 @@ const AlertSendScreen = ({navigation}: CompletedOrderProps) => {
                   <Text className="text-base text-white font-semibold">
                     {order.client.name}{' '}
                   </Text>
-                  <TouchableOpacity className="text-xs text-white border rounded-md mt-1">
-                    <Text className="text-xs text-center text-white">
+                  <TouchableOpacity
+                    className="bg-[#15191A] py-2 px-3 rounded-md mt-1"
+                    onPress={() => {
+                      sendAlertHandle(order._id);
+                      // ToastAndroid.show(
+                      //   'Feature Coming Soon',
+                      //   ToastAndroid.SHORT,
+                      // );
+                      // console.log('Send Alert');
+                    }}>
+                    {processingOrderId === order._id ? (
+                      <ActivityIndicator color="#fff" size="small" />
+                    ) : (
+                      <Text className="text-xs text-center py-1 text-white font-medium">
+                        Send Alert
+                      </Text>
+                    )}
+                    {/* <Text className="text-xs text-center text-white font-medium">
                       Send Alert
-                    </Text>
+                    </Text> */}
                   </TouchableOpacity>
                 </View>
                 <Text className="text-xs text-[#292C33]">

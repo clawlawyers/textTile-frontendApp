@@ -53,6 +53,10 @@ const ClientDetailsScreen = ({navigation, route}: AddNewUserProps) => {
 
   const currentUser = useSelector((state: RootState) => state.auth.user);
 
+  const activeFirm = useSelector((state: RootState) => state.common.activeFirm);
+
+  console.log(activeFirm);
+
   useFocusEffect(
     useCallback(() => {
       const getDetails = async () => {
@@ -80,7 +84,7 @@ const ClientDetailsScreen = ({navigation, route}: AddNewUserProps) => {
           setClientDetails(data);
 
           const getOrderHistory = await fetch(
-            `${NODE_API_ENDPOINT}/orders/${route.params.clientId}`,
+            `${NODE_API_ENDPOINT}/orders/${route.params.clientId}/${activeFirm?._id}`,
             {
               method: 'GET',
               headers: {
@@ -107,7 +111,7 @@ const ClientDetailsScreen = ({navigation, route}: AddNewUserProps) => {
       };
 
       getDetails();
-    }, [currentUser?.token, route.params.clientId]),
+    }, [currentUser?.token, route.params.clientId, activeFirm?._id]),
   );
 
   const handleDeleteClient = async () => {

@@ -25,6 +25,12 @@ const clients = [
   {id: '1', name: 'Ram Enterprice', owner: 'Rameswaram Das'},
   {id: '3', name: 'Ram Enterprice', owner: 'Rameswaram Das'},
   {id: '4', name: 'Ram Enterprice', owner: 'Rameswaram Das'},
+  {id: '4', name: 'Ram Enterprice', owner: 'Rameswaram Das'},
+  {id: '4', name: 'Ram Enterprice', owner: 'Rameswaram Das'},
+  {id: '4', name: 'Ram Enterprice', owner: 'Rameswaram Das'},
+  {id: '4', name: 'Ram Enterprice', owner: 'Rameswaram Das'},
+  {id: '4', name: 'Ram Enterprice', owner: 'Rameswaram Das'},
+  {id: '4', name: 'Ram Enterprice', owner: 'Rameswaram Das'},
 ];
 
 type AddNewUserProps = NativeStackScreenProps<
@@ -198,7 +204,6 @@ const ClientListScreen = ({navigation}: AddNewUserProps) => {
                             !currentUser?.permissions?.deleteClient &&
                             currentUser?.type !== 'manager'
                           ) {
-                            c;
                             setShowPermissionDialog(true);
                             return;
                           }
@@ -255,7 +260,7 @@ const ClientListScreen = ({navigation}: AddNewUserProps) => {
 
       {/* Add New Client */}
       <TouchableOpacity
-        className="bg-[#1F1F1F] py-4 rounded-xl items-center mb-5"
+        className="bg-[#1F1F1F] py-4 rounded-xl items-center my-3"
         onPress={() => {
           if (
             !currentUser?.permissions?.addClient &&

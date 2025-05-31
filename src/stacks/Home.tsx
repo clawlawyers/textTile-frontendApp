@@ -59,6 +59,7 @@ import PaletteGeneratedScreen from '../screens/PaletteGeneratedScreen';
 import EditPaletteScreen from '../screens/EditPaletteScreen';
 import WalletScreen from '../screens/WalletScreen';
 import MagicLoadingScreen from '../screens/MagicLoadingScreen';
+import {useNavigation} from '@react-navigation/native';
 
 // Params for Home Stack
 export type HomeStackParamList = {
@@ -109,7 +110,7 @@ export type HomeStackParamList = {
   TextileImageGenerator: undefined;
   GenerateImageScreen: undefined;
   EditImageScreen: {imageUrl: string | null};
-  PatternToGridScreen: undefined;
+  PatternToGridScreen: {imageUrl: string | null};
   ImagePaletteScreen: {imageUrl: string | null};
   GeneratedImageGrid: {imageUrls: string[]};
   GeneratedImageScreen: {imageUrl: string};
@@ -123,7 +124,13 @@ const HomeStack = createNativeStackNavigator<HomeStackParamList>();
 
 function HomeStackNavigator() {
   const currentUser = useSelector((state: RootState) => state.auth.user);
+  const loading = useSelector((state: RootState) => state.auth.status);
   console.log(currentUser);
+  const navigation = useNavigation();
+
+  // if (!currentUser && loading !== 'loading') {
+  //   navigation.navigate('Login');
+  // }
 
   return (
     // <HomeStack.Navigator initialRouteName={currentUser ? 'Home' : 'Login'}>

@@ -66,7 +66,7 @@ const OrderSummaryScreen = ({navigation}: AddNewUserProps) => {
   }, [cartProducts]);
 
   // Handle item removal
-  const handleRemoveItem = async (prodId, index) => {
+  const handleRemoveItem = async prodId => {
     try {
       // Show confirmation dialog
       Alert.alert('Remove Item', 'Are you sure you want to remove this item?', [
@@ -439,14 +439,14 @@ const OrderSummaryScreen = ({navigation}: AddNewUserProps) => {
             {/* Table Header */}
             <View className="bg-[#2D2D2D] rounded-t-lg px-3 py-3 flex-row justify-between">
               <Text
-                style={{fontSize, width: '25%'}}
+                style={{fontSize, width: '30%'}}
                 className="text-white font-semibold">
-                Product
+                Product Name
               </Text>
               <Text
-                style={{fontSize, width: '20%'}}
+                style={{fontSize, width: '15%'}}
                 className="text-white font-semibold">
-                Category
+                Bale No
               </Text>
               <Text
                 style={{fontSize, width: '15%'}}
@@ -454,7 +454,7 @@ const OrderSummaryScreen = ({navigation}: AddNewUserProps) => {
                 Qty
               </Text>
               <Text
-                style={{fontSize, width: '25%'}}
+                style={{fontSize, width: '15%'}}
                 className="text-white font-semibold text-center">
                 Rate
               </Text>
@@ -477,24 +477,24 @@ const OrderSummaryScreen = ({navigation}: AddNewUserProps) => {
                     key={index}
                     className="flex-row items-center justify-between mb-3 py-1">
                     <Text
-                      style={{fontSize, width: '25%'}}
-                      className="text-white">
+                      style={{fontSize, width: '30%'}}
+                      className="text-white text-wrap">
                       {item.inventoryProduct.design_code}
                     </Text>
                     <Text
-                      style={{fontSize, width: '20%'}}
-                      className="text-white">
-                      {item.inventoryProduct.category_code}
+                      style={{fontSize, width: '15%'}}
+                      className="text-white text-wrap">
+                      {item.inventoryProduct.bail_number}
                     </Text>
                     <Text
                       style={{fontSize, width: '15%'}}
-                      className="text-white text-center">
+                      className="text-white text-wrap text-center">
                       {item.quantity}
                     </Text>
-                    <View style={{width: '25%'}} className="px-1">
+                    <View style={{width: '15%'}} className="px-1">
                       <TextInput
                         style={{fontSize}}
-                        className="border border-white rounded-md px-2 py-1 text-white text-center"
+                        className="border border-white rounded-md px-2 py-1 text-white text-wrap text-center"
                         value={item.inventoryProduct.price}
                         onChangeText={text => handlePriceChange(index, text)}
                         keyboardType="numeric"

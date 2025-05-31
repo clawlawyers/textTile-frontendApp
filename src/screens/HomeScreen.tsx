@@ -39,6 +39,7 @@ const HomeScreen = ({navigation}: HomeProps) => {
   const dispatch = useDispatch();
 
   const currentUser = useSelector((state: RootState) => state.auth.user);
+  const loading = useSelector((state: RootState) => state.auth.status);
   const activeFirm = useSelector((state: RootState) => state.common.activeFirm);
 
   console.log(activeFirm);
@@ -75,6 +76,9 @@ const HomeScreen = ({navigation}: HomeProps) => {
     }).start();
   }, [expanded, fadeAnim, opacityAnim]);
 
+  if (!currentUser && loading !== 'loading') {
+    navigation.replace('Login');
+  }
   return (
     <View style={{flex: 1, position: 'relative'}}>
       <ScrollView className="flex-1 bg-[#FAD9B3] px-4 pt-6">
@@ -96,7 +100,7 @@ const HomeScreen = ({navigation}: HomeProps) => {
             </View>
           </View>
           <TouchableOpacity
-            className="bg-[#FAD9B3] border border-[#DB9245] rounded-2xl px-3 flex-row items-center justify-center my-8"
+            className="bg-[#FAD9B3] border border-[#DB9245] rounded-full px-3 flex-row items-center justify-center my-6"
             onPress={() => {
               navigation.navigate('TextileImageGenerator');
             }}>
@@ -214,7 +218,7 @@ const HomeScreen = ({navigation}: HomeProps) => {
         <Animated.View style={{opacity: fadeAnim}}>
           <View className="bg-[#DB9245] rounded-xl p-4 mb-4">
             <Text className="text-white font-bold text-xl mb-3">Orders</Text>
-            <View className="flex-row justify-between items-center gap-3">
+            <View className="flex-row justify-between items-center gap-3 pr-3">
               <TouchableOpacity
                 className="items-center p-4 bg-[#FAD9B3] rounded-lg w-[50%]"
                 onPress={() => {
@@ -233,7 +237,7 @@ const HomeScreen = ({navigation}: HomeProps) => {
                 </Text>
               </TouchableOpacity>
               <TouchableOpacity
-                className="items-center p-4 bg-[#FAD9B3] rounded-lg w-[45%] "
+                className="items-center p-4 bg-[#FAD9B3] rounded-lg w-[50%] "
                 onPress={() => navigation.navigate('ActiveOrdersScreen')}>
                 <Icon name="shopping-cart" size={30} color="#292C33" />
                 <Text className="text-[#292C33] mt-1 text-xs">

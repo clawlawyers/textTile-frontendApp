@@ -70,7 +70,7 @@ const EditPaletteScreen = ({navigation}: EditPaletteScreenProps) => {
         <TouchableOpacity
           className="bg-white/20 p-2 rounded-full"
           onPress={() => navigation.navigate('Wallet')}>
-          <Icon name="wallet" size={24} color="white" />
+          <Icon name="wallet" size={24} color="#DB9245" />
         </TouchableOpacity>
       </SafeAreaView>
 
