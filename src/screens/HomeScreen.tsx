@@ -10,6 +10,8 @@ import {
   ScrollView,
   ToastAndroid,
   Image,
+  PermissionsAndroid,
+  Alert,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import SimpleLineIcons from 'react-native-vector-icons/SimpleLineIcons';
@@ -20,9 +22,10 @@ import {HomeStackParamList} from '../stacks/Home';
 import PermissionDeniedDialog from '../components/PermissionDeniedDialog'; // adjust path
 import {useDispatch, useSelector} from 'react-redux';
 import {RootState} from '../redux/store';
-import {setActiveFirm} from '../redux/commonSlice';
+import {setActiveFirm, setInventoryName} from '../redux/commonSlice';
 import {logout} from '../redux/authSlice';
 import FontistoIcon from 'react-native-vector-icons/Fontisto';
+import {NODE_API_ENDPOINT} from '../utils/util';
 
 if (Platform.OS === 'android') {
   UIManager.setLayoutAnimationEnabledExperimental &&
@@ -30,6 +33,49 @@ if (Platform.OS === 'android') {
 }
 
 type HomeProps = NativeStackScreenProps<HomeStackParamList, 'Home'>;
+
+const checkStoragePermission = async () => {
+  if (Platform.OS === 'ios') {
+    return true;
+  }
+
+  try {
+    // First check if we already have the permission
+    const hasPermission = await PermissionsAndroid.check(
+      PermissionsAndroid.PERMISSIONS.WRITE_EXTERNAL_STORAGE,
+    );
+
+    if (hasPermission) {
+      return true;
+    }
+
+    // If we don't have permission, request it
+    const granted = await PermissionsAndroid.request(
+      PermissionsAndroid.PERMISSIONS.WRITE_EXTERNAL_STORAGE,
+      {
+        title: 'Storage Permission Required',
+        message: 'App needs access to your storage to download files',
+        buttonNeutral: 'Ask Me Later',
+        buttonNegative: 'Cancel',
+        buttonPositive: 'OK',
+      },
+    );
+
+    if (granted === PermissionsAndroid.RESULTS.GRANTED) {
+      return true;
+    } else {
+      // Only show alert if permission was actually denied by user
+      Alert.alert(
+        'Permission Denied',
+        'Storage permission is required for downloading files',
+      );
+      return false;
+    }
+  } catch (err) {
+    console.warn('Permission error:', err);
+    return false;
+  }
+};
 
 const HomeScreen = ({navigation}: HomeProps) => {
   const [expanded, setExpanded] = useState(false);
@@ -62,6 +108,52 @@ const HomeScreen = ({navigation}: HomeProps) => {
   };
 
   useEffect(() => {
+    // Request storage permission when component mounts
+    const requestPermission = async () => {
+      if (Platform.OS === 'ios') {
+        return true;
+      }
+
+      try {
+        // First check if we already have the permission
+        const hasPermission = await PermissionsAndroid.check(
+          PermissionsAndroid.PERMISSIONS.WRITE_EXTERNAL_STORAGE,
+        );
+
+        if (hasPermission) {
+          return true;
+        }
+
+        // If we don't have permission, request it
+        const granted = await PermissionsAndroid.request(
+          PermissionsAndroid.PERMISSIONS.WRITE_EXTERNAL_STORAGE,
+          {
+            title: 'Storage Permission Required',
+            message: 'App needs access to your storage to download files',
+            buttonNeutral: 'Ask Me Later',
+            buttonNegative: 'Cancel',
+            buttonPositive: 'OK',
+          },
+        );
+
+        if (granted === PermissionsAndroid.RESULTS.GRANTED) {
+          return true;
+        } else {
+          // Only show alert if permission was actually denied by user
+          Alert.alert(
+            'Permission Denied',
+            'Storage permission is required for downloading files',
+          );
+          return false;
+        }
+      } catch (err) {
+        console.warn('Permission error:', err);
+        return false;
+      }
+    };
+
+    requestPermission();
+
     // dispatch(logout());
     Animated.timing(fadeAnim, {
       toValue: expanded ? 0 : 1,
@@ -79,6 +171,44 @@ const HomeScreen = ({navigation}: HomeProps) => {
   if (!currentUser && loading !== 'loading') {
     navigation.replace('Login');
   }
+
+  const handleEditInventory = async () => {
+    if (
+      !currentUser?.permissions?.editInventory &&
+      currentUser?.type !== 'manager'
+    ) {
+      setShowPermissionDialog(true);
+      return;
+    }
+    if (!activeFirm?.inventory) {
+      ToastAndroid.show('Need to setup Inventory', ToastAndroid.SHORT);
+      navigation.navigate('SetUpInventoryScreen');
+      return;
+    }
+
+    const getInventoryName = await fetch(
+      `${NODE_API_ENDPOINT}/inventory/getInventoryName/${activeFirm?.inventory}`,
+      {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${currentUser?.token}`,
+        },
+      },
+    );
+
+    if (!getInventoryName.ok) {
+      const errorText = await getInventoryName.text();
+      throw new Error(
+        `Failed to fetch inventory name: ${getInventoryName.status} ${errorText}`,
+      );
+    }
+
+    const inventoryName = await getInventoryName.json();
+    dispatch(setInventoryName(inventoryName));
+    navigation.navigate('AddInventoryScreen');
+  };
+
   return (
     <View style={{flex: 1, position: 'relative'}}>
       <ScrollView className="flex-1 bg-[#FAD9B3] px-4 pt-6">
@@ -308,16 +438,7 @@ const HomeScreen = ({navigation}: HomeProps) => {
           </TouchableOpacity>
           <TouchableOpacity
             className="items-center py-6 px-4 bg-[#FAD9B3] rounded-lg"
-            onPress={() => {
-              if (
-                !currentUser?.permissions?.editInventory &&
-                currentUser?.type !== 'manager'
-              ) {
-                setShowPermissionDialog(true);
-                return;
-              }
-              navigation.navigate('AddInventoryScreen');
-            }}>
+            onPress={handleEditInventory}>
             <Feather name="edit" size={24} color="#292C33" />
             <Text className="text-[#292C33] mt-1 text-xs">Edit Inventory</Text>
           </TouchableOpacity>

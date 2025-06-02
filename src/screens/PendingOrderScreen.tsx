@@ -73,6 +73,16 @@ const PendingOrderScreen = ({navigation, route}: AddNewUserProps) => {
     }
   }, [paymentDetails]);
 
+  useEffect(() => {
+    dispatch(
+      setPaymentDetails({
+        totalAmount: route.params.orderDetails.totalAmount,
+        dueAmount: route.params.orderDetails.dueAmount,
+        payments: route.params.orderDetails.payments,
+      }),
+    );
+  }, []);
+
   // Add this function to handle order confirmation
   const handleConfirmOrder = () => {
     // Make sure all products have their prices set correctly before confirming
@@ -130,11 +140,14 @@ const PendingOrderScreen = ({navigation, route}: AddNewUserProps) => {
         ) {
           try {
             // Calculate total order amount
-            const orderTotal = parseFloat(
-              paymentDetails.totalAmount.replace(/[₹,\s]/g, ''),
-            );
+            const orderTotal =
+              typeof paymentDetails.totalAmount === 'string'
+                ? parseFloat(paymentDetails.totalAmount.replace(/[₹,\s]/g, ''))
+                : paymentDetails.totalAmount;
             let remainingDueAmount = orderTotal;
             const paymentResults = [];
+
+            console.log(paymentDetails.payments[0]?._id);
 
             // Sort payments by amount (largest first) to process larger payments first
             const sortedPayments = [...paymentDetails.payments].sort(
@@ -143,6 +156,12 @@ const PendingOrderScreen = ({navigation, route}: AddNewUserProps) => {
 
             // Process each payment individually and sequentially
             for (const payment of sortedPayments) {
+              if (payment?._id !== undefined) {
+                console.log('Payment already processed');
+                continue;
+              }
+              console.log('Processing payment:', payment);
+
               // Skip payment if it exceeds remaining due amount
               if (payment.amount > remainingDueAmount) {
                 console.warn(
@@ -414,15 +433,16 @@ const PendingOrderScreen = ({navigation, route}: AddNewUserProps) => {
                 navigation.navigate('PaymentScreen', {
                   paymentDetails: {
                     totalAmount:
-                      route.params.orderDetails.totalAmount.toLocaleString(
-                        'en-IN',
-                      ),
-                    dueAmount:
-                      route.params.orderDetails.dueAmount.toLocaleString(
-                        'en-IN',
-                      ),
+                      // route.params.orderDetails.totalAmount.toLocaleString(
+                      //   'en-IN',
+                      // )
+                      paymentDetails.totalAmount,
+                    dueAmount: paymentDetails.dueAmount,
+                    // route.params.orderDetails.dueAmount.toLocaleString(
+                    //   'en-IN',
+                    // ),
                   },
-                  paymentHistory: route.params.orderDetails.payments,
+                  paymentHistory: paymentDetails.payments,
                 })
               }>
               <Text className="font-semibold text-base text-[#292C33]">

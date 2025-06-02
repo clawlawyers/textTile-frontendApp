@@ -169,7 +169,7 @@ const OrderProductSelectionScreen = ({navigation, route}: AddNewUserProps) => {
   }
   console.log(currentClienName);
   return (
-    <View className="flex-1 bg-[#FBD7A2] pt-14 px-4 pb-2">
+    <View className="flex-1 bg-[#FAD9B3] pt-14 px-4 pb-2">
       {/* Header */}
       <View className="flex-row justify-between items-start mb-4">
         <TouchableOpacity
@@ -355,7 +355,7 @@ const OrderProductSelectionScreen = ({navigation, route}: AddNewUserProps) => {
       {/* Bottom Actions */}
       <View className="absolute bottom-4 left-4 right-4 flex-row gap-4 mb-1 flex-1">
         <TouchableOpacity
-          className=" flex-1 py-4 rounded-xl items-center border text-[#292C33]  border-[#292C33]"
+          className=" flex-1 py-3 rounded-xl items-center border text-[#292C33]  border-[#292C33]"
           onPress={() => navigation.navigate('OrderSummaryScreen')}>
           <Text className=" font-semibold text-base text-[#292C33]">
             Cart {'('}
@@ -363,14 +363,14 @@ const OrderProductSelectionScreen = ({navigation, route}: AddNewUserProps) => {
             {')'}
           </Text>
         </TouchableOpacity>
-        <TouchableOpacity
+        {/* <TouchableOpacity
           className=" flex-1 py-4 rounded-xl items-center border border-[#DB9245] bg-[#DB9245] "
           // onPress={() => navigation.navigate('AddInventoryScreen')}
         >
           <Text className="text-white font-semibold text-base">
             Create Order
           </Text>
-        </TouchableOpacity>
+        </TouchableOpacity> */}
       </View>
     </View>
   );

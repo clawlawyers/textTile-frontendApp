@@ -20,6 +20,7 @@ import {NODE_API_ENDPOINT} from '../utils/util';
 import {useDispatch, useSelector} from 'react-redux';
 import {RootState} from '../redux/store';
 import {setCurrentClient} from '../redux/commonSlice';
+import PermissionDeniedDialog from '../components/PermissionDeniedDialog';
 
 const clients = [
   {id: '1', name: 'Ram Enterprice', owner: 'Rameswaram Das'},
@@ -39,6 +40,8 @@ type AddNewUserProps = NativeStackScreenProps<
 >;
 const ClientListScreen = ({navigation}: AddNewUserProps) => {
   const [showPermissionDialog, setShowPermissionDialog] =
+    useState<boolean>(false);
+  const [showPermissionDeleteDialog, setShowPermissionDeleteDialog] =
     useState<boolean>(false);
   const [clients, setClients] = useState([]);
 
@@ -130,7 +133,7 @@ const ClientListScreen = ({navigation}: AddNewUserProps) => {
   }
 
   return (
-    <View className="flex-1 bg-[#FBD7A2] px-4 pt-14 pb-12">
+    <View className="flex-1 bg-[#FAD9B3] px-4 pt-14 pb-12">
       {/* Header */}
       <View className="flex-row justify-between items-center mb-6">
         <TouchableOpacity
@@ -207,7 +210,7 @@ const ClientListScreen = ({navigation}: AddNewUserProps) => {
                             setShowPermissionDialog(true);
                             return;
                           }
-                          setShowPermissionDialog(true);
+                          setShowPermissionDeleteDialog(true);
                         }}>
                         <Ionicons
                           name="trash-outline"
@@ -215,10 +218,15 @@ const ClientListScreen = ({navigation}: AddNewUserProps) => {
                           color="#292C33"
                         />
                         <DeleteConfirmation
-                          visible={showPermissionDialog}
-                          onClose={() => setShowPermissionDialog(false)}
+                          visible={showPermissionDeleteDialog}
+                          onClose={() => setShowPermissionDeleteDialog(false)}
                           type="Client"
                           onDelete={() => handleDeleteClient(client._id)}
+                        />
+
+                        <PermissionDeniedDialog
+                          visible={showPermissionDialog}
+                          onClose={() => setShowPermissionDialog(false)}
                         />
                       </TouchableOpacity>
                     </View>

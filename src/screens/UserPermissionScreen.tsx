@@ -171,7 +171,7 @@ const UserPermissionScreen = ({navigation, route}: UserPermissionsProps) => {
       </Text>
       <Text className="text-sm text-black mb-4 leading-snug">
         Set User Permissions as to what{' '}
-        <Text className="text-[#C16800] font-semibold">Deepika Padukone</Text>{' '}
+        {/* <Text className="text-[#C16800] font-semibold">Deepika Padukone</Text>{' '} */}
         can be allowed to access and modify.
       </Text>
 

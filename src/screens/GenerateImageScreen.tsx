@@ -197,8 +197,15 @@ const GenerateImageScreen = ({navigation}: GenerateImageScreenProps) => {
     <SafeAreaView className="flex-1 bg-[#FAD9B3]">
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 64 : 0}
         className="flex-1">
-        <View className="flex-1 px-4 pt-4">
+        <ScrollView
+          className="flex-1 px-4 pt-4"
+          contentContainerStyle={{
+            paddingBottom: keyboardVisible ? 200 : 20,
+            flexGrow: 1,
+          }}
+          keyboardShouldPersistTaps="handled">
           {/* Header Icons */}
           <View className="flex-row justify-between items-center mb-2">
             <TouchableOpacity
@@ -420,7 +427,7 @@ const GenerateImageScreen = ({navigation}: GenerateImageScreenProps) => {
               )}
             </TouchableOpacity>
           </View>
-        </View>
+        </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
   );

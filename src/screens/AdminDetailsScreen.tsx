@@ -1,5 +1,5 @@
 /* eslint-disable react-native/no-inline-styles */
-import React, {useCallback, useEffect} from 'react';
+import React, {useCallback, useEffect, useState} from 'react';
 import {
   View,
   Text,
@@ -8,6 +8,7 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   ToastAndroid,
+  Animated,
 } from 'react-native';
 import Feather from 'react-native-vector-icons/Feather';
 import FontistoIcon from 'react-native-vector-icons/Fontisto';
@@ -39,6 +40,7 @@ const AdminDetailsScreen = ({navigation}: AddNewUserProps) => {
 
   const [adminDetails, setAdminDetails] = React.useState<adminInfo>();
   const [loading, setLoading] = React.useState(false);
+  const [fadeAnim] = useState(new Animated.Value(1));
 
   const dispatch = useDispatch();
   console.log(adminDetails);
@@ -99,13 +101,49 @@ const AdminDetailsScreen = ({navigation}: AddNewUserProps) => {
     return (
       <View className="flex-1 justify-center items-center bg-[#FAD9B3]">
         <ActivityIndicator size="large" color="#DB9245" />
-        <Text className="mt-2 text-black">Loading Admin Details...</Text>
+        <Text className="mt-2 text-black">
+          Loading {currentUser?.type === 'manager' ? 'Admin' : 'User'}{' '}
+          Details...
+        </Text>
       </View>
     );
   }
 
+  const handleLogout = () => {
+    // Show toast first
+    ToastAndroid.show('Logout Successful', ToastAndroid.SHORT);
+
+    dispatch(logout());
+
+    rootNavigation.dispatch(
+      CommonActions.reset({
+        index: 0,
+        routes: [
+          {
+            name: 'Home',
+            state: {
+              routes: [{name: 'Login'}],
+            },
+          },
+        ],
+      }),
+    );
+
+    // // Start fade out animation
+    // Animated.timing(fadeAnim, {
+    //   toValue: 0,
+    //   duration: 300,
+    //   useNativeDriver: true,
+    // }).start(() => {
+    //   // Dispatch logout action after animation starts
+
+    // });
+  };
+
   return (
-    <View className="bg-[#FAD9B3] flex-1 px-4 pt-10 flex">
+    <Animated.View
+      style={{flex: 1, opacity: fadeAnim}}
+      className="bg-[#FAD9B3] px-4 pt-10">
       {/* Top Bar */}
       <View className="flex-row justify-between items-center mb-2">
         <TouchableOpacity
@@ -125,7 +163,9 @@ const AdminDetailsScreen = ({navigation}: AddNewUserProps) => {
       {/* Admin Card */}
       <View className="bg-[#DB9245] rounded-xl p-4 mt-4">
         <View className="flex-row justify-between items-center mb-3">
-          <Text className="text-lg font-bold text-white">Admin Details</Text>
+          <Text className="text-lg font-bold text-white">
+            {currentUser?.type === 'manager' ? 'Admin' : 'User'} Details
+          </Text>
           <TouchableOpacity
             onPress={() =>
               navigation.navigate('EditAccountDetails', {
@@ -178,20 +218,8 @@ const AdminDetailsScreen = ({navigation}: AddNewUserProps) => {
           </>
         )}
         <Pressable
-          className="bg-[#DB9245] rounded-md py-3 "
-          onPress={() => {
-            dispatch(logout());
-            ToastAndroid.show('Logout Successful', ToastAndroid.SHORT);
-            // Hard reset the entire navigation state
-            rootNavigation.dispatch(
-              CommonActions.reset({
-                index: 0,
-                routes: [{name: 'LoginScreen'}],
-              }),
-            );
-            // navigation.popToTop();
-            // navigation.replace('LoginScreen');
-          }}>
+          className="bg-[#DB9245] rounded-md py-3"
+          onPress={handleLogout}>
           <Text className="text-center text-white font-semibold">Logout</Text>
         </Pressable>
       </View>
@@ -209,7 +237,7 @@ const AdminDetailsScreen = ({navigation}: AddNewUserProps) => {
           </Text>
         </View>
       </View>
-    </View>
+    </Animated.View>
   );
 };
 

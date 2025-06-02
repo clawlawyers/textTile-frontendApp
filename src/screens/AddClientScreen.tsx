@@ -1,6 +1,6 @@
 /* eslint-disable react-native/no-inline-styles */
 import {NativeStackScreenProps} from '@react-navigation/native-stack';
-import React, {useState} from 'react';
+import React, {useState, useEffect} from 'react';
 import {
   View,
   Text,
@@ -9,6 +9,9 @@ import {
   Image,
   ScrollView,
   ActivityIndicator,
+  Keyboard,
+  KeyboardAvoidingView,
+  Platform,
 } from 'react-native';
 import {HomeStackParamList} from '../stacks/Home';
 
@@ -30,10 +33,31 @@ const AddClientScreen = ({navigation}: AddNewUserProps) => {
   const [firmName, setFirmName] = useState('');
   const [firmAddress, setFirmAddress] = useState('');
   const [firmGST, setFirmGST] = useState('');
-
   const [loading, setLoading] = useState(false);
+  const [keyboardVisible, setKeyboardVisible] = useState(false);
 
   const currentUser = useSelector((state: RootState) => state.auth.user);
+
+  // Add keyboard listeners
+  useEffect(() => {
+    const keyboardDidShowListener = Keyboard.addListener(
+      'keyboardDidShow',
+      () => {
+        setKeyboardVisible(true);
+      },
+    );
+    const keyboardDidHideListener = Keyboard.addListener(
+      'keyboardDidHide',
+      () => {
+        setKeyboardVisible(false);
+      },
+    );
+
+    return () => {
+      keyboardDidShowListener.remove();
+      keyboardDidHideListener.remove();
+    };
+  }, []);
 
   const addClientHandler = async () => {
     // if (currentUser?.type !== 'manager') {
@@ -79,44 +103,42 @@ const AddClientScreen = ({navigation}: AddNewUserProps) => {
   };
 
   return (
-    <View className="flex-1 bg-[#FAD9B3] px-6 pt-14 pb-8">
-      {/* Header */}
-      <View className="flex-row justify-between items-center mb-6">
-        <TouchableOpacity
-          onPress={() => navigation.goBack()}
-          className="w-10 h-10 rounded-full border border-[#292C33] justify-center items-center">
-          <Icon1 name="arrow-left" size={20} color="#292C33" />
-        </TouchableOpacity>
-
-        {/* <TouchableOpacity
-          onPress={() => navigation.navigate('Notification')}
-          className="relative">
-          <FontistoIcon name="bell" size={25} color={'#DB9245'} />
-          <View className="absolute top-0 right-0 w-2 h-2 rounded-full bg-green-500" />
-        </TouchableOpacity> */}
-      </View>
-
-      {/* Icon */}
-      <View className="items-start">
-        <Image
-          source={require('../assets/logo.png')} // Replace with your icon
-          style={{width: 80, height: 80, resizeMode: 'contain'}}
-        />
-      </View>
-
-      {/* Title & Subtitle */}
-      <View className="mt-4 mb-2">
-        <Text className="text-black text-xl font-bold">Set Up Client</Text>
-        <Text className="text-black text-sm mt-1">
-          Set Up Your Client first to proceed with{'\n'}
-          <Text className="text-[#DB9245]">Order Placement</Text>
-        </Text>
-      </View>
-
-      {/* Input Form */}
+    <KeyboardAvoidingView
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      className="flex-1 bg-[#FAD9B3]">
       <ScrollView
-        contentContainerStyle={{paddingBottom: 20}}
+        className="flex-1 px-6 pt-14 pb-8"
+        contentContainerStyle={{
+          paddingBottom: keyboardVisible ? 200 : 20,
+        }}
         showsVerticalScrollIndicator={false}>
+        {/* Header */}
+        <View className="flex-row justify-between items-center mb-6">
+          <TouchableOpacity
+            onPress={() => navigation.goBack()}
+            className="w-10 h-10 rounded-full border border-[#292C33] justify-center items-center">
+            <Icon1 name="arrow-left" size={20} color="#292C33" />
+          </TouchableOpacity>
+        </View>
+
+        {/* Icon */}
+        <View className="items-start">
+          <Image
+            source={require('../assets/logo.png')}
+            style={{width: 80, height: 80, resizeMode: 'contain'}}
+          />
+        </View>
+
+        {/* Title & Subtitle */}
+        <View className="mt-4 mb-2">
+          <Text className="text-black text-xl font-bold">Set Up Client</Text>
+          <Text className="text-black text-sm mt-1">
+            Set Up Your Client first to proceed with{'\n'}
+            <Text className="text-[#DB9245]">Order Placement</Text>
+          </Text>
+        </View>
+
+        {/* Input Form */}
         <View className="space-y-4 gap-1">
           <TextInput
             className="border border-[#DB9245] rounded-md px-4 py-3 text-black"
@@ -164,19 +186,21 @@ const AddClientScreen = ({navigation}: AddNewUserProps) => {
             onChangeText={setFirmGST}
           />
         </View>
-      </ScrollView>
 
-      {/* Submit Button */}
-      <TouchableOpacity
-        className="bg-[#DB9245] py-4 rounded-xl items-center mt-2"
-        onPress={addClientHandler}>
-        {loading ? (
-          <ActivityIndicator color="#fff" />
-        ) : (
-          <Text className="text-white font-semibold text-base">Add Client</Text>
-        )}
-      </TouchableOpacity>
-    </View>
+        {/* Submit Button */}
+        <TouchableOpacity
+          className="bg-[#DB9245] py-4 rounded-xl items-center mt-6"
+          onPress={addClientHandler}>
+          {loading ? (
+            <ActivityIndicator color="#fff" />
+          ) : (
+            <Text className="text-white font-semibold text-base">
+              Add Client
+            </Text>
+          )}
+        </TouchableOpacity>
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 };
 

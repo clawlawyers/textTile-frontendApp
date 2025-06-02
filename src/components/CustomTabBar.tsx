@@ -66,8 +66,29 @@ const CustomTabBar: React.FC<BottomTabBarProps> = ({
   const CostomeState = useNavigationState(state => state);
   console.log(CostomeState);
 
+  // Check if CostomeState exists and has routes
+  if (
+    !CostomeState ||
+    !CostomeState.routes ||
+    CostomeState.routes.length === 0
+  ) {
+    return null; // Don't render tab bar if state is invalid
+  }
+
   const currentTabIndex = CostomeState?.index;
+  // Ensure currentTabIndex is valid
+  if (
+    currentTabIndex === undefined ||
+    currentTabIndex < 0 ||
+    currentTabIndex >= CostomeState.routes.length
+  ) {
+    return null;
+  }
+
   const currentRoute = CostomeState?.routes[currentTabIndex];
+  if (!currentRoute) {
+    return null;
+  }
 
   const nestedState = currentRoute?.state as any;
   const nestedRouteName =
@@ -83,6 +104,11 @@ const CustomTabBar: React.FC<BottomTabBarProps> = ({
   return (
     <View className="flex-row justify-around bg-[#26272c] py-3 ">
       {CostomeState?.routes.map((route, index) => {
+        // Check if route key exists in descriptors
+        if (!descriptors[route.key]) {
+          return null; // Skip rendering this tab item
+        }
+
         const {options} = descriptors[route.key];
         const isFocused = state.index === index;
 

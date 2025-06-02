@@ -56,11 +56,32 @@ const OrderSummaryScreen = ({navigation}: AddNewUserProps) => {
     (state: RootState) => state.common.paymentDetails,
   );
 
+  console.log(paymentDetails);
+
+  // Handle back navigation cleanup
+  useEffect(() => {
+    const unsubscribe = navigation.addListener('beforeRemove', () => {
+      dispatch(setPaymentDetails(null)); // Clear payment details when leaving screen
+    });
+
+    return unsubscribe;
+  }, [navigation, dispatch]);
+
   // Calculate total price
   const totalPrice = useMemo(() => {
     return cartProducts.reduce((sum, item) => {
       const price = parseFloat(item.inventoryProduct.price) || 0;
       const quantity = parseInt(item.quantity) || 0;
+      if (!loading) {
+        dispatch(
+          setPaymentDetails({
+            totalAmount: (sum + price * quantity).toLocaleString('en-IN'),
+            dueAmount: (sum + price * quantity).toLocaleString('en-IN'),
+            payments: [],
+          }),
+        );
+      }
+
       return sum + price * quantity;
     }, 0);
   }, [cartProducts]);
@@ -75,7 +96,7 @@ const OrderSummaryScreen = ({navigation}: AddNewUserProps) => {
           text: 'Remove',
           style: 'destructive',
           onPress: async () => {
-            setLoading(true);
+            // setLoading(true);
 
             // Log the request details for debugging
             console.log(
@@ -105,7 +126,7 @@ const OrderSummaryScreen = ({navigation}: AddNewUserProps) => {
                 `Failed to remove from cart: ${removeFromCartResponse.status} ${errorText}`,
               );
               Alert.alert('Error', 'Failed to remove item from cart');
-              setLoading(false);
+              // setLoading(false);
               return;
             }
 
@@ -125,7 +146,7 @@ const OrderSummaryScreen = ({navigation}: AddNewUserProps) => {
 
             // Update local state
             setCartProducts(data.cart.items);
-            setLoading(false);
+            // setLoading(false);
           },
         },
       ]);
@@ -139,11 +160,16 @@ const OrderSummaryScreen = ({navigation}: AddNewUserProps) => {
   // Add this function to handle price updates
   const handlePriceChange = (index, newPrice) => {
     const updatedProducts = [...cartProducts];
-    // Update both the display price and the actual price properties
-    updatedProducts[index].inventoryProduct.price = newPrice;
-    updatedProducts[index].unitPrice = parseFloat(newPrice) || 0;
-    updatedProducts[index].totalPrice =
-      (parseFloat(newPrice) || 0) * updatedProducts[index].quantity;
+    // Create a new inventoryProduct object instead of modifying the existing one
+    updatedProducts[index] = {
+      ...updatedProducts[index],
+      inventoryProduct: {
+        ...updatedProducts[index].inventoryProduct,
+        price: newPrice,
+      },
+      unitPrice: parseFloat(newPrice) || 0,
+      totalPrice: (parseFloat(newPrice) || 0) * updatedProducts[index].quantity,
+    };
     setCartProducts(updatedProducts);
   };
 
@@ -182,7 +208,9 @@ const OrderSummaryScreen = ({navigation}: AddNewUserProps) => {
 
         if (!response.ok) {
           setLoading(false);
-          const errorText = await response.text();
+          const errorText = await response.json();
+          console.log(errorText?.message);
+          ToastAndroid.show(errorText?.message, ToastAndroid.SHORT);
           throw new Error(
             `Failed to create order: ${response.status} ${errorText}`,
           );
@@ -353,7 +381,8 @@ const OrderSummaryScreen = ({navigation}: AddNewUserProps) => {
       } catch (error) {
         setLoading(false);
         console.error('Error creating order:', error);
-        Alert.alert('Error', 'Failed to create order');
+        ToastAndroid.show('Failed to create order', ToastAndroid.SHORT);
+        // Alert.alert('Error', 'Failed to create order');
       }
     };
 
@@ -532,6 +561,19 @@ const OrderSummaryScreen = ({navigation}: AddNewUserProps) => {
             <View className="mt-auto">
               {/* Total Amount Section */}
               <View className="mt-2 mb-4">
+                <View className="flex-row items-center justify-between border border-black rounded-lg overflow-hidden mb-2">
+                  <View className="bg-black px-5 py-4">
+                    <Text className="text-white font-semibold">Due Amount</Text>
+                  </View>
+                  <View className="px-4 py-3 flex-1">
+                    <Text className="text-right font-semibold text-base">
+                      ₹{' '}
+                      {paymentDetails === null
+                        ? totalPrice.toLocaleString('en-IN')
+                        : paymentDetails.dueAmount}
+                    </Text>
+                  </View>
+                </View>
                 <View className="flex-row items-center justify-between border border-black rounded-lg overflow-hidden">
                   <View className="bg-black px-4 py-4">
                     <Text className="text-white font-semibold">
@@ -551,13 +593,16 @@ const OrderSummaryScreen = ({navigation}: AddNewUserProps) => {
                 <TouchableOpacity
                   className="flex-1 py-3 rounded-xl items-center border border-[#292C33]"
                   onPress={() => {
-                    dispatch(setPaymentDetails(null));
+                    // dispatch(setPaymentDetails(null));
                     navigation.navigate('PaymentScreen', {
                       paymentDetails: {
                         totalAmount: totalPrice.toLocaleString('en-IN'),
-                        dueAmount: totalPrice.toLocaleString('en-IN'),
+                        dueAmount:
+                          paymentDetails === null
+                            ? totalPrice.toLocaleString('en-IN')
+                            : paymentDetails.dueAmount,
                       },
-                      paymentHistory: [],
+                      paymentHistory: paymentDetails.payments,
                     });
                   }}>
                   <Text className="font-semibold text-base text-[#292C33]">

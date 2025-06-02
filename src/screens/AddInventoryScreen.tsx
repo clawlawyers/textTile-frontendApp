@@ -12,9 +12,11 @@ type AddNewUserProps = NativeStackScreenProps<
 >;
 
 const AddInventoryScreen = ({navigation}: AddNewUserProps) => {
-  const currentInventoryName = useSelector(
+  const inventoryName = useSelector(
     (state: RootState) => state.common.inventoryName,
   );
+
+  console.log(inventoryName);
   return (
     <View className="flex-1 bg-[#FAD9B3] px-6 pt-12">
       <StatusBar barStyle="dark-content" backgroundColor="#FAD9B3" />
@@ -30,7 +32,7 @@ const AddInventoryScreen = ({navigation}: AddNewUserProps) => {
         <View className="items-end">
           <Text className="text-xs text-black">Inventory For</Text>
           <Text className="text-base font-bold text-black">
-            {currentInventoryName}
+            {inventoryName}
           </Text>
         </View>
       </View>

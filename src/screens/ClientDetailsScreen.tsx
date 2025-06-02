@@ -6,6 +6,7 @@ import {
   ScrollView,
   StatusBar,
   ActivityIndicator,
+  ToastAndroid,
 } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 
@@ -20,6 +21,7 @@ import {useSelector} from 'react-redux';
 import {RootState} from '../redux/store';
 import {NODE_API_ENDPOINT} from '../utils/util';
 import DeleteConfirmation from '../components/DeleteConfirmation';
+import PermissionDeniedDialog from '../components/PermissionDeniedDialog';
 
 // const orders = [
 //   {date: '25/05/2025', orderNo: '325698565478', status: 'Active'},
@@ -48,6 +50,8 @@ const ClientDetailsScreen = ({navigation, route}: AddNewUserProps) => {
   const [loading, setLoading] = useState(true);
 
   const [showPermissionDialog, setShowPermissionDialog] = useState(false);
+  const [showPermissionDeleteDialog, setShowPermissionDeleteDialog] =
+    useState(false);
 
   console.log(orders);
 
@@ -154,7 +158,7 @@ const ClientDetailsScreen = ({navigation, route}: AddNewUserProps) => {
   }
 
   return (
-    <View className="flex-1 bg-[#FBD7A2] pt-14 px-4 pb-12">
+    <View className="flex-1 bg-[#FAD9B3] pt-14 px-4 pb-12">
       <StatusBar barStyle="dark-content" backgroundColor="#FBD7A2" />
 
       {/* Top Navigation */}
@@ -186,16 +190,21 @@ const ClientDetailsScreen = ({navigation, route}: AddNewUserProps) => {
               setShowPermissionDialog(true);
               return;
             }
-            setShowPermissionDialog(true);
+            setShowPermissionDeleteDialog(true);
           }}>
           <Icon1 name="trash-2" size={15} color="black" />
         </TouchableOpacity>
       </View>
       <DeleteConfirmation
-        visible={showPermissionDialog}
-        onClose={() => setShowPermissionDialog(false)}
+        visible={showPermissionDeleteDialog}
+        onClose={() => setShowPermissionDeleteDialog(false)}
         type="Client"
         onDelete={handleDeleteClient}
+      />
+
+      <PermissionDeniedDialog
+        visible={showPermissionDialog}
+        onClose={() => setShowPermissionDialog(false)}
       />
 
       {/* Client Info */}
@@ -294,7 +303,11 @@ const ClientDetailsScreen = ({navigation, route}: AddNewUserProps) => {
 
       <View className="mt-auto">
         {/* Bottom Buttons */}
-        <TouchableOpacity className="bg-[#1F1F1F] py-4 rounded-xl items-center mb-2">
+        <TouchableOpacity
+          className="bg-[#1F1F1F] py-4 rounded-xl items-center mb-2"
+          onPress={() => {
+            ToastAndroid.show('Feature Coming Soon', ToastAndroid.SHORT);
+          }}>
           <Text className="text-white font-semibold text-base">
             Generate Client Login
           </Text>

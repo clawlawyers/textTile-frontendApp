@@ -53,6 +53,8 @@ const PaymentScreen = ({navigation, route}: AddNewUserProps) => {
     route.params.paymentDetails,
   );
 
+  console.log(paymentData);
+
   // Ensure we have proper formatting for due amount
   const [currentDueAmount, setCurrentDueAmount] = useState(() => {
     // Parse the due amount, handling different formats
@@ -90,9 +92,11 @@ const PaymentScreen = ({navigation, route}: AddNewUserProps) => {
     ) {
       newDueAmount = Math.max(
         0,
-        parseFloat(
-          route.params.paymentDetails.dueAmount.replace(/[₹,\s]/g, ''),
-        ) - totalPaid,
+        typeof route.params.paymentDetails?.dueAmount === 'string'
+          ? parseFloat(
+              route.params.paymentDetails.dueAmount.replace(/[₹,\s]/g, ''),
+            ) - totalPaid
+          : route.params.paymentDetails.dueAmount - totalPaid,
       );
       // newDueAmount =
       //   newDueAmount -
@@ -112,7 +116,7 @@ const PaymentScreen = ({navigation, route}: AddNewUserProps) => {
       ...paymentDetails,
       dueAmount: formattedDueAmount,
       payments:
-        paymentData.length > 0
+        paymentData?.length > 0
           ? paymentData.map(item => ({
               amount: parseFloat(item.amount.replace(/[₹,\s]/g, '')),
               modeOfPayment: item.mode,
@@ -171,12 +175,15 @@ const PaymentScreen = ({navigation, route}: AddNewUserProps) => {
   const handleUpdatePayment = () => {
     // Format payment data for API
     const formattedPayments =
-      paymentData.length > 0
+      paymentData?.length > 0
         ? paymentData.map(item => ({
             amount: parseFloat(item.amount.replace(/[₹,\s]/g, '')),
             modeOfPayment: item.mode,
           }))
         : [];
+
+    route?.params?.paymentHistory?.length > 0 &&
+      formattedPayments.push(...route.params.paymentHistory);
 
     // Final payment details to be used by other components
     const finalPaymentDetails = {
@@ -185,6 +192,8 @@ const PaymentScreen = ({navigation, route}: AddNewUserProps) => {
     };
 
     console.log('Updating payment details in Redux:', finalPaymentDetails);
+
+    console.log('Current due amount before update:', paymentDetails);
 
     // Dispatch to Redux
     dispatch(setPaymentDetails(finalPaymentDetails));
@@ -329,18 +338,18 @@ const PaymentScreen = ({navigation, route}: AddNewUserProps) => {
           </Text>
         </TouchableOpacity>
 
-        {route.params.paymentHistory.length > 0 && (
+        {route?.params?.paymentHistory?.length > 0 && (
           <>
             <Text className="text-base font-semibold mb-2">
               Payment History
             </Text>
-            {route.params.paymentHistory.map((item: any, index: number) => (
+            {route.params?.paymentHistory.map((item: any, index: number) => (
               <View key={index} className="flex-row items-center mb-3">
                 <Text className="flex-1 border border-[#DB9245] rounded-lg px-4 py-3 mr-2 text-base">
                   {item.amount}
                 </Text>
                 <Text className="flex-1 border border-[#DB9245] bg-[#DB9245] rounded-lg px-4 py-3 mr-2 text-base">
-                  {item.paymentMethod}
+                  {item.paymentMethod || item.modeOfPayment}
                 </Text>
               </View>
             ))}
@@ -351,7 +360,7 @@ const PaymentScreen = ({navigation, route}: AddNewUserProps) => {
       {/* Update Payment Button */}
       <TouchableOpacity
         className="bg-[#D1853A] py-3 rounded-lg items-center mt-auto mb-10"
-        disabled={paymentData.length === 0}
+        disabled={paymentData?.length === 0}
         onPress={handleUpdatePayment}>
         <Text className="text-white font-semibold text-base">
           Update Payment

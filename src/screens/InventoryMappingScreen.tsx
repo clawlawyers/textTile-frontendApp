@@ -179,7 +179,7 @@ const InventoryMappingScreen = ({navigation, route}: AddNewUserProps) => {
         <View className="items-end">
           <Text className="text-xs text-black">Inventory For</Text>
           <Text className="text-base font-bold text-black">
-            {currentInventoryName || 'CLAW Textile Manufacturing'}
+            {currentInventoryName}
           </Text>
         </View>
       </View>
@@ -213,7 +213,7 @@ const InventoryMappingScreen = ({navigation, route}: AddNewUserProps) => {
             <View className="flex-1">
               <Dropdown
                 style={{
-                  height: 48,
+                  height: 38,
                   backgroundColor: 'white',
                   borderTopRightRadius: 6,
                   borderBottomRightRadius: 6,
@@ -245,7 +245,7 @@ const InventoryMappingScreen = ({navigation, route}: AddNewUserProps) => {
                   marginLeft: 12,
                 }}
                 inputSearchStyle={{
-                  height: 40,
+                  height: 38,
                   borderColor: '#D6872A',
                   borderWidth: 1,
                   borderRadius: 6,

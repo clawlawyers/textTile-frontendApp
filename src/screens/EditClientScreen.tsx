@@ -46,7 +46,10 @@ const EditClientScreen = ({navigation, route}: AddNewUserProps) => {
   console.log(route.params.clientId);
 
   const addClientHandler = async () => {
-    if (currentUser?.type !== 'manager') {
+    if (
+      !currentUser?.permissions?.editClient &&
+      currentUser?.type !== 'manager'
+    ) {
       return;
     }
     try {
