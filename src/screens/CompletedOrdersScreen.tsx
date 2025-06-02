@@ -91,7 +91,7 @@ const CompletedOrdersScreen = ({navigation}: CompletedOrderProps) => {
 
       // Optional cleanup function
       return () => {};
-    }, [currentUser?.token, activeFirm?._id]),
+    }, [currentUser?.token, activeFirm]),
   );
 
   if (loading) {

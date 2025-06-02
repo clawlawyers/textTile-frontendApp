@@ -303,10 +303,8 @@ const HomeScreen = ({navigation}: HomeProps) => {
               <TouchableOpacity
                 className="mt-4 bg-[#FAD9B3] py-2 rounded-lg items-center flex-row justify-center gap-4 z-0"
                 onPress={() => {
-                  if (
-                    !currentUser?.permissions?.addFirm &&
-                    currentUser?.type !== 'manager'
-                  ) {
+                  if (currentUser?.type !== 'manager') {
+                    setShowPermissionDialog(true);
                     return;
                   }
                   navigation.navigate('AddNewFirmScreen');
@@ -325,10 +323,7 @@ const HomeScreen = ({navigation}: HomeProps) => {
             <TouchableOpacity
               className="mt-4 bg-[#FAD9B3] py-2 rounded-lg items-center flex-row justify-center gap-4 z-0"
               onPress={() => {
-                if (
-                  !currentUser?.permissions?.addFirm &&
-                  currentUser?.type !== 'manager'
-                ) {
+                if (currentUser?.type !== 'manager') {
                   setShowPermissionDialog(true);
                   return;
                 }

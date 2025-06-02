@@ -9,6 +9,8 @@ import {
   Platform,
   PermissionsAndroid,
 } from 'react-native';
+import Share from 'react-native-share';
+
 import Icon from 'react-native-vector-icons/Feather';
 import FontistoIcon from 'react-native-vector-icons/Fontisto';
 import {OrderHistoryParamList} from '../stacks/OrderHistory';
@@ -27,6 +29,7 @@ const InvoiceDetailScreen = ({navigation, route}: InvoiceDetailScreenProps) => {
     route.params.orderDetails,
   );
   const [downloading, setDownloading] = React.useState(false);
+  const [shareDownloading, setShareDownloading] = React.useState(false);
   const currentUser = useSelector((state: RootState) => state.auth.user);
 
   // Check storage permission for Android
@@ -163,6 +166,58 @@ const InvoiceDetailScreen = ({navigation, route}: InvoiceDetailScreenProps) => {
     }
   };
 
+  const shareInvoice = async () => {
+    if (shareDownloading) return;
+
+    setShareDownloading(true);
+
+    try {
+      // Get the order ID
+      const orderId = orderDetails._id;
+
+      // Set download path based on platform
+      const {dirs} = RNFetchBlob.fs;
+      const dirPath =
+        Platform.OS === 'ios' ? dirs.DocumentDir : dirs.DownloadDir;
+
+      // Create filename with timestamp
+      const timestamp = new Date().getTime();
+      const filename = `invoice_${orderId}_${timestamp}.pdf`;
+      const filePath = `${dirPath}/${filename}`;
+
+      const apiUrl = `${NODE_API_ENDPOINT}/orders/invoice/${orderId}`;
+
+      // Download the file first
+      const res = await RNFetchBlob.config({
+        fileCache: true,
+        path: filePath,
+      }).fetch('GET', apiUrl, {
+        Authorization: `Bearer ${currentUser?.token}`,
+      });
+
+      // Check if file exists and has content
+      const fileExists = await RNFetchBlob.fs.exists(filePath);
+      if (!fileExists || res.info().status !== 200) {
+        throw new Error('Failed to download invoice for sharing');
+      }
+
+      // Share the file
+      const shareOptions = {
+        title: 'Share Invoice',
+        message: 'Please find the attached invoice',
+        url: Platform.OS === 'android' ? `file://${filePath}` : filePath,
+        type: 'application/pdf',
+      };
+
+      await Share.open(shareOptions);
+    } catch (error) {
+      console.error('Error sharing invoice:', error);
+      // Alert.alert('Error', `Failed to share invoice: ${error.message}`);
+    } finally {
+      setShareDownloading(false);
+    }
+  };
+
   return (
     <ScrollView className="flex-1 bg-[#FAD7AF] px-6 pt-12">
       {/* Header */}
@@ -267,9 +322,13 @@ const InvoiceDetailScreen = ({navigation, route}: InvoiceDetailScreenProps) => {
       </TouchableOpacity>
 
       <View className="flex-row justify-between mt-4">
-        <TouchableOpacity className="flex-1 py-3 rounded-xl border border-black mr-2">
-          <Text className="text-center text-black font-semibold">
-            <Icon name="share-2" size={20} color="#292C33" /> {'   '} Share
+        <TouchableOpacity
+          className="flex-1 py-3 rounded-xl border border-black mr-2"
+          onPress={shareInvoice}
+          disabled={shareDownloading}>
+          <Text className="text-center text-black font-semibold ">
+            <Icon name="share-2" size={20} color="#292C33" />
+            {'   '} {shareDownloading ? 'Processing...' : 'Share'}
           </Text>
         </TouchableOpacity>
         <TouchableOpacity

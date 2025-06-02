@@ -23,7 +23,7 @@ type UserPermissionsProps = NativeStackScreenProps<
 
 interface PermissionState {
   _id: string;
-  addFirm: boolean;
+  // addFirm: boolean;
   deleteClient: boolean;
   addClient: boolean;
   generateInvoice: boolean;
@@ -176,7 +176,7 @@ const UserPermissionScreen = ({navigation, route}: UserPermissionsProps) => {
       </Text>
 
       {/* Firm Management Section */}
-      <View className="bg-[#1E1E1E] rounded-xl p-4 mb-2">
+      {/* <View className="bg-[#1E1E1E] rounded-xl p-4 mb-2">
         <View className="text-[#FAD7AF] font-semibold flex flex-row">
           <View className="w-4 h-4 border border-[#DB9245] rounded-full mr-3" />
           <View>
@@ -186,7 +186,7 @@ const UserPermissionScreen = ({navigation, route}: UserPermissionsProps) => {
           </View>
         </View>
         {renderCheckbox('Add Firm', 'addFirm')}
-      </View>
+      </View> */}
 
       {/* Client Management Section */}
       <View className="bg-[#1E1E1E] rounded-xl p-4 mb-2">
