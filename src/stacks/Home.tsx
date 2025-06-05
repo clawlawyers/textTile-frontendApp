@@ -58,6 +58,7 @@ import ImagePaletteScreen from '../screens/ImagePaletteScreen';
 import PaletteGeneratedScreen from '../screens/PaletteGeneratedScreen';
 import EditPaletteScreen from '../screens/EditPaletteScreen';
 import WalletScreen from '../screens/WalletScreen';
+import TestHomeScreen from '../screens/TestHomeScreenn';
 import MagicLoadingScreen from '../screens/MagicLoadingScreen';
 import {useNavigation} from '@react-navigation/native';
 
@@ -195,7 +196,7 @@ function HomeStackNavigator() {
       />
       <HomeStack.Screen
         name="Home"
-        component={HomeScreen}
+        component={TestHomeScreen}
         options={{headerShown: false}}
       />
       <HomeStack.Screen

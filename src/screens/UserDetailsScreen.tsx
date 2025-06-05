@@ -5,6 +5,7 @@ import {
   TouchableOpacity,
   ScrollView,
   ToastAndroid,
+  Clipboard,
 } from 'react-native';
 import FontistoIcon from 'react-native-vector-icons/Fontisto';
 import Ionicons from 'react-native-vector-icons/Feather';
@@ -23,7 +24,6 @@ type AddNewUserProps = NativeStackScreenProps<
 
 const UserDetailsScreen = ({navigation, route}: AddNewUserProps) => {
   const [userDetails, setUserDetails] = useState(route.params.userDetails);
-
   const organizationName = useSelector(
     (state: RootState) => state.auth.user?.organizationName,
   );
@@ -54,8 +54,17 @@ const UserDetailsScreen = ({navigation, route}: AddNewUserProps) => {
       navigation.goBack();
     } catch (error) {}
   };
+  const handleCopyUserId = () => {
+    if (userDetails.user_id === 'Not Available') {
+      ToastAndroid.show('No User ID to copy', ToastAndroid.SHORT);
+      return;
+    }
+    Clipboard.setString(userDetails.user_id);
+    ToastAndroid.show('User ID copied to clipboard', ToastAndroid.SHORT);
+  };
 
   console.log(userDetails);
+  
 
   return (
     <View className="flex-1 bg-[#FAD9B3] px-4 pt-14 pb-6">
@@ -121,6 +130,21 @@ const UserDetailsScreen = ({navigation, route}: AddNewUserProps) => {
           </View>
         </View>
       </ScrollView>
+      <View className="px-4 py-2 bg-[#DB9245] rounded-lg">
+        <View className="flex-row justify-between items-center">
+          <Text className="text-white text-base font-bold">User Login Details</Text>
+            <TouchableOpacity onPress={handleCopyUserId}>
+            <Icon name="content-copy" size={18} color="#292C33" />
+            </TouchableOpacity>
+        </View>
+
+         <View className="flex-row justify-between items-center mt-2 pt-4 pb-2">
+            <View className="flex-row flex-1">
+             <Text className="font-medium text-black w-[40%]">User ID :</Text>
+             <Text className="text-black flex-1">{userDetails.user_id}</Text>
+            </View>
+         </View>
+      </View>
 
       {/* Bottom Button */}
       <TouchableOpacity
