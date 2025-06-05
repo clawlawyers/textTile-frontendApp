@@ -146,27 +146,30 @@ const CompletedOrdersScreen = ({navigation}: CompletedOrderProps) => {
                   orderDetails: order,
                 });
               }}>
-              <LinearGradient
+           <LinearGradient
                 colors={['#C7742D', '#FAD9B3']}
-                start={{x: 0, y: 0}}
-                end={{x: 1, y: 0}}
-                className="rounded-lg px-4 py-3 mb-2 flex-row justify-between items-center">
-                <View>
-                  <Text className="text-xs text-white">
-                    Order No: {order._id}
-                  </Text>
-                  <Text className="text-base text-white font-semibold">
-                    {order.client.name}{' '}
-                  </Text>
-                </View>
-                <Text className="text-xs text-[#292C33]">
-                  {new Date(order.createdAt).toLocaleDateString('en-US', {
-                    year: 'numeric',
-                    month: '2-digit',
-                    day: '2-digit',
-                  })}
-                </Text>
-              </LinearGradient>
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+                className="rounded-lg px-4 py-3 mb-2 flex-row justify-between items-center"
+                  >
+              <View>
+             <Text className="text-xs text-white">
+               Order No: {order?._id}
+              </Text>
+            <Text className="text-base text-white font-semibold">
+               {order?.client?.name || 'Unknown Client'}
+            </Text>
+            </View>
+               <Text className="text-xs text-[#292C33]">
+             {order?.createdAt
+               ? new Date(order.createdAt).toLocaleDateString('en-US', {
+               year: 'numeric',
+              month: '2-digit',
+          day: '2-digit',
+        })
+      : 'N/A'}
+  </Text>
+</LinearGradient>
             </TouchableOpacity>
           ))
         ) : (

@@ -175,7 +175,7 @@ const AlertSendScreen = ({navigation}: CompletedOrderProps) => {
                     Order No: {order._id}
                   </Text>
                   <Text className="text-base text-white font-semibold">
-                    {order.client.name}{' '}
+                    {order?.client?.name || 'Unknown Client'}
                   </Text>
                   <TouchableOpacity
                     className="bg-[#15191A] py-2 px-3 rounded-md mt-1"
