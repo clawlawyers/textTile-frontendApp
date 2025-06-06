@@ -210,6 +210,7 @@ const AdminDetailsScreen = ({navigation}: AddNewUserProps) => {
               className="bg-[#DB9245] rounded-md py-3 mb-4"
               onPress={() => {
                 ToastAndroid.show('Feature Coming Soon', ToastAndroid.SHORT);
+                // navigation.navigate('InsightsEmpty');
               }}>
               <Text className="text-center text-white font-semibold">
                 Generate Insights{' '}

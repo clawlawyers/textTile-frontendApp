@@ -102,7 +102,7 @@ const CustomTabBar: React.FC<BottomTabBarProps> = ({
   }
 
   return (
-    <View className="flex-row justify-around bg-[#26272c] py-3 ">
+    <View className="flex-row justify-around bg-[#26272c] py-3 z-50">
       {CostomeState?.routes.map((route, index) => {
         // Check if route key exists in descriptors
         if (!descriptors[route.key]) {
@@ -113,6 +113,7 @@ const CustomTabBar: React.FC<BottomTabBarProps> = ({
         const isFocused = state.index === index;
 
         const onPress = () => {
+          console.log('changeing tab');
           const event = navigation.emit({
             type: 'tabPress',
             target: route.key,

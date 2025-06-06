@@ -15,6 +15,13 @@ import UserPermissionScreen from '../screens/UserPermissionScreen';
 import AddNewUserScreen from '../screens/AddNewUserScreen';
 import LoginScreen from '../screens/LoginScreen';
 import AddNewUserAdded from '../screens/NewUserAddedScreen';
+import InsightScreen from '../Insights/InsightsEmpty';
+import LeftoverstockDesignwiseScreen from '../Insights/LeftOverStockDesignwise';
+import LeftoverstockproductwiseScreen from '../Insights/LeftOverStockProductwise';
+import MonthlyAdvanceVsDuesProductwiseScreen from '../Insights/MonthlyAdvanceVsDuesProductwise';
+import MonthlyDesignwiseOrdersScreen from '../Insights/MonthlyDesignwiseOrders';
+import MonthlyOrderPlacementAnalyticsScreen from '../Insights/MonthlyOrderPlacementAnaytics';
+import MonthlyProductwiseOrdersScreen from '../Insights/MonthlyProductwiseOrders';
 // import AccountScreen from '../screens/AccountScreen';
 // import OrderScreen from '../screens/OrdersScreen';
 // import OrderDetailsScreen from '../screens/OrderDetailsScreen';
@@ -43,6 +50,13 @@ export type AccountStackParamList = {
   UserPermissions: {salesmanId: string};
   AddNewUser: undefined;
   LoginScreen: undefined;
+  InsightsEmpty: undefined;
+  LeftoverstockDesignwiseScreen: undefined;
+  LeftoverstockproductwiseScreen: undefined;
+  MonthlyAdvanceVsDuesProductwiseScreen: undefined;
+  MonthlyDesignwiseOrdersScreen: undefined;
+  MonthlyOrderPlacementAnalyticsScreen: undefined;
+  MonthlyProductwiseOrdersScreen: undefined;
 };
 
 const AccountStack = createNativeStackNavigator<AccountStackParamList>();
@@ -119,6 +133,47 @@ function AccountStackNavigator() {
       <AccountStack.Screen
         name="EditAccountDetails"
         component={EditAccountDetails}
+        options={{headerShown: false}}
+      />
+      <AccountStack.Screen
+        name="InsightsEmpty"
+        component={InsightScreen}
+        options={{headerShown: false}}
+      />
+
+      <AccountStack.Screen
+        name="LeftoverstockDesignwiseScreen"
+        component={LeftoverstockDesignwiseScreen}
+        options={{headerShown: false}}
+      />
+
+      <AccountStack.Screen
+        name="LeftoverstockproductwiseScreen"
+        component={LeftoverstockproductwiseScreen}
+        options={{headerShown: false}}
+      />
+
+      <AccountStack.Screen
+        name="MonthlyAdvanceVsDuesProductwiseScreen"
+        component={MonthlyAdvanceVsDuesProductwiseScreen}
+        options={{headerShown: false}}
+      />
+
+      <AccountStack.Screen
+        name="MonthlyDesignwiseOrdersScreen"
+        component={MonthlyDesignwiseOrdersScreen}
+        options={{headerShown: false}}
+      />
+
+      <AccountStack.Screen
+        name="MonthlyOrderPlacementAnalyticsScreen"
+        component={MonthlyOrderPlacementAnalyticsScreen}
+        options={{headerShown: false}}
+      />
+
+      <AccountStack.Screen
+        name="MonthlyProductwiseOrdersScreen"
+        component={MonthlyProductwiseOrdersScreen}
         options={{headerShown: false}}
       />
     </AccountStack.Navigator>
