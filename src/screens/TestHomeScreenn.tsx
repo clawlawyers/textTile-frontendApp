@@ -166,6 +166,28 @@ const TestHomeScreen = ({ navigation }: HomeProps) => {
     navigation.navigate('AddInventoryScreen');
   };
 
+  const handleAddNewFirm = () => {
+    // Check firm limit
+    const firmCount = currentUser?.companies?.length || 0;
+    if (firmCount >= 3) {
+      Alert.alert(
+        'Firm Limit Exceeded',
+        'More than three firms cannot be created.',
+        [{ text: 'OK' }],
+      );
+      return;
+    }
+
+    // Check permissions
+    if (!currentUser?.permissions?.addFirm && currentUser?.type !== 'manager') {
+      setShowPermissionDialog(true);
+      return;
+    }
+
+    // Navigate to AddNewFirmScreen if checks pass
+    navigation.navigate('AddNewFirmScreen');
+  };
+ 
   // Calculate ScrollView height when expanded
   const scrollViewHeight = expanded
     ? screenHeight -
@@ -372,13 +394,14 @@ const TestHomeScreen = ({ navigation }: HomeProps) => {
                     justifyContent: 'center',
                     gap: scale(12),
                   }}
-                  onPress={() => {
-                    if (!currentUser?.permissions?.addFirm && currentUser?.type !== 'manager') {
-                      setShowPermissionDialog(true);
-                      return;
-                    }
-                    navigation.navigate('AddNewFirmScreen');
-                  }}
+                  // onPress={() => {
+                  //   if (!currentUser?.permissions?.addFirm && currentUser?.type !== 'manager') {
+                  //     setShowPermissionDialog(true);
+                  //     return;
+                  //   }
+                  //   navigation.navigate('AddNewFirmScreen');
+                  // }}
+                  onPress={handleAddNewFirm}
                 >
                   <View
                     style={{
@@ -418,13 +441,7 @@ const TestHomeScreen = ({ navigation }: HomeProps) => {
                   justifyContent: 'center',
                   gap: scale(12),
                 }}
-                onPress={() => {
-                  if (!currentUser?.permissions?.addFirm && currentUser?.type !== 'manager') {
-                    setShowPermissionDialog(true);
-                    return;
-                    }
-                    navigation.navigate('AddNewFirmScreen');
-                }}
+                onPress={handleAddNewFirm}
               >
                 <View
                   style={{
