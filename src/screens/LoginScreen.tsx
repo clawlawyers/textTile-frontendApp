@@ -172,8 +172,8 @@ const LoginScreen = ({navigation}: LoginProps) => {
 
         {/* Welcome Text */}
         <Text className="text-xl font-bold text-black">Welcome Back</Text>
-        <Text className="text-lg font-semibold text-[#DB9245] mb-6">
-          <Text className="text-black">to</Text> Inventory Automation
+        <Text className="text-lg font-bold text-[#DB9245] mb-6">
+          <Text className="text-black">to</Text> FabrIQs
         </Text>
 
         {/* Login Type Toggle */}

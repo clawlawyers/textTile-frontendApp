@@ -55,9 +55,11 @@ const SplashScreen = ({navigation}: SplashProps) => {
 
       {/* Animated Title */}
       <Animated.Text
-        className="text-base font-semibold text-black tracking-widest"
-        style={{opacity: textOpacity}}>
-        INVENTORY AUTOMATION
+        className="text-base font-bold text-['#DB9245'] py-5 tracking-widest"
+        style={{opacity: textOpacity,
+            fontSize: 29, // or use your scale function: fontSize: fontSize['3xl']
+        }}>
+        FabrIQs
       </Animated.Text>
 
       {/* Animated Footer */}
