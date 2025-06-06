@@ -23,7 +23,7 @@ import {NODE_API_ENDPOINT} from '../utils/util';
 import {setCurrentClient, setPaymentDetails} from '../redux/commonSlice';
 import Icon1 from 'react-native-vector-icons/Feather';
 import Feather from 'react-native-vector-icons/Feather';
-import { scale,moderateScale,verticalScale } from '../utils/scaling';
+import {scale, moderateScale, verticalScale} from '../utils/scaling';
 
 type AddNewUserProps = NativeStackScreenProps<
   HomeStackParamList,
@@ -37,7 +37,6 @@ const OrderSummaryScreen = ({navigation}: AddNewUserProps) => {
   // Get screen dimensions
   const {width, height} = Dimensions.get('window');
   const isSmallDevice = width < 375;
-  
 
   // Calculate dynamic heights based on screen size
   const listMaxHeight = height * 0.35; // 35% of screen height
@@ -74,19 +73,13 @@ const OrderSummaryScreen = ({navigation}: AddNewUserProps) => {
   }, [navigation, dispatch]);
 
   //base total price
-  const baseTotalPrice = useMemo(()=>{
-     return cartProducts.reduce((sum:number,item:any)=>{
-      const price = parseFloat(item?.inventoryProduct?.price?? '0')||0;
+  const baseTotalPrice = useMemo(() => {
+    return cartProducts.reduce((sum: number, item: any) => {
+      const price = parseFloat(item?.inventoryProduct?.price ?? '0') || 0;
       const quantity = parseInt(item?.quantity ?? '0') || 0;
-      return sum+price*quantity;
-     },0);
-  },[cartProducts])
-
-  //calculating gst amount
-  const gstAmount = useMemo(() => {
-    const gstPercentage = parseFloat(gstValue) || 0;
-    return (baseTotalPrice * gstPercentage) / 100;
-  }, [baseTotalPrice, gstValue]);
+      return sum + price * quantity;
+    }, 0);
+  }, [cartProducts]);
 
   //discounted value
   const discountAmount = useMemo(() => {
@@ -96,24 +89,47 @@ const OrderSummaryScreen = ({navigation}: AddNewUserProps) => {
     }
     return discountValue; // If mode is 'rupees', subtract the value directly
   }, [baseTotalPrice, value, mode]);
-  
+
+  //calculating gst amount
+  const gstAmount = useMemo(() => {
+    const gstPercentage = parseFloat(gstValue) || 0;
+    return ((baseTotalPrice - discountAmount) * gstPercentage) / 100;
+  }, [baseTotalPrice, discountAmount, gstValue]);
 
   const adjustedTotalPrice = useMemo(() => {
-    return baseTotalPrice + gstAmount - discountAmount;
-  }, [baseTotalPrice, gstAmount, discountAmount]);
+    const price = baseTotalPrice - discountAmount + gstAmount;
 
-  // Update paymentDetails whenever adjustedTotalPrice changes
-  useEffect(() => {
     if (!loading) {
+      console.log('dispching');
       dispatch(
         setPaymentDetails({
-          totalAmount: adjustedTotalPrice.toLocaleString('en-IN'),
-          dueAmount: adjustedTotalPrice.toLocaleString('en-IN'),
-          payments: paymentDetails?.payments || [],
+          totalAmount: price.toLocaleString('en-IN'),
+          dueAmount: price.toLocaleString('en-IN'),
+          payments: [],
         }),
       );
     }
-  }, [adjustedTotalPrice, loading, dispatch, paymentDetails?.payments]);
+    return price;
+  }, [gstAmount, discountAmount, loading, dispatch]);
+
+  console.log(baseTotalPrice);
+  console.log(discountAmount);
+  console.log(gstAmount);
+  console.log(adjustedTotalPrice);
+
+  // Update paymentDetails whenever adjustedTotalPrice changes
+  // useEffect(() => {
+  //   if (!loading) {
+  //     console.log('dispching');
+  //     dispatch(
+  //       setPaymentDetails({
+  //         totalAmount: adjustedTotalPrice.toLocaleString('en-IN'),
+  //         dueAmount: adjustedTotalPrice.toLocaleString('en-IN'),
+  //         payments: paymentDetails?.payments || [],
+  //       }),
+  //     );
+  //   }
+  // }, [adjustedTotalPrice, loading, dispatch, paymentDetails?.payments]);
 
   // Handle item removal
   const handleRemoveItem = async prodId => {
@@ -209,7 +225,8 @@ const OrderSummaryScreen = ({navigation}: AddNewUserProps) => {
       ...item,
       unitPrice: parseFloat(item?.inventoryProduct?.price ?? '0') || 0,
       totalPrice:
-        (parseFloat(item?.inventoryProduct?.price ?? '0') || 0) * (item?.quantity ?? 0),
+        (parseFloat(item?.inventoryProduct?.price ?? '0') || 0) *
+        (item?.quantity ?? 0),
     }));
 
     console.log('Order confirmed with products:', productsWithPrices);
@@ -230,6 +247,10 @@ const OrderSummaryScreen = ({navigation}: AddNewUserProps) => {
             body: JSON.stringify({
               cartItems: productsWithPrices,
               companyId: activeFirm?._id,
+              gst: gstValue,
+              ...(mode === 'percent'
+                ? {discountPercentage: value}
+                : {discountValue: value}),
             }),
           },
         );
@@ -461,298 +482,290 @@ const OrderSummaryScreen = ({navigation}: AddNewUserProps) => {
     );
   }
 
-return (
-  <SafeAreaView
-    style={{
-      flex: 1,
-      backgroundColor: '#F4D5B2',
-      paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0,
-    }}
-  >
-    <View className="flex-1 px-3 py-2">
-      {/* Header */}
-      <View className="flex-row justify-between items-center mb-4 mt-4">
-        <TouchableOpacity
-          onPress={() => {
-            dispatch(setPaymentDetails(null));
-            navigation.goBack();
-          }}
-          className="w-10 h-10 rounded-full border border-[#292C33] justify-center items-center"
-        >
-          <Icon name="arrow-left" size={20} color="#292C33" />
-        </TouchableOpacity>
-        <View className="flex-1 items-end -ml-4">
-          <Text className="text-sm text-black">Order Creation For</Text>
-          <Text className="text-base font-bold text-black">{currentClient.name}</Text>
-        </View>
-      </View>
-
-      {cartProducts.length === 0 ? (
-        <View className="flex-1 justify-center items-center bg-[#FAD9B3]">
-          <Text className="mt-2 text-black">Cart is Empty</Text>
-        </View>
-      ) : (
-        <>
-          {/* Table Header */}
-          <View className="bg-[#2D2D2D] rounded-t-lg px-3 py-3 flex-row justify-between">
-            <Text
-              style={{ fontSize, width: '30%' }}
-              className="text-white font-semibold"
-            >
-              Product Name
-            </Text>
-            <Text
-              style={{ fontSize, width: '15%' }}
-              className="text-white font-semibold"
-            >
-              Bale No
-            </Text>
-            <Text
-              style={{ fontSize, width: '15%' }}
-              className="text-white font-semibold text-center"
-            >
-              Qty
-            </Text>
-            <Text
-              style={{ fontSize, width: '15%' }}
-              className="text-white font-semibold text-center"
-            >
-              Rate
-            </Text>
-            <Text
-              style={{ fontSize, width: '15%' }}
-              className="text-white font-semibold text-center"
-            >
-              Action
+  return (
+    <SafeAreaView
+      style={{
+        flex: 1,
+        backgroundColor: '#F4D5B2',
+        paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0,
+      }}>
+      <View className="flex-1 px-3 py-2">
+        {/* Header */}
+        <View className="flex-row justify-between items-center mb-4 mt-4">
+          <TouchableOpacity
+            onPress={() => {
+              dispatch(setPaymentDetails(null));
+              navigation.goBack();
+            }}
+            className="w-10 h-10 rounded-full border border-[#292C33] justify-center items-center">
+            <Icon name="arrow-left" size={20} color="#292C33" />
+          </TouchableOpacity>
+          <View className="flex-1 items-end -ml-4">
+            <Text className="text-sm text-black">Order Creation For</Text>
+            <Text className="text-base font-bold text-black">
+              {currentClient.name}
             </Text>
           </View>
+        </View>
 
-          {/* Cart Items Container */}
-          <View className="bg-[#D1853A] rounded-b-lg px-3 py-2 mb-4">
-            <ScrollView
-              style={{ maxHeight: listMaxHeight }}
-              showsVerticalScrollIndicator={false}
-              className="mb-2"
-            >
-              {cartProducts.map((item, index) => (
-                <View
-                  key={index}
-                  className="flex-row items-center justify-between mb-3 py-1"
-                >
-                  <Text
-                    style={{ fontSize, width: '30%' }}
-                    className="text-white text-wrap"
-                  >
-                    {item.inventoryProduct?.design_code ?? ''}
-                  </Text>
-                  <Text
-                    style={{ fontSize, width: '15%' }}
-                    className="text-white text-wrap"
-                  >
-                    {item.inventoryProduct?.bail_number ?? ''}
-                  </Text>
-                  <Text
-                    style={{ fontSize, width: '15%' }}
-                    className="text-white text-wrap text-center"
-                  >
-                    {item.quantity}
-                  </Text>
-                  <View style={{ width: '15%' }} className="px-1">
-                    <TextInput
-                      style={{ fontSize }}
-                      className="border border-white rounded-md px-2 py-1 text-white text-wrap text-center"
-                      value={item.inventoryProduct?.price?.toString() ?? ''}
-                      onChangeText={(text) => handlePriceChange(index, text)}
-                      keyboardType="numeric"
-                      editable={true}
-                    />
+        {cartProducts.length === 0 ? (
+          <View className="flex-1 justify-center items-center bg-[#FAD9B3]">
+            <Text className="mt-2 text-black">Cart is Empty</Text>
+          </View>
+        ) : (
+          <>
+            {/* Table Header */}
+            <View className="bg-[#2D2D2D] rounded-t-lg px-3 py-3 flex-row justify-between">
+              <Text
+                style={{fontSize, width: '30%'}}
+                className="text-white font-semibold">
+                Product Name
+              </Text>
+              <Text
+                style={{fontSize, width: '15%'}}
+                className="text-white font-semibold">
+                Bale No
+              </Text>
+              <Text
+                style={{fontSize, width: '15%'}}
+                className="text-white font-semibold text-center">
+                Qty
+              </Text>
+              <Text
+                style={{fontSize, width: '15%'}}
+                className="text-white font-semibold text-center">
+                Rate
+              </Text>
+              <Text
+                style={{fontSize, width: '15%'}}
+                className="text-white font-semibold text-center">
+                Action
+              </Text>
+            </View>
+
+            {/* Cart Items Container */}
+            <View className="bg-[#D1853A] rounded-b-lg px-3 py-2 mb-4">
+              <ScrollView
+                style={{maxHeight: listMaxHeight}}
+                showsVerticalScrollIndicator={false}
+                className="mb-2">
+                {cartProducts.map((item, index) => (
+                  <View
+                    key={index}
+                    className="flex-row items-center justify-between mb-3 py-1">
+                    <Text
+                      style={{fontSize, width: '30%'}}
+                      className="text-white text-wrap">
+                      {item.inventoryProduct?.design_code ?? ''}
+                    </Text>
+                    <Text
+                      style={{fontSize, width: '15%'}}
+                      className="text-white text-wrap">
+                      {item.inventoryProduct?.bail_number ?? ''}
+                    </Text>
+                    <Text
+                      style={{fontSize, width: '15%'}}
+                      className="text-white text-wrap text-center">
+                      {item.quantity}
+                    </Text>
+                    <View style={{width: '15%'}} className="px-1">
+                      <TextInput
+                        style={{fontSize}}
+                        className="border border-white rounded-md px-2 py-1 text-white text-wrap text-center"
+                        value={item.inventoryProduct?.price?.toString() ?? ''}
+                        onChangeText={text => handlePriceChange(index, text)}
+                        keyboardType="numeric"
+                        editable={true}
+                      />
+                    </View>
+                    <TouchableOpacity
+                      style={{width: '15%'}}
+                      className="items-center"
+                      onPress={() =>
+                        handleRemoveItem(item?.inventoryProduct?._id)
+                      }>
+                      <Icon name="trash-2" size={16} color="#fff" />
+                    </TouchableOpacity>
                   </View>
+                ))}
+              </ScrollView>
+
+              <TouchableOpacity
+                className="bg-[#FBDBB5] rounded-lg py-2 items-center flex-row justify-center"
+                onPress={() => {
+                  dispatch(setPaymentDetails(null));
+                  navigation.navigate('OrderProductSelectionScreen', {
+                    clientName: currentClient.name,
+                  });
+                }}>
+                <View className="border border-black rounded-lg p-1">
+                  <Icon name="plus" size={14} color="#000" />
+                </View>
+                <Text className="ml-2 text-sm font-medium">Add More Items</Text>
+              </TouchableOpacity>
+            </View>
+
+            <View className=" mt-auto gap-2">
+              {/* Discount Section */}
+              <View
+                className="flex-row items-center justify-between bg-[#292C33] rounded-lg px-4 py-2 "
+                style={{height: verticalScale(40)}}>
+                {/* Label */}
+                <View className="flex-1">
+                  <Text className="text-sm text-[#E7CBA1] font-medium">
+                    Discount:
+                  </Text>
+                </View>
+
+                {/* Toggle Buttons */}
+                <View className=" flex-1 flex-row bg-[#FBDBB5] rounded-md  mr-2 w-[10%] h-[100%] ">
                   <TouchableOpacity
-                    style={{ width: '15%' }}
-                    className="items-center"
-                    onPress={() => handleRemoveItem(item?.inventoryProduct?._id)}
-                  >
-                    <Icon name="trash-2" size={16} color="#fff" />
+                    onPress={() => setMode('percent')}
+                    className={`flex-1 items-center justify-center rounded-md px-4 ${
+                      mode === 'percent' ? 'bg-[#DB9245]' : ''
+                    }`}>
+                    <Text className="text-sm font-medium text-black">%</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    onPress={() => setMode('rupees')}
+                    className={`flex-1 items-center justify-center px-4 rounded-md ${
+                      mode === 'rupees' ? 'bg-[#DB9245]' : ''
+                    }`}>
+                    <Text className="text-sm font-medium text-black">₹</Text>
                   </TouchableOpacity>
                 </View>
-              ))}
-            </ScrollView>
 
-            <TouchableOpacity
-              className="bg-[#FBDBB5] rounded-lg py-2 items-center flex-row justify-center"
-              onPress={() => {
-                dispatch(setPaymentDetails(null));
-                navigation.navigate('OrderProductSelectionScreen', {
-                  clientName: currentClient.name,
-                });
-              }}
-            >
-              <View className="border border-black rounded-lg p-1">
-                <Icon name="plus" size={14} color="#000" />
-              </View>
-              <Text className="ml-2 text-sm font-medium">Add More Items</Text>
-            </TouchableOpacity>
-          </View>
+                {/* Input Box */}
+                <View className="flex-row items-center justify-center bg-[#FAD9B3] rounded-md px-3 py-1.4 w-[45%]">
+                  {mode === 'rupees' && (
+                    <Text className="text-sm text-[#292C33] font-medium">
+                      ₹
+                    </Text>
+                  )}
 
-          <View className=" mt-auto gap-2">
-            
-            {/* Discount Section */}
-            <View className="flex-row items-center justify-between bg-[#292C33] rounded-lg px-4 py-2 " style={{height:verticalScale(40)}}>
-  {/* Label */}
-  <View className="flex-1">
-    <Text className="text-sm text-[#E7CBA1] font-medium">
-      Discount:
-    </Text>
-  </View>
-  
-  {/* Toggle Buttons */}
-  <View className=" flex-1 flex-row bg-[#FBDBB5] rounded-md  mr-2 w-[10%] h-[100%] ">
-    <TouchableOpacity
-      onPress={() => setMode('percent')}
-      className={`flex-1 items-center justify-center rounded-md px-4 ${
-        mode === 'percent' ? 'bg-[#DB9245]' : ''
-      }`}
-    >
-      <Text className="text-sm font-medium text-black">
-        %
-      </Text>
-    </TouchableOpacity>
-    <TouchableOpacity
-      onPress={() => setMode('rupees')}
-      className={`flex-1 items-center justify-center px-4 rounded-md ${
-        mode === 'rupees' ? 'bg-[#DB9245]' : ''
-      }`}
-    > 
-      <Text className="text-sm font-medium text-black">
-        ₹
-      </Text>
-    </TouchableOpacity>
-    </View>
-  
-  {/* Input Box */}
-  <View className="flex-row items-center justify-center bg-[#FAD9B3] rounded-md px-3 py-1.4 w-[45%]">
-    {mode === 'rupees' && (
-      <Text className="text-sm text-[#292C33] font-medium">₹</Text>
-    )}
-    
-    <TextInput
-      value={value}
-      onChangeText={setValue}
-      placeholder="0"
-      placeholderTextColor="black"
-      keyboardType="numeric"
-      className="text-[#000000] text-sm font-medium flex-1 text-right"
-      style={{ minWidth: 40 }}
-    />
-    
-    {mode === 'percent' && (
-      <Text className="text-sm text-[#292C33] font-medium ml-1">%</Text>
-    )}
-    <Icon 
-      name="edit-2" 
-      size={14} 
-      color="#C7742D" 
-      style={{ marginLeft: 8 }} 
-    />
+                  <TextInput
+                    value={value}
+                    onChangeText={setValue}
+                    placeholder="0"
+                    placeholderTextColor="black"
+                    keyboardType="numeric"
+                    placeholderClassName="text-[#000000] text-sm font-medium text-right min-w-[40px] flex-1 leading-3"
+                    className="text-[#000000] text-sm font-medium flex-1 text-right leading-3"
+                    style={{minWidth: 40}}
+                  />
 
-  </View>
-</View>
+                  {mode === 'percent' && (
+                    <Text className="text-sm text-[#292C33] font-medium ml-1">
+                      %
+                    </Text>
+                  )}
+                  <Icon
+                    name="edit-2"
+                    size={14}
+                    color="#C7742D"
+                    style={{marginLeft: 8}}
+                  />
+                </View>
+              </View>
 
-            {/* GST Percentage Section */}
-            <View className="flex-row items-center justify-between bg-[#292C33] rounded-lg px-4 py-2" style={{height:verticalScale(40)}}>
-  {/* Left side - Label */}
-  <View className="flex-1">
-    <Text className="text-sm text-[#E7CBA1] font-medium">
-      GST Percentage:
-    </Text>
-  </View>
-  
-  {/* Right side - Input with icon */}
-  <View className="flex-row items-center bg-[#FAD9B3] rounded-md px-3 py-1.3 w-[45%]">
-  <TextInput
-  value={gstValue}
-  onChangeText={setGstValue}
-  placeholder="0"
-  placeholderTextColor="#000000"
-  keyboardType="numeric"
-  className="text-[#000000] text-sm font-medium text-right min-w-[40px] flex-1"
-/>
-    <Text className="text-sm text-[#292C33] font-medium ml-1">%</Text>
-    <Icon 
-      name="edit-2" 
-      size={14} 
-      color="#C7742D" 
-      style={{ marginLeft: 8 }} 
-    />
-  </View>
-</View>   
-            {/* Due Amount Section */}
-            <View className="flex-row items-center justify-between border border-black rounded-lg overflow-hidden">
-              <View className="bg-black px-5 py-4 bg-[#292C33]">
-                <Text className="text-white font-semibold">Due Amount</Text>
-              </View>
-              <View className="px-4 py-3 flex-1">
-                <Text className="text-right font-semibold text-base">
-                  ₹{' '}
-                  {paymentDetails === null
-                    ? adjustedTotalPrice.toLocaleString('en-IN')
-                    : paymentDetails.dueAmount}
-                </Text>
-              </View>
-            </View>
-            {/* Total Amount Section */}
-            <View className="flex-row items-center justify-between border border-black rounded-lg overflow-hidden">
-              <View className="bg-black px-4 py-4">
-                <Text className="text-white font-semibold">Total Amount</Text>
-              </View>
-              <View className="px-4 py-3 flex-1">
-                <Text className="text-right font-semibold text-base">
-                  ₹ {adjustedTotalPrice.toLocaleString('en-IN')}
-                </Text>
-              </View>
-            </View>
-            {/* Action Buttons */}
-            <View className="flex-row gap-4 mb-4 ">
-              <TouchableOpacity
-                className="flex-1 py-3 rounded-xl items-center border border-[#292C33]"
-                onPress={() => {
-                  navigation.navigate('PaymentScreen', {
-                    paymentDetails: {
-                      totalAmount: adjustedTotalPrice.toLocaleString('en-IN'),
-                      dueAmount:
-                        paymentDetails === null
-                          ? adjustedTotalPrice.toLocaleString('en-IN')
-                          : paymentDetails.dueAmount,
-                    },
-                    paymentHistory: paymentDetails?.payments,
-                  });
-                }}
-              >
-                <Text className="font-semibold text-base text-[#292C33]">
-                  Payment Options
-                </Text>
-              </TouchableOpacity>
-            </View>
-            <View className="flex-row gap-4 mb-4">
-              <TouchableOpacity
-                className="flex-1 py-3 rounded-xl items-center border border-[#DB9245] bg-[#DB9245]"
-                onPress={handleConfirmOrder}
-              >
-                {loading ? (
-                  <ActivityIndicator color="#fff" size="small" />
-                ) : (
-                  <Text className="text-white font-semibold text-base">
-                    Confirm Order Placement
+              {/* GST Percentage Section */}
+              <View
+                className="flex-row items-center justify-between bg-[#292C33] rounded-lg px-4 py-2"
+                style={{height: verticalScale(40)}}>
+                {/* Left side - Label */}
+                <View className="flex-1">
+                  <Text className="text-sm text-[#E7CBA1] font-medium">
+                    GST Percentage:
                   </Text>
-                )}
-              </TouchableOpacity>
+                </View>
+
+                {/* Right side - Input with icon */}
+                <View className="flex-row items-center bg-[#FAD9B3] rounded-md px-3 py-1.3 w-[45%]">
+                  <TextInput
+                    value={gstValue}
+                    onChangeText={setGstValue}
+                    placeholder="0"
+                    placeholderTextColor="#000000"
+                    placeholderClassName="text-[#000000] text-sm font-medium text-right min-w-[40px] flex-1 leading-3"
+                    keyboardType="numeric"
+                    className="text-[#000000] text-sm font-medium text-right min-w-[40px] flex-1 leading-3"
+                  />
+                  <Text className="text-sm text-[#292C33] font-medium ml-1">
+                    %
+                  </Text>
+                  <Icon
+                    name="edit-2"
+                    size={14}
+                    color="#C7742D"
+                    style={{marginLeft: 8}}
+                  />
+                </View>
+              </View>
+              {/* Due Amount Section */}
+              <View className="flex-row items-center justify-between border border-black rounded-lg overflow-hidden">
+                <View className="bg-black px-5 py-4 bg-[#292C33]">
+                  <Text className="text-white font-semibold">Due Amount</Text>
+                </View>
+                <View className="px-4 py-3 flex-1">
+                  <Text className="text-right font-semibold text-base">
+                    ₹{' '}
+                    {paymentDetails === null
+                      ? adjustedTotalPrice.toLocaleString('en-IN')
+                      : paymentDetails.dueAmount}
+                  </Text>
+                </View>
+              </View>
+              {/* Total Amount Section */}
+              <View className="flex-row items-center justify-between border border-black rounded-lg overflow-hidden">
+                <View className="bg-black px-4 py-4">
+                  <Text className="text-white font-semibold">Total Amount</Text>
+                </View>
+                <View className="px-4 py-3 flex-1">
+                  <Text className="text-right font-semibold text-base">
+                    ₹ {adjustedTotalPrice.toLocaleString('en-IN')}
+                  </Text>
+                </View>
+              </View>
+              {/* Action Buttons */}
+              <View className="flex-row gap-4 mb-4 ">
+                <TouchableOpacity
+                  className="flex-1 py-3 rounded-xl items-center border border-[#292C33]"
+                  onPress={() => {
+                    navigation.navigate('PaymentScreen', {
+                      paymentDetails: {
+                        totalAmount: adjustedTotalPrice.toLocaleString('en-IN'),
+                        dueAmount:
+                          paymentDetails === null
+                            ? adjustedTotalPrice.toLocaleString('en-IN')
+                            : paymentDetails.dueAmount,
+                      },
+                      paymentHistory: paymentDetails?.payments,
+                    });
+                  }}>
+                  <Text className="font-semibold text-base text-[#292C33]">
+                    Payment Options
+                  </Text>
+                </TouchableOpacity>
+              </View>
+              <View className="flex-row gap-4 mb-4">
+                <TouchableOpacity
+                  className="flex-1 py-3 rounded-xl items-center border border-[#DB9245] bg-[#DB9245]"
+                  onPress={handleConfirmOrder}>
+                  {loading ? (
+                    <ActivityIndicator color="#fff" size="small" />
+                  ) : (
+                    <Text className="text-white font-semibold text-base">
+                      Confirm Order Placement
+                    </Text>
+                  )}
+                </TouchableOpacity>
+              </View>
             </View>
-            </View>
-        </>
-      )}
-    </View>
-  </SafeAreaView>
-);
+          </>
+        )}
+      </View>
+    </SafeAreaView>
+  );
 };
 
 export default OrderSummaryScreen;

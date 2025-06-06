@@ -259,6 +259,7 @@ const ClientDetailsScreen = ({navigation, route}: AddNewUserProps) => {
           className="max-h-[200px]">
           {orders.map((order, index) => (
             <TouchableOpacity
+              key={order._id}
               onPress={() => {
                 if (order.status === 'pending') {
                   navigation.navigate('PendingOrderScreen', {

@@ -44,6 +44,8 @@ const ActiveOrdersScreen = ({navigation}: CompletedOrderProps) => {
 
   const [orders, setOrders] = React.useState([]);
 
+  console.log(orders);
+
   const dispatch = useDispatch();
 
   const activeFirm = useSelector((state: RootState) => state.common.activeFirm);
@@ -131,7 +133,7 @@ const ActiveOrdersScreen = ({navigation}: CompletedOrderProps) => {
 
       {/* Scrollable Orders List */}
       <ScrollView
-        className="flex-1"
+        className="flex-1 mb-8"
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{paddingBottom: 20}}>
         {orders.length > 0 ? (
@@ -151,17 +153,17 @@ const ActiveOrdersScreen = ({navigation}: CompletedOrderProps) => {
                 className="rounded-lg px-4 py-3 mb-2 flex-row justify-between items-center">
                 <View>
                   <Text className="text-xs text-white">
-                    Order No: {order._id}
+                    Order No: {order?._id}
                   </Text>
                   <Text className="text-base text-white font-semibold">
                     {order?.products[0]?.inventoryProduct?.design_code}
                   </Text>
                   <Text className="text-xs text-white">
-                    {order.client.name}
+                    {order?.client?.name}
                   </Text>
                 </View>
                 <Text className="text-xs text-[#292C33]">
-                  {new Date(order.createdAt).toLocaleDateString('en-US', {
+                  {new Date(order?.createdAt).toLocaleDateString('en-US', {
                     year: 'numeric',
                     month: '2-digit',
                     day: '2-digit',

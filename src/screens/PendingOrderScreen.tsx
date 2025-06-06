@@ -22,6 +22,7 @@ import {RootState} from '../redux/store';
 import {NODE_API_ENDPOINT} from '../utils/util';
 import {setCurrentClient, setPaymentDetails} from '../redux/commonSlice';
 import Icon1 from 'react-native-vector-icons/Feather';
+import {verticalScale} from '../utils/scaling';
 
 type AddNewUserProps = NativeStackScreenProps<
   HomeStackParamList,
@@ -33,7 +34,7 @@ const PendingOrderScreen = ({navigation, route}: AddNewUserProps) => {
   const {width, height} = Dimensions.get('window');
   const isSmallDevice = width < 375;
 
-  console.log(route.params.orderDetails.payments);
+  console.log(route.params.orderDetails);
 
   // Calculate dynamic heights based on screen size
   const listMaxHeight = height * 0.35; // 35% of screen height
@@ -47,7 +48,7 @@ const PendingOrderScreen = ({navigation, route}: AddNewUserProps) => {
 
   const [loading, setLoading] = useState(false);
 
-  const [getLoading, setGetLoading] = useState(false);
+  const [DeleteLoading, DeleteGetLoading] = useState(false);
 
   const currentUser = useSelector((state: RootState) => state.auth.user);
   const currentClient = useSelector(
@@ -297,14 +298,60 @@ const PendingOrderScreen = ({navigation, route}: AddNewUserProps) => {
     processPayments();
   };
 
-  if (getLoading) {
-    return (
-      <View className="flex-1 justify-center items-center bg-[#FAD9B3]">
-        <ActivityIndicator size="large" color="#DB9245" />
-        <Text className="mt-2 text-black">Loading Order...</Text>
-      </View>
+  const handleDeleteOrder = () => {
+    Alert.alert(
+      'Delete Order',
+      'Do you want to restore inventory while deleting this order?',
+      [
+        {
+          text: 'Cancel',
+          style: 'cancel',
+        },
+        {
+          text: 'Delete without Restore',
+          style: 'destructive',
+          onPress: () => deleteOrder(false),
+        },
+        {
+          text: 'Delete & Restore Inventory',
+          onPress: () => deleteOrder(true),
+        },
+      ],
     );
-  }
+  };
+
+  const deleteOrder = async (restoreInventory: boolean) => {
+    try {
+      DeleteGetLoading(true);
+      const orderId = route.params.orderDetails._id;
+
+      const response = await fetch(
+        `${NODE_API_ENDPOINT}/orders/${orderId}?restock=${restoreInventory}`,
+        {
+          method: 'DELETE',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${currentUser?.token}`,
+          },
+        },
+      );
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.message || 'Failed to delete order');
+      }
+
+      ToastAndroid.show('Order deleted successfully', ToastAndroid.SHORT);
+      dispatch(setPaymentDetails(null));
+      navigation.goBack();
+    } catch (error) {
+      console.error('Delete Order Error:', error);
+      Alert.alert('Error', error.message || 'Failed to delete order');
+    } finally {
+      DeleteGetLoading(false);
+    }
+  };
 
   return (
     <SafeAreaView
@@ -398,6 +445,106 @@ const PendingOrderScreen = ({navigation, route}: AddNewUserProps) => {
         </View>
 
         <View className="mt-auto">
+          {/* Discount Section */}
+          <View
+            className="flex-row items-center justify-between bg-[#292C33] rounded-lg px-4 py-2 mb-4"
+            style={{height: verticalScale(40)}}>
+            {/* Label */}
+            <View className="flex-1">
+              <Text className="text-sm text-[#E7CBA1] font-medium">
+                Discount:
+              </Text>
+            </View>
+
+            {/* Toggle Buttons */}
+            <View className=" flex-1 flex-row bg-[#FBDBB5] rounded-md  mr-2 w-[10%] h-[100%] ">
+              <TouchableOpacity
+                // onPress={() => setMode('percent')}
+                className={`flex-1 items-center justify-center rounded-md px-4 ${
+                  route.params.orderDetails.discountPercentage !== 0
+                    ? 'bg-[#DB9245]'
+                    : ''
+                }`}>
+                <Text className="text-sm font-medium text-black">%</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                // onPress={() => setMode('rupees')}
+                className={`flex-1 items-center justify-center px-4 rounded-md ${
+                  route.params.orderDetails.discountValue !== 0
+                    ? 'bg-[#DB9245]'
+                    : ''
+                }`}>
+                <Text className="text-sm font-medium text-black">₹</Text>
+              </TouchableOpacity>
+            </View>
+
+            {/* Input Box */}
+            <View className="flex-row items-center justify-center bg-[#FAD9B3] rounded-md px-3 py-1.4 w-[45%]">
+              {route.params.orderDetails.discountValue !== 0 && (
+                <Text className="text-sm text-[#292C33] font-medium">₹</Text>
+              )}
+
+              <TextInput
+                editable={false}
+                value={
+                  route.params.orderDetails.discountValue === 0
+                    ? route.params.orderDetails.discountPercentage + ''
+                    : '0'
+                }
+                placeholder="0"
+                placeholderTextColor="black"
+                keyboardType="numeric"
+                placeholderClassName="text-[#000000] text-sm font-medium text-right min-w-[40px] flex-1 leading-3"
+                className="text-[#000000] text-sm font-medium flex-1 text-right leading-3"
+                style={{minWidth: 40}}
+              />
+
+              {route.params.orderDetails.discountPercentage !== 0 && (
+                <Text className="text-sm text-[#292C33] font-medium ml-1">
+                  %
+                </Text>
+              )}
+              {/* <Icon
+                name="edit-2"
+                size={14}
+                color="#C7742D"
+                style={{marginLeft: 8}}
+              /> */}
+            </View>
+          </View>
+
+          {/* GST Percentage Section */}
+          <View
+            className="flex-row items-center justify-between bg-[#292C33] rounded-lg px-4 py-2"
+            style={{height: verticalScale(40)}}>
+            {/* Left side - Label */}
+            <View className="flex-1">
+              <Text className="text-sm text-[#E7CBA1] font-medium">
+                GST Percentage:
+              </Text>
+            </View>
+
+            {/* Right side - Input with icon */}
+            <View className="flex-row items-center bg-[#FAD9B3] rounded-md px-3 py-1.3 w-[45%]">
+              <TextInput
+                value={route.params.orderDetails.gst + ''}
+                editable={false}
+                // onChangeText={setGstValue}
+                placeholder="0"
+                placeholderTextColor="#000000"
+                placeholderClassName="text-[#000000] text-sm font-medium text-right min-w-[40px] flex-1 leading-3"
+                keyboardType="numeric"
+                className="text-[#000000] text-sm font-medium text-right min-w-[40px] flex-1 leading-3"
+              />
+              <Text className="text-sm text-[#292C33] font-medium ml-1">%</Text>
+              {/* <Icon
+                name="edit-2"
+                size={14}
+                color="#C7742D"
+                style={{marginLeft: 8}}
+              /> */}
+            </View>
+          </View>
           {/* Total Amount Section */}
           <View className="mt-2 mb-4 flex gap-5">
             <View className="flex-row items-center justify-between border border-black rounded-lg overflow-hidden">
@@ -459,6 +606,17 @@ const PendingOrderScreen = ({navigation, route}: AddNewUserProps) => {
               ) : (
                 <Text className="text-white font-semibold text-base">
                   Update Order Placement
+                </Text>
+              )}
+            </TouchableOpacity>
+            <TouchableOpacity
+              className="flex-1 py-3 rounded-xl items-center border border-red-500 bg-red-500"
+              onPress={handleDeleteOrder}>
+              {DeleteLoading ? (
+                <ActivityIndicator color="#fff" size="small" />
+              ) : (
+                <Text className="text-white font-semibold text-base">
+                  Delete Order
                 </Text>
               )}
             </TouchableOpacity>
