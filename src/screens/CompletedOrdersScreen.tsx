@@ -1,21 +1,20 @@
-import React, {useCallback, useEffect} from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import {
   View,
   Text,
   ScrollView,
   TouchableOpacity,
-  Image,
   ActivityIndicator,
+  TextInput,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/Feather';
 import LinearGradient from 'react-native-linear-gradient';
-import FontistoIcon from 'react-native-vector-icons/Fontisto';
-import {NativeStackScreenProps} from '@react-navigation/native-stack';
-import {OrderHistoryParamList} from '../stacks/OrderHistory';
-import {useSelector} from 'react-redux';
-import {RootState} from '../redux/store';
-import {NODE_API_ENDPOINT} from '../utils/util';
-import {useFocusEffect} from '@react-navigation/native';
+import { NativeStackScreenProps } from '@react-navigation/native-stack';
+import { OrderHistoryParamList } from '../stacks/OrderHistory';
+import { useSelector } from 'react-redux';
+import { RootState } from '../redux/store';
+import { NODE_API_ENDPOINT } from '../utils/util';
+import { useFocusEffect } from '@react-navigation/native';
 
 type CompletedOrderProps = NativeStackScreenProps<
   OrderHistoryParamList,
@@ -37,20 +36,65 @@ type CompletedOrderProps = NativeStackScreenProps<
 //   },
 // ];
 
-const CompletedOrdersScreen = ({navigation}: CompletedOrderProps) => {
+const CompletedOrdersScreen = ({ navigation }: CompletedOrderProps) => {
   const currentUser = useSelector((state: RootState) => state.auth.user);
   const [loading, setLoading] = React.useState(true);
 
   const activeFirm = useSelector((state: RootState) => state.common.activeFirm);
 
   const [orders, setOrders] = React.useState([]);
+  const [filteredOrders, setFilteredOrders] = useState([]);
+  const [searchQuery, setSearchQuery] = useState('');
 
-  console.log(activeFirm);
+  useEffect(() => {
+    if (searchQuery.trim() === '') {
+      setFilteredOrders(orders);
+      return;
+    }
+
+    const filtered = orders.filter((order: any) => {
+      const clientName = order?.client?.name?.toLowerCase?.() ?? '';
+      const queryLower = searchQuery.toLowerCase();
+
+      const orderDate = order?.createdAt ? new Date(order.createdAt) : null;
+      if (!orderDate || isNaN(orderDate.getTime())) return false;
+
+      // Use UTC methods to avoid timezone issues
+      const day = orderDate.getUTCDate().toString().padStart(2, '0');
+      const month = (orderDate.getUTCMonth() + 1).toString().padStart(2, '0');
+      const year = orderDate.getUTCFullYear().toString();
+
+      // Format date as MM/DD/YYYY and DD/MM/YYYY
+      const formattedDateMMDDYYYY = `${month}${day}${year}`; // e.g., "05/06/2025"
+      const formattedDateDDMMYYYY = `${day}${month}${year}`; // e.g., "06/05/2025"
+      const dateMMDD = `${month}${day}`; // e.g., "0506"
+      const dateDDMM = `${day}${month}`; // e.g., "0605"
+
+      // Allow partial and full date matches
+      const dateParts = [
+        year,
+        month,
+        day,
+        formattedDateMMDDYYYY,
+        formattedDateDDMMYYYY,
+        dateMMDD,
+        dateDDMM,
+      ];
+
+      // Remove all non-digit characters for date search
+      const matchesDate = dateParts.some((part) =>
+        part.includes(searchQuery.replace(/\//g, '')),
+      );
+
+      return clientName.includes(queryLower) || matchesDate;
+    });
+
+    setFilteredOrders(filtered);
+  }, [searchQuery, orders]);
 
   useFocusEffect(
     useCallback(() => {
       const getOrders = async () => {
-        console.log(activeFirm);
         setLoading(true);
         try {
           const response = await fetch(
@@ -63,7 +107,6 @@ const CompletedOrdersScreen = ({navigation}: CompletedOrderProps) => {
               },
             },
           );
-          console.log(response);
 
           if (!response.ok) {
             const errorText = await response.text();
@@ -73,7 +116,6 @@ const CompletedOrdersScreen = ({navigation}: CompletedOrderProps) => {
           }
 
           const data = await response.json();
-          console.log(data);
           const completedOrder = data.orders.filter(
             (order: any) => order.status === 'completed',
           );
@@ -89,7 +131,6 @@ const CompletedOrdersScreen = ({navigation}: CompletedOrderProps) => {
         getOrders();
       }
 
-      // Optional cleanup function
       return () => {};
     }, [currentUser?.token, activeFirm]),
   );
@@ -103,27 +144,16 @@ const CompletedOrdersScreen = ({navigation}: CompletedOrderProps) => {
     );
   }
 
-  console.log(orders);
-
   return (
     <View className="flex-1 bg-[#FAD7AF] px-6 pt-12">
       {/* Fixed Header */}
       <View className="flex-row justify-between items-center mb-4">
         <TouchableOpacity
           onPress={() => navigation.goBack()}
-          className="w-10 h-10 rounded-full border border-[#292C33] justify-center items-center mb-6">
-          <Icon name="arrow-left" size={20} color="#292C33" />{' '}
+          className="w-10 h-10 rounded-full border border-[#292C33] justify-center items-center mb-6"
+        >
+          <Icon name="arrow-left" size={20} color="#292C33" />
         </TouchableOpacity>
-        {/* <TouchableOpacity
-          className="mb-8"
-          onPress={() => {
-            navigation.navigate('Notification');
-          }}>
-          <View className="relative">
-            <FontistoIcon name="bell" size={25} color={'#DB9245'} />
-            <View className="absolute top-0 left-6 right-0 w-2 h-2 rounded-full bg-green-500" />
-          </View>
-        </TouchableOpacity> */}
       </View>
 
       {/* Fixed Title */}
@@ -131,47 +161,62 @@ const CompletedOrdersScreen = ({navigation}: CompletedOrderProps) => {
         Completed Orders
       </Text>
 
+      <View className="mb-2 rounded-lg">
+        <TextInput
+          className="bg-[#292C33] rounded-lg px-4 py-3 text-white text-lg"
+          placeholder="Search by client name or date..."
+          placeholderTextColor="#fff"
+          value={searchQuery}
+          onChangeText={setSearchQuery}
+        />
+      </View>
+
       {/* Scrollable Orders List */}
       <ScrollView
         className="flex-1"
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={{paddingBottom: 20}}>
-        {orders.length > 0 ? (
-          orders.map(order => (
+        contentContainerStyle={{ paddingBottom: 20 }}
+      >
+        {filteredOrders.length > 0 ? (
+          filteredOrders.map((order: any) => (
             <TouchableOpacity
               key={order._id}
               onPress={() => {
-                console.log('Order', order);
                 navigation.navigate('InvoiceDetailScreen', {
                   orderDetails: order,
                 });
-              }}>
-           <LinearGradient
+              }}
+            >
+              <LinearGradient
                 colors={['#C7742D', '#FAD9B3']}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 0 }}
                 className="rounded-lg px-4 py-3 mb-2 flex-row justify-between items-center"
-                  >
-              <View>
-             <Text className="text-xs text-white">
-               Order No: {order?._id}
-              </Text>
-            <Text className="text-base text-white font-semibold">
-               {order?.client?.name || 'Unknown Client'}
-            </Text>
-            </View>
-               <Text className="text-xs text-[#292C33]">
-             {order?.createdAt
-               ? new Date(order.createdAt).toLocaleDateString('en-US', {
-               year: 'numeric',
-              month: '2-digit',
-          day: '2-digit',
-        })
-      : 'N/A'}
-  </Text>
-</LinearGradient>
+              >
+                <View>
+                  <Text className="text-xs text-white">
+                    Order No: {order?._id}
+                  </Text>
+                  <Text className="text-base text-white font-semibold">
+                    {order?.client?.name || 'Unknown Client'}
+                  </Text>
+                </View>
+                <Text className="text-xs text-[#292C33]">
+                  {order?.createdAt
+                    ? new Date(order.createdAt).toLocaleDateString('en-US', {
+                        year: 'numeric',
+                        month: '2-digit',
+                        day: '2-digit',
+                      })
+                    : 'N/A'}
+                </Text>
+              </LinearGradient>
             </TouchableOpacity>
           ))
+        ) : orders.length > 0 ? (
+          <View className="flex-1 justify-center items-center">
+            <Text className="mt-2 text-black">No matching orders found</Text>
+          </View>
         ) : (
           <View className="flex-1 justify-center items-center">
             <Text className="mt-2 text-black">No Completed Orders</Text>
