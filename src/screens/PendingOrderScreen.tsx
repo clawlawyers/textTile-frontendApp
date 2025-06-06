@@ -362,7 +362,7 @@ const PendingOrderScreen = ({navigation, route}: AddNewUserProps) => {
       }}>
       <View className="flex-1 px-3 py-2">
         {/* Header */}
-        <View className="flex-row justify-between items-center mb-4 mt-4">
+        <View className="flex-row justify-between items-center mb-4 mt-8">
           <TouchableOpacity
             onPress={() => {
               dispatch(setPaymentDetails(null));
