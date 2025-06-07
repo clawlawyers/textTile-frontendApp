@@ -12,6 +12,7 @@ import {
   Keyboard,
   KeyboardAvoidingView,
   Platform,
+  ToastAndroid,
 } from 'react-native';
 import {HomeStackParamList} from '../stacks/Home';
 
@@ -83,7 +84,9 @@ const AddClientScreen = ({navigation}: AddNewUserProps) => {
 
       if (!response.ok) {
         setLoading(false);
-        const errorText = await response.text();
+        const errorText = await response.json();
+        console.log(errorText.message);
+        ToastAndroid.show(errorText?.message, ToastAndroid.SHORT);
         throw new Error(
           `Failed to add client: ${response.status} ${errorText}`,
         );

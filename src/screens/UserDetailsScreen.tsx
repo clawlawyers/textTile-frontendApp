@@ -64,7 +64,6 @@ const UserDetailsScreen = ({navigation, route}: AddNewUserProps) => {
   };
 
   console.log(userDetails);
-  
 
   return (
     <View className="flex-1 bg-[#FAD9B3] px-4 pt-14 pb-6">
@@ -132,19 +131,33 @@ const UserDetailsScreen = ({navigation, route}: AddNewUserProps) => {
       </ScrollView>
       <View className="px-4 py-2 bg-[#DB9245] rounded-lg">
         <View className="flex-row justify-between items-center">
-          <Text className="text-white text-base font-bold">User Login Details</Text>
-            <TouchableOpacity onPress={handleCopyUserId}>
+          <Text className="text-white text-base font-bold">
+            User Login Details
+          </Text>
+          <TouchableOpacity onPress={handleCopyUserId}>
             <Icon name="content-copy" size={18} color="#292C33" />
-            </TouchableOpacity>
+          </TouchableOpacity>
         </View>
 
-         <View className="flex-row justify-between items-center mt-2 pt-4 pb-2">
-            <View className="flex-row flex-1">
-             <Text className="font-medium text-black w-[40%]">User ID :</Text>
-             <Text className="text-black flex-1">{userDetails.user_id}</Text>
-            </View>
-         </View>
+        <View className="flex-row justify-between items-center mt-2 pt-4 pb-2">
+          <View className="flex-row flex-1">
+            <Text className="font-medium text-black w-[40%]">User ID :</Text>
+            <Text className="text-black flex-1">{userDetails.user_id}</Text>
+          </View>
+        </View>
       </View>
+
+      <TouchableOpacity
+        className="bg-black py-4 mt-6 rounded-xl items-center justify-center"
+        onPress={() =>
+          navigation.navigate('UserPermissions', {
+            salesmanId: userDetails._id,
+          })
+        }>
+        <Text className="text-white font-semibold text-base">
+          Regenarate Password
+        </Text>
+      </TouchableOpacity>
 
       {/* Bottom Button */}
       <TouchableOpacity

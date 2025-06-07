@@ -74,7 +74,8 @@ const AddNewUserScreen = ({navigation}: AddNewUserProps) => {
     Alert.alert(
       'New User Added',
       `Please save these login credentials:\n\nUser ID: ${data.salesman.user_id}\nPassword: ${data.salesman.password}\n\nDo you want to set permissions for this user now?`,
-      [  {
+      [ 
+       {
         text: 'Copy',
         onPress: () => {
           const credentials = `User ID: ${data.salesman.user_id}\nPassword: ${data.salesman.password}`;

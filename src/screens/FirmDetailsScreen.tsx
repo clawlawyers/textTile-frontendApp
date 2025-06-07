@@ -31,6 +31,8 @@ const FirmDetailsScreen = ({navigation, route}: AddNewUserProps) => {
     (state: RootState) => state.auth.user?.organizationName,
   );
 
+  const activeFirm = useSelector((state: RootState) => state.common.activeFirm);
+
   const dispatch = useDispatch();
 
   const [showPermissionDialog, setShowPermissionDialog] = useState(false);
@@ -38,6 +40,14 @@ const FirmDetailsScreen = ({navigation, route}: AddNewUserProps) => {
   const currentUser = useSelector((state: RootState) => state.auth.user);
 
   const handleDeleteFirm = async () => {
+    // Prevent deletion of the currently active firm
+    if (activeFirm?._id === firmDetails._id) {
+      ToastAndroid.show(
+        'You cannot delete the currently active firm.',
+        ToastAndroid.SHORT,
+      );
+      return;
+    }
     const response = await fetch(
       `${NODE_API_ENDPOINT}/companies/${firmDetails._id}`,
       {

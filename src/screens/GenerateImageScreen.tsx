@@ -307,51 +307,43 @@ const GenerateImageScreen = ({navigation}: GenerateImageScreenProps) => {
               </View>
 
               {/* Complexity & Image No */}
-              <View className="flex-row items-center gap-2 mb-2">
-                <View className="flex-1 flex-row items-center rounded-md bg-[#DB9245] overflow-hidden">
-                  <Text className="text-white px-1 py-1 text-sm">
-                    Complexity
-                  </Text>
-                  <View className="flex-row rounded-md bg-[#FBDBB5] my-1 mr-1 ml-auto">
+              <View className="flex-col items-center gap-2 mb-2">
+                <View className="w-full flex-row items-center justify-between rounded-md bg-[#DB9245] px-2 py-1">
+                  <Text className="text-white text-sm">Complexity</Text>
+                  <View className="flex-row rounded-md bg-[#FBDBB5]">
                     <TouchableOpacity
                       onPress={() => setComplexity(Math.max(1, complexity - 1))}
-                      className="px-1 py-0.5 border-r border-gray-200">
-                      <Text className="text-black">-</Text>
+                      className="px-2 py-1 border-r border-gray-200">
+                      <Text className="text-black text-lg">-</Text>
                     </TouchableOpacity>
-                    <View>
-                      <Text className="text-black px-1 py-0.5 min-w-[20px] text-center">
-                        {complexity}
-                      </Text>
+                    <View className="justify-center items-center px-4">
+                      <Text className="text-black text-base">{complexity}</Text>
                     </View>
                     <TouchableOpacity
                       onPress={() =>
                         setComplexity(Math.min(10, complexity + 1))
                       }
-                      className="px-1 py-0.5 border-l border-gray-200">
-                      <Text className="text-black">+</Text>
+                      className="px-2 py-1 border-l border-gray-200">
+                      <Text className="text-black text-lg">+</Text>
                     </TouchableOpacity>
                   </View>
                 </View>
 
-                <View className="flex-1 flex-row items-center rounded-md bg-[#DB9245] overflow-hidden">
-                  <Text className="text-white px-1 py-1 text-sm">
-                    Image Nos.
-                  </Text>
-                  <View className="flex-row rounded-md bg-[#FBDBB5] my-1 mr-1 ml-auto">
+                <View className="w-full flex-row items-center justify-between rounded-md bg-[#DB9245] px-2 py-1">
+                  <Text className="text-white text-sm">Image Nos.</Text>
+                  <View className="flex-row rounded-md bg-[#FBDBB5]">
                     <TouchableOpacity
                       onPress={() => setImageCount(Math.max(1, imageCount - 1))}
-                      className="px-1 py-0.5 border-r border-gray-200">
-                      <Text className="text-black">-</Text>
+                      className="px-2 py-1 border-r border-gray-200">
+                      <Text className="text-black text-lg">-</Text>
                     </TouchableOpacity>
-                    <View>
-                      <Text className="text-black px-1 py-0.5 min-w-[20px] text-center">
-                        {imageCount}
-                      </Text>
+                    <View className="justify-center items-center px-4">
+                      <Text className="text-black text-base">{imageCount}</Text>
                     </View>
                     <TouchableOpacity
-                      onPress={() => setImageCount(Math.min(2, imageCount + 1))}
-                      className="px-1 py-0.5 border-l border-gray-200">
-                      <Text className="text-black">+</Text>
+                      onPress={() => setImageCount(Math.min(5, imageCount + 1))}
+                      className="px-2 py-1 border-l border-gray-200">
+                      <Text className="text-black text-lg">+</Text>
                     </TouchableOpacity>
                   </View>
                 </View>

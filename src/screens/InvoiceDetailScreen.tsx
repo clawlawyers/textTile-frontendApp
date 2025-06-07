@@ -38,21 +38,20 @@ const InvoiceDetailScreen = ({navigation, route}: InvoiceDetailScreenProps) => {
       return true;
     }
 
-    try {
-      const granted = await PermissionsAndroid.request(
-        PermissionsAndroid.PERMISSIONS.WRITE_EXTERNAL_STORAGE,
-        {
-          title: 'Storage Permission Required',
-          message: 'App needs access to your storage to download the invoice',
-          buttonNeutral: 'Ask Me Later',
-          buttonNegative: 'Cancel',
-          buttonPositive: 'OK',
-        },
+    if (+Platform.Version >= 33) {
+      const result = await PermissionsAndroid.request(
+        PermissionsAndroid.PERMISSIONS.READ_MEDIA_IMAGES,
       );
-      return granted === PermissionsAndroid.RESULTS.GRANTED;
-    } catch (err) {
-      console.warn(err);
-      return false;
+      return result === PermissionsAndroid.RESULTS.GRANTED;
+    } else if (+Platform.Version >= 29) {
+      // No need to request permission explicitly for DownloadDir
+      // DownloadManager can write without permission in scoped storage
+      return true;
+    } else {
+      const result = await PermissionsAndroid.request(
+        PermissionsAndroid.PERMISSIONS.WRITE_EXTERNAL_STORAGE,
+      );
+      return result === PermissionsAndroid.RESULTS.GRANTED;
     }
   };
 
@@ -250,32 +249,32 @@ const InvoiceDetailScreen = ({navigation, route}: InvoiceDetailScreenProps) => {
         <View className="flex flex-row gap-6">
           <Text className="text-sm text-black font-bold">Firm Name :</Text>
           <Text className="text-sm text-black mb-1">
-            {orderDetails.client.firmName}
+            {orderDetails?.client?.firmName}
           </Text>
         </View>
 
-        <View className="flex flex-row gap-12">
+        {/* <View className="flex flex-row gap-12">
           <Text className="text-sm text-black font-bold">GST No :</Text>
           <Text className="text-sm text-black mb-1">012356985421525445</Text>
-        </View>
+        </View> */}
         <View className="flex flex-row gap-11">
           <Text className="text-sm text-black font-bold">Address :</Text>
           <Text className="text-sm text-black mb-2">
-            {orderDetails.client.address}
+            {orderDetails?.client?.address}
           </Text>
         </View>
 
         <View className="flex flex-row gap-5">
           <Text className="text-sm text-black font-bold">Client Name :</Text>
           <Text className="text-sm text-black mb-1">
-            {orderDetails.client.name}
+            {orderDetails?.client?.name}
           </Text>
         </View>
 
         <View className="flex flex-row gap-7">
           <Text className="text-sm text-black font-bold">Contact No :</Text>
           <Text className="text-sm text-black mb-2">
-            {orderDetails.client.phone}
+            {orderDetails?.client?.phone}
           </Text>
         </View>
       </View>
@@ -293,7 +292,7 @@ const InvoiceDetailScreen = ({navigation, route}: InvoiceDetailScreenProps) => {
         {orderDetails.products.map((item, index) => (
           <View key={index} className="flex-row justify-between py-1">
             <Text className="text-xs text-[#292C33] w-[25%]">
-              {item?.inventoryProduct?.design_code}
+              {item?.inventoryProduct?.category_code}
             </Text>
             <Text className="text-xs text-[#292C33] w-[20%]">
               {item?.inventoryProduct?.bail_number}

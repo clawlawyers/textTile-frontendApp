@@ -230,7 +230,7 @@ const AdminDetailsScreen = ({navigation}: AddNewUserProps) => {
         <View className="w-full h-px bg-black mb-1" />
         <View className="flex flex-row justify-between items-center w-[90%]">
           <Text className="text-xs text-gray-500">
-            Version <Text className="font-bold">1.0.0</Text>
+            Version <Text className="font-bold">1.0.1</Text>
           </Text>
           <Text className="text-xs text-gray-500">
             Powered By{' '}

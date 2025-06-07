@@ -82,11 +82,11 @@ android {
 
     namespace "com.inventorymanagement"
     defaultConfig {
-        applicationId "com.inventorymanagement"
+        applicationId "com.fabriqs"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1
-        versionName "1.0"
+        versionName "1.0.1"
     }
     signingConfigs {
          release {
@@ -104,6 +104,17 @@ android {
             keyPassword 'android'
         }
     }
+
+    // Add the splits block here
+    splits {
+        abi {
+            enable true
+            reset()
+            include 'armeabi-v7a', 'arm64-v8a', 'x86'
+            universalApk false
+        }
+    }
+
     buildTypes {
         debug {
             signingConfig signingConfigs.debug
@@ -114,9 +125,27 @@ android {
             signingConfig signingConfigs.release
             minifyEnabled enableProguardInReleaseBuilds
             proguardFiles getDefaultProguardFile("proguard-android.txt"), "proguard-rules.pro"
+            minifyEnabled true  
+            shrinkResources true  
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'  
+
+        }
+    }
+    
+    applicationVariants.all { variant ->
+        variant.outputs.all { output ->
+            def appName = "FabrIQs"
+            def versionName = variant.versionName
+            def buildType = variant.buildType.name
+
+            if (output.outputFileName.endsWith('.aab')) {
+                output.outputFileName = "${appName}-ver-${versionName}-${buildType}.aab"
+            }
         }
     }
 }
+
+
 
 dependencies {
     // The version of react-native is set by the React Native Gradle Plugin

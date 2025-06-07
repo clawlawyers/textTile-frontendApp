@@ -415,7 +415,7 @@ const PendingOrderScreen = ({navigation, route}: AddNewUserProps) => {
                 key={index}
                 className="flex-row items-center justify-between mb-3 py-1">
                 <Text style={{fontSize, width: '25%'}} className="text-white">
-                  {item?.inventoryProduct?.design_code}
+                  {item?.inventoryProduct?.category_code}
                 </Text>
                 <Text style={{fontSize, width: '20%'}} className="text-white">
                   {item?.inventoryProduct?.bail_number}
@@ -447,7 +447,7 @@ const PendingOrderScreen = ({navigation, route}: AddNewUserProps) => {
         <View className="mt-auto">
           {/* Discount Section */}
           <View
-            className="flex-row items-center justify-between bg-[#292C33] rounded-lg px-4 py-2 mb-4"
+            className="flex-row items-center justify-between bg-[#292C33] rounded-lg px-4 py-1 mb-4"
             style={{height: verticalScale(40)}}>
             {/* Label */}
             <View className="flex-1">
@@ -489,13 +489,13 @@ const PendingOrderScreen = ({navigation, route}: AddNewUserProps) => {
                 value={
                   route.params.orderDetails.discountValue === 0
                     ? route.params.orderDetails.discountPercentage + ''
-                    : '0'
+                    : route.params.orderDetails.discountValue + ''
                 }
                 placeholder="0"
                 placeholderTextColor="black"
                 keyboardType="numeric"
-                placeholderClassName="text-[#000000] text-sm font-medium text-right min-w-[40px] flex-1 leading-3"
-                className="text-[#000000] text-sm font-medium flex-1 text-right leading-3"
+                placeholderClassName="text-[#000000] text-sm font-medium text-right min-w-[40px] flex-1 leading-[0.55rem]"
+                className="text-[#000000] text-sm font-medium flex-1 text-right leading-[0.55rem]"
                 style={{minWidth: 40}}
               />
 
@@ -515,7 +515,7 @@ const PendingOrderScreen = ({navigation, route}: AddNewUserProps) => {
 
           {/* GST Percentage Section */}
           <View
-            className="flex-row items-center justify-between bg-[#292C33] rounded-lg px-4 py-2"
+            className="flex-row items-center justify-between bg-[#292C33] rounded-lg px-4 py-1"
             style={{height: verticalScale(40)}}>
             {/* Left side - Label */}
             <View className="flex-1">
@@ -525,16 +525,16 @@ const PendingOrderScreen = ({navigation, route}: AddNewUserProps) => {
             </View>
 
             {/* Right side - Input with icon */}
-            <View className="flex-row items-center bg-[#FAD9B3] rounded-md px-3 py-1.3 w-[45%]">
+            <View className="flex-row items-center bg-[#FAD9B3] rounded-md px-3  w-[45%]">
               <TextInput
                 value={route.params.orderDetails.gst + ''}
                 editable={false}
                 // onChangeText={setGstValue}
                 placeholder="0"
                 placeholderTextColor="#000000"
-                placeholderClassName="text-[#000000] text-sm font-medium text-right min-w-[40px] flex-1 leading-3"
+                placeholderClassName="text-[#000000] text-sm font-medium text-right min-w-[40px] flex-1 leading-[0.55rem]"
                 keyboardType="numeric"
-                className="text-[#000000] text-sm font-medium text-right min-w-[40px] flex-1 leading-3"
+                className="text-[#000000] text-sm font-medium text-right min-w-[40px] flex-1 leading-[0.55rem]"
               />
               <Text className="text-sm text-[#292C33] font-medium ml-1">%</Text>
               {/* <Icon

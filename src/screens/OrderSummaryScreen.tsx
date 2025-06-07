@@ -110,7 +110,7 @@ const OrderSummaryScreen = ({navigation}: AddNewUserProps) => {
       );
     }
     return price;
-  }, [gstAmount, discountAmount, loading, dispatch]);
+  }, [baseTotalPrice, discountAmount, gstAmount, loading, dispatch]);
 
   console.log(baseTotalPrice);
   console.log(discountAmount);
@@ -145,12 +145,12 @@ const OrderSummaryScreen = ({navigation}: AddNewUserProps) => {
 
             // Log the request details for debugging
             console.log(
-              `Removing item: ${prodId} from cart: ${currentClient._id}`,
+              `Removing item: ${prodId} from cart: ${currentClient?._id}`,
             );
 
             // The API endpoint might be incorrect - let's fix it
             const removeFromCartResponse = await fetch(
-              `${NODE_API_ENDPOINT}/cart/${currentClient._id}/item/${prodId}`,
+              `${NODE_API_ENDPOINT}/cart/${currentClient?._id}/item/${prodId}`,
               {
                 method: 'DELETE',
                 headers: {
@@ -181,7 +181,7 @@ const OrderSummaryScreen = ({navigation}: AddNewUserProps) => {
             const updatedClient = {
               ...currentClient,
               cart: {
-                ...currentClient.cart,
+                ...currentClient?.cart,
                 items: data.cart.items,
               },
             };
@@ -237,7 +237,7 @@ const OrderSummaryScreen = ({navigation}: AddNewUserProps) => {
       try {
         setLoading(true);
         const response = await fetch(
-          `${NODE_API_ENDPOINT}/cart/${currentClient._id}/checkout`,
+          `${NODE_API_ENDPOINT}/cart/${currentClient?._id}/checkout`,
           {
             method: 'POST',
             headers: {
@@ -272,7 +272,7 @@ const OrderSummaryScreen = ({navigation}: AddNewUserProps) => {
         const updatedClient = {
           ...currentClient,
           cart: {
-            ...currentClient.cart,
+            ...currentClient?.cart,
             items: [], // Empty the cart items
           },
         };
@@ -443,7 +443,7 @@ const OrderSummaryScreen = ({navigation}: AddNewUserProps) => {
       try {
         setGetLoading(true);
         const response = await fetch(
-          `${NODE_API_ENDPOINT}/cart/${currentClient._id}`,
+          `${NODE_API_ENDPOINT}/cart/${currentClient?._id}`,
           {
             method: 'GET',
             headers: {
@@ -471,7 +471,7 @@ const OrderSummaryScreen = ({navigation}: AddNewUserProps) => {
       }
     };
     getCartProducts();
-  }, [currentClient._id, currentUser?.token, currentUser?.type]);
+  }, [currentClient?._id, currentUser?.token, currentUser?.type]);
 
   if (getLoading) {
     return (
@@ -503,7 +503,7 @@ const OrderSummaryScreen = ({navigation}: AddNewUserProps) => {
           <View className="flex-1 items-end -ml-4">
             <Text className="text-sm text-black">Order Creation For</Text>
             <Text className="text-base font-bold text-black">
-              {currentClient.name}
+              {currentClient?.name}
             </Text>
           </View>
         </View>
@@ -556,7 +556,7 @@ const OrderSummaryScreen = ({navigation}: AddNewUserProps) => {
                     <Text
                       style={{fontSize, width: '30%'}}
                       className="text-white text-wrap">
-                      {item.inventoryProduct?.design_code ?? ''}
+                      {item.inventoryProduct?.category_code ?? ''}
                     </Text>
                     <Text
                       style={{fontSize, width: '15%'}}
@@ -595,7 +595,7 @@ const OrderSummaryScreen = ({navigation}: AddNewUserProps) => {
                 onPress={() => {
                   dispatch(setPaymentDetails(null));
                   navigation.navigate('OrderProductSelectionScreen', {
-                    clientName: currentClient.name,
+                    clientName: currentClient?.name,
                   });
                 }}>
                 <View className="border border-black rounded-lg p-1">
@@ -608,7 +608,7 @@ const OrderSummaryScreen = ({navigation}: AddNewUserProps) => {
             <View className=" mt-auto gap-2">
               {/* Discount Section */}
               <View
-                className="flex-row items-center justify-between bg-[#292C33] rounded-lg px-4 py-2 "
+                className="flex-row items-center justify-between bg-[#292C33] rounded-lg px-4 py-1 "
                 style={{height: verticalScale(40)}}>
                 {/* Label */}
                 <View className="flex-1">
@@ -636,9 +636,9 @@ const OrderSummaryScreen = ({navigation}: AddNewUserProps) => {
                 </View>
 
                 {/* Input Box */}
-                <View className="flex-row items-center justify-center bg-[#FAD9B3] rounded-md px-3 py-1.4 w-[45%]">
+                <View className="flex-row items-center justify-center bg-[#FAD9B3] rounded-md w-[45%] px-4 h-[100%]">
                   {mode === 'rupees' && (
-                    <Text className="text-sm text-[#292C33] font-medium">
+                    <Text className="text-xs text-[#292C33] font-medium">
                       ₹
                     </Text>
                   )}
@@ -646,11 +646,11 @@ const OrderSummaryScreen = ({navigation}: AddNewUserProps) => {
                   <TextInput
                     value={value}
                     onChangeText={setValue}
-                    placeholder="0"
+                    // placeholder="0"
                     placeholderTextColor="black"
                     keyboardType="numeric"
-                    placeholderClassName="text-[#000000] text-sm font-medium text-right min-w-[40px] flex-1 leading-3"
-                    className="text-[#000000] text-sm font-medium flex-1 text-right leading-3"
+                    placeholderClassName="text-[#000000] text-lg font-medium text-right min-w-[40px] flex-1 leading-[0.55rem]"
+                    className="text-[#000000] text-sm font-medium flex-1 text-right leading-[0.55rem]"
                     style={{minWidth: 40}}
                   />
 
@@ -670,7 +670,7 @@ const OrderSummaryScreen = ({navigation}: AddNewUserProps) => {
 
               {/* GST Percentage Section */}
               <View
-                className="flex-row items-center justify-between bg-[#292C33] rounded-lg px-4 py-2"
+                className="flex-row items-center justify-between bg-[#292C33] rounded-lg px-4 py-1"
                 style={{height: verticalScale(40)}}>
                 {/* Left side - Label */}
                 <View className="flex-1">
@@ -680,15 +680,15 @@ const OrderSummaryScreen = ({navigation}: AddNewUserProps) => {
                 </View>
 
                 {/* Right side - Input with icon */}
-                <View className="flex-row items-center bg-[#FAD9B3] rounded-md px-3 py-1.3 w-[45%]">
+                <View className="flex-row items-center bg-[#FAD9B3] rounded-md px-3 w-[45%] h-[100%]">
                   <TextInput
                     value={gstValue}
                     onChangeText={setGstValue}
-                    placeholder="0"
+                    // placeholder="0"
                     placeholderTextColor="#000000"
-                    placeholderClassName="text-[#000000] text-sm font-medium text-right min-w-[40px] flex-1 leading-3"
+                    placeholderClassName="text-[#000000] text-sm font-medium text-right min-w-[40px] flex-1 leading-[0.55rem]"
                     keyboardType="numeric"
-                    className="text-[#000000] text-sm font-medium text-right min-w-[40px] flex-1 leading-3"
+                    className="text-[#000000] text-sm font-medium text-right min-w-[40px] flex-1 leading-[0.55rem]"
                   />
                   <Text className="text-sm text-[#292C33] font-medium ml-1">
                     %

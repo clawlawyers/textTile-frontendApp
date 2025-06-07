@@ -53,21 +53,20 @@ const InvoiceBreakdownScreen = ({
       return true;
     }
 
-    try {
-      const granted = await PermissionsAndroid.request(
-        PermissionsAndroid.PERMISSIONS.WRITE_EXTERNAL_STORAGE,
-        {
-          title: 'Storage Permission Required',
-          message: 'App needs access to your storage to download the invoice',
-          buttonNeutral: 'Ask Me Later',
-          buttonNegative: 'Cancel',
-          buttonPositive: 'OK',
-        },
+    if (+Platform.Version >= 33) {
+      const result = await PermissionsAndroid.request(
+        PermissionsAndroid.PERMISSIONS.READ_MEDIA_IMAGES,
       );
-      return granted === PermissionsAndroid.RESULTS.GRANTED;
-    } catch (err) {
-      console.warn(err);
-      return false;
+      return result === PermissionsAndroid.RESULTS.GRANTED;
+    } else if (+Platform.Version >= 29) {
+      // No need to request permission explicitly for DownloadDir
+      // DownloadManager can write without permission in scoped storage
+      return true;
+    } else {
+      const result = await PermissionsAndroid.request(
+        PermissionsAndroid.PERMISSIONS.WRITE_EXTERNAL_STORAGE,
+      );
+      return result === PermissionsAndroid.RESULTS.GRANTED;
     }
   };
 
@@ -277,32 +276,32 @@ const InvoiceBreakdownScreen = ({
         <View className="flex flex-row gap-6">
           <Text className="text-sm text-black font-bold">Firm Name :</Text>
           <Text className="text-sm text-black mb-1">
-            {orderDetails.client.firmName}
+            {orderDetails?.client?.firmName}
           </Text>
         </View>
 
-        <View className="flex flex-row gap-12">
+        {/* <View className="flex flex-row gap-12">
           <Text className="text-sm text-black font-bold">GST No :</Text>
           <Text className="text-sm text-black mb-1">012356985421525445</Text>
-        </View>
+        </View> */}
         <View className="flex flex-row gap-11">
           <Text className="text-sm text-black font-bold">Address :</Text>
           <Text className="text-sm text-black mb-2">
-            {orderDetails.client.address}
+            {orderDetails?.client?.address}
           </Text>
         </View>
 
         <View className="flex flex-row gap-5">
           <Text className="text-sm text-black font-bold">Client Name :</Text>
           <Text className="text-sm text-black mb-1">
-            {orderDetails.client.name}
+            {orderDetails?.client?.name}
           </Text>
         </View>
 
         <View className="flex flex-row gap-7">
           <Text className="text-sm text-black font-bold">Contact No :</Text>
           <Text className="text-sm text-black mb-2">
-            {orderDetails.client.phone}
+            {orderDetails?.client?.phone}
           </Text>
         </View>
       </View>
@@ -322,6 +321,37 @@ const InvoiceBreakdownScreen = ({
             </Text>
           </View>
         </View>
+
+        <View className="flex-row mb-1">
+          {/* Label (left side) */}
+          <View className="flex-1 bg-[#1F1F1F] px-4 py-3">
+            <Text className="text-white font-semibold text-sm">
+              {orderDetails.discountValue === 0
+                ? 'Discount  (%)'
+                : 'Discount  (₹)'}
+            </Text>
+          </View>
+          {/* Value (right side) */}
+          <View className="flex-1 bg-[#DA8B2C] px-4 py-3">
+            <Text className="text-black font-semibold text-sm text-right">
+              {orderDetails.discountValue}
+            </Text>
+          </View>
+        </View>
+
+        <View className="flex-row mb-1">
+          {/* Label (left side) */}
+          <View className="flex-1 bg-[#1F1F1F] px-4 py-3">
+            <Text className="text-white font-semibold text-sm">GST %</Text>
+          </View>
+          {/* Value (right side) */}
+          <View className="flex-1 bg-[#DA8B2C] px-4 py-3">
+            <Text className="text-black font-semibold text-sm text-right">
+              {orderDetails.gst}
+            </Text>
+          </View>
+        </View>
+
         {orderDetails.payments.map((item, index) => (
           <View key={index} className="flex-row mb-1">
             {/* Label (left side) */}

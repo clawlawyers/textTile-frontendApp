@@ -54,21 +54,20 @@ const InvoiceScreen = ({navigation, route}: AddNewUserProps) => {
       return true;
     }
 
-    try {
-      const granted = await PermissionsAndroid.request(
-        PermissionsAndroid.PERMISSIONS.WRITE_EXTERNAL_STORAGE,
-        {
-          title: 'Storage Permission Required',
-          message: 'App needs access to your storage to download the invoice',
-          buttonNeutral: 'Ask Me Later',
-          buttonNegative: 'Cancel',
-          buttonPositive: 'OK',
-        },
+    if (+Platform.Version >= 33) {
+      const result = await PermissionsAndroid.request(
+        PermissionsAndroid.PERMISSIONS.READ_MEDIA_IMAGES,
       );
-      return granted === PermissionsAndroid.RESULTS.GRANTED;
-    } catch (err) {
-      console.warn(err);
-      return false;
+      return result === PermissionsAndroid.RESULTS.GRANTED;
+    } else if (+Platform.Version >= 29) {
+      // No need to request permission explicitly for DownloadDir
+      // DownloadManager can write without permission in scoped storage
+      return true;
+    } else {
+      const result = await PermissionsAndroid.request(
+        PermissionsAndroid.PERMISSIONS.WRITE_EXTERNAL_STORAGE,
+      );
+      return result === PermissionsAndroid.RESULTS.GRANTED;
     }
   };
 
@@ -91,7 +90,7 @@ const InvoiceScreen = ({navigation, route}: AddNewUserProps) => {
 
     try {
       // Get the order ID
-      const orderId = orderDetails._id;
+      const orderId = route.params.orderDetails?._id;
 
       // Set download path based on platform
       const {dirs} = RNFetchBlob.fs;
@@ -202,9 +201,11 @@ const InvoiceScreen = ({navigation, route}: AddNewUserProps) => {
 
       {/* Client Info */}
       <View className="bg-[#DB9245] rounded-lg mt-8 mb-5 p-4">
-        <Text className="text-sm text-white">Rameswarm Das</Text>
+        <Text className="text-sm text-white">
+          {route.params?.orderDetails?.client?.name}
+        </Text>
         <Text className="text-xl font-bold text-white mt-1">
-          Ram Enterprise
+          {route.params?.orderDetails?.client?.firmName}
         </Text>
       </View>
 

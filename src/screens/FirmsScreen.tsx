@@ -1,5 +1,12 @@
 import React, {useCallback, useState} from 'react';
-import {View, Text, TouchableOpacity, ScrollView} from 'react-native';
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  ScrollView,
+  Alert,
+  ToastAndroid,
+} from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import FontistoIcon from 'react-native-vector-icons/Fontisto';
 import {NativeStackScreenProps} from '@react-navigation/native-stack';
@@ -74,6 +81,14 @@ const FirmsScreen = ({navigation}: AddNewUserProps) => {
   );
 
   const handleDeleteFirm = async () => {
+    // Prevent deletion of the currently active firm
+    if (activeFirm?._id === firmId) {
+      ToastAndroid.show(
+        'You cannot delete the currently active firm.',
+        ToastAndroid.SHORT,
+      );
+      return;
+    }
     const response = await fetch(`${NODE_API_ENDPOINT}/companies/${firmId}`, {
       method: 'DELETE',
       headers: {
@@ -187,7 +202,21 @@ const FirmsScreen = ({navigation}: AddNewUserProps) => {
       {/* Add New Firm Button */}
       <TouchableOpacity
         className="bg-black rounded-xl py-4 items-center mb-6"
-        onPress={() => navigation.navigate('AddNewFirmScreen')}>
+        onPress={() => {
+          // Check firm limit
+          const firmCount = currentUser?.companies?.length || 0;
+          if (firmCount >= 3) {
+            Alert.alert(
+              'Firm Limit Exceeded',
+              'More than three firms cannot be created.',
+              [{text: 'OK'}],
+            );
+            return;
+          }
+          navigation.getParent()?.navigate('Home', {
+            screen: 'AddNewFirmScreen', // or whatever that stack/screen name is
+          });
+        }}>
         <Text className="text-white font-semibold text-base">Add New Firm</Text>
       </TouchableOpacity>
     </View>

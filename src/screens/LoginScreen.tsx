@@ -172,8 +172,8 @@ const LoginScreen = ({navigation}: LoginProps) => {
 
         {/* Welcome Text */}
         <Text className="text-xl font-bold text-black">Welcome Back</Text>
-        <Text className="text-lg font-semibold text-[#DB9245] mb-6">
-          <Text className="text-black">to</Text> Inventory Automation
+        <Text className="text-lg font-bold text-[#DB9245] mb-6">
+          <Text className="text-black">to</Text> FabrIQs
         </Text>
 
         {/* Login Type Toggle */}
@@ -259,14 +259,18 @@ const LoginScreen = ({navigation}: LoginProps) => {
         </TouchableOpacity>
 
         {/* Create Account */}
-        <View className="flex-row justify-center mt-auto pt-6">
-          <Text className="text-sm text-black">New Here ? </Text>
-          <TouchableOpacity onPress={() => navigation.navigate('Signup')}>
-            <Text className="text-sm text-[#DB9245] font-semibold">
-              Create An Account
-            </Text>
-          </TouchableOpacity>
-        </View>
+        <>
+          {!isUserLogin && (
+            <View className="flex-row justify-center mt-auto pt-6">
+              <Text className="text-sm text-black">New Here ? </Text>
+              <TouchableOpacity onPress={() => navigation.navigate('Signup')}>
+                <Text className="text-sm text-[#DB9245] font-semibold">
+                  Create An Account
+                </Text>
+              </TouchableOpacity>
+            </View>
+          )}
+        </>
       </ScrollView>
     </KeyboardAvoidingView>
   );

@@ -37,7 +37,7 @@ const OrderConfirmationScreen = ({navigation, route}: AddNewUserProps) => {
         <View className="flex-1 items-end -ml-4">
           <Text className="text-sm text-black">Order Creation For</Text>
           <Text className="text-base font-bold text-black">
-            {currentClient.name}
+            {currentClient?.name}
           </Text>
         </View>
       </View>

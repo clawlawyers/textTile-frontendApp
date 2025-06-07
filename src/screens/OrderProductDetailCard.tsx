@@ -66,7 +66,7 @@ const OrderProductDetailCard = ({navigation, route}: AddNewUserProps) => {
     setLoading(true);
     console.log('hello bhai');
     const addToCartResponse = await fetch(
-      `${NODE_API_ENDPOINT}/cart/${currentClient._id}/add`,
+      `${NODE_API_ENDPOINT}/cart/${currentClient?._id}/add`,
       {
         method: 'POST',
         headers: {
@@ -97,7 +97,7 @@ const OrderProductDetailCard = ({navigation, route}: AddNewUserProps) => {
     const updatedClient = {
       ...currentClient,
       cart: {
-        ...currentClient.cart,
+        ...currentClient?.cart,
         items: data.cart.items,
       },
     };
@@ -116,7 +116,7 @@ const OrderProductDetailCard = ({navigation, route}: AddNewUserProps) => {
     navigation.goBack();
 
     navigation.replace('OrderProductSelectionScreen', {
-      clientName: currentClient.name,
+      clientName: currentClient?.name,
     });
   };
 
@@ -165,7 +165,7 @@ const OrderProductDetailCard = ({navigation, route}: AddNewUserProps) => {
           <View className="flex-1 items-end -ml-4">
             <Text className="text-sm text-black">Order Creation For</Text>
             <Text className="text-base font-bold text-black">
-              {currentClient.name}
+              {currentClient?.name}
             </Text>
           </View>
         </View>

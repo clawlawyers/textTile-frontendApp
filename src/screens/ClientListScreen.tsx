@@ -44,6 +44,7 @@ const ClientListScreen = ({navigation}: AddNewUserProps) => {
   const [showPermissionDeleteDialog, setShowPermissionDeleteDialog] =
     useState<boolean>(false);
   const [clients, setClients] = useState([]);
+  const [selectedClientToDelete, setSelectedClientToDelete] = useState(null);
 
   const currentUser = useSelector((state: RootState) => state.auth.user);
 
@@ -51,33 +52,34 @@ const ClientListScreen = ({navigation}: AddNewUserProps) => {
 
   const [getLoading, setGetLoading] = useState(true);
 
-  const handleDeleteClient = async clientId => {
-    // if (currentUser?.type !== 'manager') {
-    //   return;
-    // }
-    const deleteClient = await fetch(
-      `${NODE_API_ENDPOINT}/clients/${clientId}`,
-      {
+  const handleDeleteClient = async (clientId: string) => {
+    try {
+      const response = await fetch(`${NODE_API_ENDPOINT}/clients/${clientId}`, {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${currentUser?.token}`,
         },
-      },
-    );
-    console.log(deleteClient);
+      });
 
-    if (!deleteClient.ok) {
-      const errorText = await deleteClient.text();
-      throw new Error(
-        `Failed to delete client: ${deleteClient.status} ${errorText}`,
-      );
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(
+          `Failed to delete client: ${response.status} ${errorText}`,
+        );
+      }
+
+      const data = await response.json();
+      console.log(data);
+
+      // Refresh client list after deletion
+      setClients(prev => prev.filter(client => client._id !== clientId));
+    } catch (error) {
+      console.error('Delete client failed:', error);
+    } finally {
+      setShowPermissionDeleteDialog(false);
+      setSelectedClientToDelete(null);
     }
-    setShowPermissionDialog(false);
-    const data = await deleteClient.json();
-    console.log(data);
-
-    // navigation.goBack();
   };
 
   useFocusEffect(
@@ -108,6 +110,7 @@ const ClientListScreen = ({navigation}: AddNewUserProps) => {
           setGetLoading(false);
 
           const data = await response.json();
+          console.log(data);
           setClients(data);
         } catch (error) {
           console.error('Error fetching clients:', error);
@@ -210,6 +213,7 @@ const ClientListScreen = ({navigation}: AddNewUserProps) => {
                             setShowPermissionDialog(true);
                             return;
                           }
+                          setSelectedClientToDelete(client);
                           setShowPermissionDeleteDialog(true);
                         }}>
                         <Ionicons
@@ -219,9 +223,15 @@ const ClientListScreen = ({navigation}: AddNewUserProps) => {
                         />
                         <DeleteConfirmation
                           visible={showPermissionDeleteDialog}
-                          onClose={() => setShowPermissionDeleteDialog(false)}
+                          onClose={() => {
+                            setSelectedClientToDelete(null);
+                            setShowPermissionDeleteDialog(false);
+                          }}
                           type="Client"
-                          onDelete={() => handleDeleteClient(client._id)}
+                          onDelete={() =>
+                            selectedClientToDelete &&
+                            handleDeleteClient(selectedClientToDelete._id)
+                          }
                         />
 
                         <PermissionDeniedDialog
