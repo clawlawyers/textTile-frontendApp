@@ -23,6 +23,8 @@ import {useDispatch} from 'react-redux';
 import {setCreateImagePayload} from '../redux/imgeGenSlice';
 import {launchImageLibrary} from 'react-native-image-picker';
 import {Platform} from 'react-native';
+import LottieView from 'lottie-react-native';
+import { scale, verticalScale } from '../utils/scaling';
 
 type GenerateImageScreenProps = NativeStackScreenProps<
   HomeStackParamList,
@@ -199,6 +201,7 @@ const GenerateImageScreen = ({navigation}: GenerateImageScreenProps) => {
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         keyboardVerticalOffset={Platform.OS === 'ios' ? 64 : 0}
         className="flex-1">
+          <View className="flex-1" pointerEvents={loading ? 'none' : 'auto'}>
         <ScrollView
           className="flex-1 px-4 pt-4"
           contentContainerStyle={{
@@ -420,6 +423,31 @@ const GenerateImageScreen = ({navigation}: GenerateImageScreenProps) => {
             </TouchableOpacity>
           </View>
         </ScrollView>
+        {loading && (
+            <View
+              style={{
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: 0,
+                backgroundColor: 'rgba(0, 0, 0, 0.5)', // Semi-transparent overlay
+                justifyContent: 'center',
+                alignItems: 'center',
+              }}>
+              <LottieView
+                source={require('../assets/lottieanimation.json')}
+                autoPlay
+                loop
+                style={{width:scale(200), height:verticalScale(200),
+                  position:'absolute',
+                  bottom:scale(350),
+                  
+                }}
+              />
+            </View>
+          )}
+          </View>
       </KeyboardAvoidingView>
     </SafeAreaView>
   );
