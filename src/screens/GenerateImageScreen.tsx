@@ -196,7 +196,7 @@ const GenerateImageScreen = ({navigation}: GenerateImageScreenProps) => {
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-[#FAD9B3]">
+    <SafeAreaView className="flex-1 bg-[#FAD9B3] pt-6">
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         keyboardVerticalOffset={Platform.OS === 'ios' ? 64 : 0}
@@ -425,27 +425,39 @@ const GenerateImageScreen = ({navigation}: GenerateImageScreenProps) => {
         </ScrollView>
         {loading && (
             <View
+            style={{
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              justifyContent: 'center',
+              alignItems: 'center',
+              backgroundColor:'#FAD9B3'
+            }}>
+            <View
               style={{
-                position: 'absolute',
-                top: 0,
-                left: 0,
-                right: 0,
-                bottom: 0,
-                backgroundColor: 'rgba(0, 0, 0, 0.5)', // Semi-transparent overlay
+                flexDirection: 'column',
                 justifyContent: 'center',
                 alignItems: 'center',
+                paddingBottom: scale(100)
               }}>
               <LottieView
                 source={require('../assets/lottieanimation.json')}
                 autoPlay
                 loop
-                style={{width:scale(200), height:verticalScale(200),
-                  position:'absolute',
-                  bottom:scale(350),
-                  
+                style={{
+                  width: scale(200),
+                  height: verticalScale(200),
                 }}
               />
+              <Text
+                className="text-[#DB9245] text-2xl font-extrabold mt-2"
+                style={{ textAlign: 'center' }}>
+                Generating Magic...
+              </Text>
             </View>
+          </View>
           )}
           </View>
       </KeyboardAvoidingView>
