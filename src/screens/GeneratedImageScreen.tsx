@@ -1,5 +1,5 @@
 /* eslint-disable react-native/no-inline-styles */
-import React, {useState} from 'react';
+import React, {useEffect, useRef, useState} from 'react';
 import {
   View,
   Text,
@@ -10,6 +10,7 @@ import {
   Platform,
   PermissionsAndroid,
   Alert,
+  Animated,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import RNFetchBlob from 'rn-fetch-blob';
@@ -113,6 +114,43 @@ const GeneratedImageScreen = ({
     }
   };
 
+  const [imageLoading, setImageLoading] = useState(true);
+
+  const pulseAnim = useRef(new Animated.Value(0.5)).current;
+  const flickerAnim = useRef(new Animated.Value(0.2)).current;
+
+  useEffect(() => {
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(pulseAnim, {
+          toValue: 1,
+          duration: 800,
+          useNativeDriver: false,
+        }),
+        Animated.timing(pulseAnim, {
+          toValue: 0.5,
+          duration: 800,
+          useNativeDriver: false,
+        }),
+      ]),
+    ).start();
+
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(flickerAnim, {
+          toValue: 0.4,
+          duration: 200,
+          useNativeDriver: false,
+        }),
+        Animated.timing(flickerAnim, {
+          toValue: 0.2,
+          duration: 200,
+          useNativeDriver: false,
+        }),
+      ]),
+    ).start();
+  }, []);
+
   return (
     <View className="flex-1 bg-[#FAD9B3] px-4 pt-2 flex">
       {/* Header */}
@@ -135,13 +173,39 @@ const GeneratedImageScreen = ({
       </Text>
 
       {/* Generated Image */}
-      <View className="items-center mb-6">
+      <View className="items-center mb-6" style={{width: 330, height: 350}}>
         <Image
           source={{uri: route.params.imageUrl}}
-          // source={require('../assets/cactus.png'))} // Replace with actual image
-          style={{width: 350, height: 350, borderRadius: 12}}
+          style={{
+            width: 330,
+            height: 350,
+            borderRadius: 12,
+            position: 'absolute',
+          }}
           resizeMode="stretch"
+          onLoadStart={() => setImageLoading(true)}
+          onLoadEnd={() => setImageLoading(false)}
         />
+
+        {imageLoading && (
+          <Animated.View
+            style={{
+              width: 350,
+              height: 350,
+              borderRadius: 12,
+              backgroundColor: '#E5C59E',
+              shadowColor: '#DB9245',
+              shadowOffset: {width: 0, height: 2},
+              shadowOpacity: flickerAnim,
+              shadowRadius: 4,
+              opacity: pulseAnim,
+              elevation: flickerAnim.interpolate({
+                inputRange: [0.2, 0.4],
+                outputRange: [3, 6],
+              }),
+            }}
+          />
+        )}
       </View>
 
       <View className="mt-auto mb-10">
