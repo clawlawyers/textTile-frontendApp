@@ -206,8 +206,9 @@ const AdminDetailsScreen = ({navigation}: AddNewUserProps) => {
                 View All Users
               </Text>
             </Pressable>
+            <View className='flex-row justify-around gap-4'>
             <Pressable
-              className="bg-[#DB9245] rounded-md py-3 mb-4"
+              className="bg-[#DB9245] rounded-md py-3 mb-4 flex-1"
               onPress={() => {
                 ToastAndroid.show('Feature Coming Soon', ToastAndroid.SHORT);
                 // navigation.navigate('InsightsEmpty');
@@ -216,6 +217,14 @@ const AdminDetailsScreen = ({navigation}: AddNewUserProps) => {
                 Generate Insights{' '}
               </Text>
             </Pressable>
+            <Pressable
+              className="bg-[#DB9245] rounded-md py-3 mb-4 flex-1"
+              onPress={() => navigation.navigate('InvoicesScreen')}>
+              <Text className="text-center text-white font-semibold">
+                Generate Invoice
+              </Text>
+            </Pressable>
+            </View>
           </>
         )}
         <Pressable

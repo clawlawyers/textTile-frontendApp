@@ -22,12 +22,42 @@ import MonthlyAdvanceVsDuesProductwiseScreen from '../Insights/MonthlyAdvanceVsD
 import MonthlyDesignwiseOrdersScreen from '../Insights/MonthlyDesignwiseOrders';
 import MonthlyOrderPlacementAnalyticsScreen from '../Insights/MonthlyOrderPlacementAnaytics';
 import MonthlyProductwiseOrdersScreen from '../Insights/MonthlyProductwiseOrders';
+import GenerateInvoiceScreen from '../screens/GenerateInvoiceScreen';
+import PreviousInvoiceScreen from '../screens/PreviousInvoiceScreen';
+import InvoicesScreen from '../screens/InvoicesScreen';
+import InvoiceUpdated from '../screens/InvoiceUpdated';
+import InvoiceItemsScreen from '../screens/InvoiceItemsScreen';
+import InvoicePaymentScreen from '../screens/InvoicePaymentScreen';
+import TestInvoicesScreen from '../screens/TestInvoicesScreen'
 // import AccountScreen from '../screens/AccountScreen';
 // import OrderScreen from '../screens/OrdersScreen';
 // import OrderDetailsScreen from '../screens/OrderDetailsScreen';
 // import PaymentMethods from '../screens/PaymentMethodsScreen';
 // import ShippingAddress from '../screens/AddressScreen';
 // import HomeScreen from '../screens/Home';
+
+interface BillingDetails {
+  billTo: string;
+  firmName: string;
+  address: string;
+  firmGSTNumber: string;
+  billingFromAddress: string;
+  billingFromGSTIN: string;
+  billingFrom: string;
+  billToAddress: string;
+  billToGSTIN: string;
+  date: string;
+  duedate: string;
+}
+
+interface PaymentDetails {
+  totalAmount: string;
+  dueAmount: string;
+  payments: Array<{
+    amount: number;
+    modeOfPayment: string;
+  }>;
+}
 
 // Params for Home Stack
 export type AccountStackParamList = {
@@ -50,6 +80,7 @@ export type AccountStackParamList = {
   UserPermissions: {salesmanId: string};
   AddNewUser: undefined;
   LoginScreen: undefined;
+  AddNewUserAdded: undefined;
   InsightsEmpty: undefined;
   LeftoverstockDesignwiseScreen: undefined;
   LeftoverstockproductwiseScreen: undefined;
@@ -57,6 +88,31 @@ export type AccountStackParamList = {
   MonthlyDesignwiseOrdersScreen: undefined;
   MonthlyOrderPlacementAnalyticsScreen: undefined;
   MonthlyProductwiseOrdersScreen: undefined;
+  GenerateInvoiceScreen:{ invoiceStatus: 'new' | 'active' | 'completed';
+    orderId: string; 
+  };
+  PreviousInvoiceScreen:undefined;
+  InvoicesScreen:undefined;
+  InvoiceItemsScreen:{
+    invoiceStatus: 'new' | 'active' | 'completed';
+    orderId: string;
+    invoiceNumber: string;
+    billingDetails: BillingDetails;
+  };
+  InvoiceUpdated:undefined;
+  TestInvoicesScreen:undefined;
+  InvoicePaymentScreen:{ invoiceStatus: 'new' | 'active' | 'completed';
+   orderId: string;
+    invoiceNumber: string;
+    billingDetails: BillingDetails;
+    paymentDetails: PaymentDetails;
+    paymentHistory?: Array<{
+      amount: number;
+      modeOfPayment: string;
+    }>
+  };
+
+  
 };
 
 const AccountStack = createNativeStackNavigator<AccountStackParamList>();
@@ -175,6 +231,39 @@ function AccountStackNavigator() {
         name="MonthlyProductwiseOrdersScreen"
         component={MonthlyProductwiseOrdersScreen}
         options={{headerShown: false}}
+      />
+
+      <AccountStack.Screen
+        name="GenerateInvoiceScreen"
+        component={GenerateInvoiceScreen}
+        options={{headerShown: false}}
+      />
+      <AccountStack.Screen
+        name="PreviousInvoiceScreen"
+        component={PreviousInvoiceScreen}
+        options={{headerShown: false}}
+      />
+      <AccountStack.Screen
+        name="InvoicesScreen"
+        component={InvoicesScreen}
+        options={{headerShown: false}}
+      />
+       <AccountStack.Screen
+        name="InvoiceUpdated"
+        component={InvoiceUpdated}
+        options={{headerShown: false}}
+      />
+       <AccountStack.Screen
+        name="InvoiceItemsScreen"
+        component={InvoiceItemsScreen}
+        options={{headerShown: false,
+        }}
+      />
+      <AccountStack.Screen
+        name="InvoicePaymentScreen"
+        component={InvoicePaymentScreen}
+        options={{headerShown: false,
+        }}
       />
     </AccountStack.Navigator>
   );

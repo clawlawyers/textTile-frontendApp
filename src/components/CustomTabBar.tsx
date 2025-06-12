@@ -56,6 +56,13 @@ const HIDDEN_ROUTES = [
   'GeneratedImageScreen',
   'PaletteGeneratedScreen',
   'EditPaletteScreen',
+  'GenerateInvoiceScreen',
+  'InvoiceItemsScreen',
+  'InvoicesScreen',
+  'InvoiceUpdated',
+  'PreviousInvoiceScreen',
+  'InvoicePaymentScreen'
+
 ];
 
 const CustomTabBar: React.FC<BottomTabBarProps> = ({
