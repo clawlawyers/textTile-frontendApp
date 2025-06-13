@@ -1,5 +1,5 @@
 /* eslint-disable react-native/no-inline-styles */
-import React, {useState} from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -8,77 +8,91 @@ import {
   SafeAreaView,
   Platform,
   StatusBar,
+  Alert,
 } from 'react-native';
-import {Dropdown} from 'react-native-element-dropdown';
+import { Dropdown } from 'react-native-element-dropdown';
 import Ionicons from 'react-native-vector-icons/Ionicons';
-import {NativeStackScreenProps} from '@react-navigation/native-stack';
-import {HomeStackParamList} from '../stacks/Home';
 import Feather from 'react-native-vector-icons/Feather';
+import { NativeStackScreenProps } from '@react-navigation/native-stack';
+import { AccountStackParamList } from '../stacks/Account';
 
 type InsightsEmptyProps = NativeStackScreenProps<
-  HomeStackParamList,
+  AccountStackParamList,
   'InsightsEmpty'
 >;
 
-const InsightScreen: React.FC<InsightsEmptyProps> = ({navigation}) => {
-  const [selectedInsightCategory, setSelectedInsightCategory] = useState(null);
+const InsightScreen: React.FC<InsightsEmptyProps> = ({ navigation }) => {
+  const [selectedInsightCategory, setSelectedInsightCategory] = useState<string | null>(null);
   const [searchProduct, setSearchProduct] = useState('');
 
   const insightCategories = [
-    {label: 'Select Insight Category', value: null}, // Default placeholder item
-    {label: 'Sales Performance', value: 'sales_performance'},
-    {label: 'Customer Demographics', value: 'customer_demographics'},
-    {label: 'Product Trends', value: 'product_trends'},
-    {label: 'Marketing Effectiveness', value: 'marketing_effectiveness'},
+    { label: 'Monthly product wise order percentage', value: 'MonthlyProductwiseOrdersScreen' },
+    { label: 'Monthly design wise order percentage', value: 'MonthlyDesignwiseOrdersScreen' },
+    { label: 'Monthly Advances vs Dues Product Wise', value: 'MonthlyAdvanceVsDuesProductwiseScreen' },
+    { label: 'Monthly Order Placement Analytics', value: 'MonthlyOrderPlacementAnalyticsScreen' },
+    { label: 'Left Over Stock Product Wise', value: 'LeftoverstockproductwiseScreen' },
+    { label: 'Left Over Stock Design Wise', value: 'LeftoverstockDesignwiseScreen' },
   ];
+
+  const handleSearch = () => {
+    if (!selectedInsightCategory) {
+      Alert.alert('Error', 'Please select an insight category first.');
+      return;
+    }
+    console.log('Searching for product:', searchProduct);
+  };
+
+  const clearSearch = () => {
+    setSearchProduct('');
+    console.log('Search cleared');
+  };
 
   return (
     <SafeAreaView
-      // Apply background color directly with NativeWind
       className="flex-1 bg-[#FAD9B3]"
-      // Conditional padding for Android StatusBar
       style={{
         paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0,
-      }}>
+      }}
+    >
       <View className="flex-1 px-5">
         {/* Header */}
         <View className="flex-row justify-between items-center mb-5 mt-2.5">
           <TouchableOpacity
             onPress={() => navigation.goBack()}
-            className="w-8 h-8 rounded-full border border-[#292C33] justify-center items-center">
-            <Ionicons name="arrow-back" size={20} color="#292C33" />{' '}
+            className="w-8 h-8 rounded-full border border-[#292C33] justify-center items-center"
+          >
+            <Ionicons name="arrow-back" size={20} color="#292C33" />
           </TouchableOpacity>
           <View className="flex-row items-center rounded-lg py-2 px-4">
             <View className="flex-column">
-              <Text
-                style={{fontSize: 10}}
-                className="text-black text-right mr-1.5">
+              <Text style={{ fontSize: 10 }} className="text-black text-right mr-1.5">
                 Insights For
               </Text>
-              <Text className="text-black text-sm font-bold mr-2.5">
-                May 2025
-              </Text>
+              <Text className="text-black text-sm font-bold mr-2.5">May 2025</Text>
             </View>
             <TouchableOpacity onPress={() => console.log('Open calendar')}>
-              <Feather
-                name="calendar"
-                size={20}
-                color="#000"
-                className="ml-1.5"
-              />
+              <Feather name="calendar" size={20} color="#000" />
             </TouchableOpacity>
           </View>
         </View>
 
         {/* Dropdown + Search Input Section */}
         <View className="mb-5">
-          <View className="bg-[#D6872A] rounded-lg mb-4">
+          <View className="bg-[#D6872A] rounded-lg mb-4 shadow-md">
             <Dropdown
-              style={{height: 42, paddingHorizontal: 15}}
-              containerStyle={{borderRadius: 8}}
+              style={{
+                height: 42,
+                paddingHorizontal: 15,
+                borderRadius: 12,
+              }}
+              containerStyle={{
+                borderRadius: 8,
+                backgroundColor: '#292C33',
+                marginTop: 4,
+              }}
               placeholderStyle={{
                 color: '#fff',
-                fontSize: 16,
+                fontSize: 15,
                 textAlign: 'left',
               }}
               selectedTextStyle={{
@@ -86,15 +100,30 @@ const InsightScreen: React.FC<InsightsEmptyProps> = ({navigation}) => {
                 fontSize: 14,
                 textAlign: 'left',
               }}
-              iconStyle={{width: 24, height: 22, tintColor: '#fff'}}
+              itemContainerStyle={{
+                backgroundColor: '#292C33',
+              }}
+              itemTextStyle={{
+                color: '#fff',
+                fontSize: 14,
+                paddingVertical: 4,
+              }}
+              iconStyle={{
+                width: 24,
+                height: 22,
+                tintColor: '#fff',
+              }}
               data={insightCategories}
               labelField="label"
               valueField="value"
-              placeholder={'Select Insight Category'}
+              placeholder="Select Insight Category"
               value={selectedInsightCategory}
-              onChange={item => setSelectedInsightCategory(item.value)}
+              onChange={(item) => {
+                setSelectedInsightCategory(item.value);
+                navigation.navigate(item.value);
+              }}
               renderRightIcon={() => (
-                <Ionicons name="chevron-down" size={18} color="black" />
+                <Ionicons name="chevron-down" size={18} color="#fff" />
               )}
             />
           </View>
@@ -108,12 +137,14 @@ const InsightScreen: React.FC<InsightsEmptyProps> = ({navigation}) => {
               value={searchProduct}
               onChangeText={setSearchProduct}
             />
-            <TouchableOpacity
-              onPress={() =>
-                navigation.navigate('MonthlyProductwiseOrdersScreen')
-              }>
+            <TouchableOpacity onPress={handleSearch}>
               <Ionicons name="search" size={20} color="#888" />
             </TouchableOpacity>
+            {searchProduct.length > 0 && (
+              <TouchableOpacity onPress={clearSearch} className="ml-2">
+                <Ionicons name="close" size={20} color="#888" />
+              </TouchableOpacity>
+            )}
           </View>
         </View>
 
@@ -121,9 +152,7 @@ const InsightScreen: React.FC<InsightsEmptyProps> = ({navigation}) => {
           <View className="w-10 h-10 rounded-full bg-[#CA6800] items-center justify-center">
             <Text className="text-white text-2xl font-bold">!</Text>
           </View>
-          <Text className="text-lg font-bold text-black mt-4">
-            Insights Parameter Empty
-          </Text>
+          <Text className="text-lg font-bold text-black mt-4">Insights Parameter Empty</Text>
           <Text className="text-sm text-black text-center mt-1 px-8">
             Please enter a search term
           </Text>
