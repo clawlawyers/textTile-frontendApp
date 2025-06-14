@@ -11,6 +11,7 @@ import {
   ScrollView,
   ActivityIndicator,
   Alert,
+  ToastAndroid,
 } from 'react-native';
 import { Dropdown } from 'react-native-element-dropdown';
 import Ionicons from 'react-native-vector-icons/Ionicons';
@@ -463,7 +464,7 @@ const MonthlyDesignwiseOrdersScreen: React.FC<MonthlyDesignwiseOrdersScreenProps
 
         <View className="absolute bottom-0 left-0 right-0 px-5 pb-5">
           <TouchableOpacity
-            onPress={downloadReport}
+             onPress={()=>ToastAndroid.show('Feature Coming Soon', ToastAndroid.SHORT)}
             className="bg-[#D6872A] py-4 rounded-xl items-center"
             disabled={loading}
           >

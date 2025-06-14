@@ -10,6 +10,7 @@ import {
   StatusBar,
   ActivityIndicator,
   Alert,
+  ToastAndroid,
 } from 'react-native';
 import { Dropdown } from 'react-native-element-dropdown';
 import Ionicons from 'react-native-vector-icons/Ionicons';
@@ -212,131 +213,131 @@ const LeftoverstockDesignwiseScreen: React.FC<LeftoverstockDesignwiseScreenProps
     }, [currentUser?.token, activeFirm, startDate, endDate]),
   );
 
-  const downloadReport = async () => {
-    if (loading) return;
+  // const downloadReport = async () => {
+  //   if (loading) return;
 
-    if (Platform.OS === 'android') {
-      const hasPermission = await checkPermission();
-      if (!hasPermission) {
-        Alert.alert(
-          'Permission Denied',
-          'Storage permission is required to download reports',
-        );
-        return;
-      }
-    }
+  //   if (Platform.OS === 'android') {
+  //     const hasPermission = await checkPermission();
+  //     if (!hasPermission) {
+  //       Alert.alert(
+  //         'Permission Denied',
+  //         'Storage permission is required to download reports',
+  //       );
+  //       return;
+  //     }
+  //   }
 
-    setLoading(true);
+  //   setLoading(true);
 
-    try {
-      if (!analyticsData.length) {
-        throw new Error('No data available to download.');
-      }
+  //   try {
+  //     if (!analyticsData.length) {
+  //       throw new Error('No data available to download.');
+  //     }
 
-      if (!startDate || !endDate) {
-        throw new Error('Please select both start and end dates to download the report.');
-      }
+  //     if (!startDate || !endDate) {
+  //       throw new Error('Please select both start and end dates to download the report.');
+  //     }
 
-      if (!activeFirm || !activeFirm._id) {
-        throw new Error('No active firm selected.');
-      }
+  //     if (!activeFirm || !activeFirm._id) {
+  //       throw new Error('No active firm selected.');
+  //     }
 
-      const companyId = activeFirm._id;
-      // Placeholder endpoint; replace with correct one when confirmed
-      let url = `${NODE_API_ENDPOINT}/analytics/download-report?companyId=${companyId}&type=leftover-stock-product-wise`;
-      if (startDate) {
-        url += `&startDate=${formatDate(startDate)}`;
-      }
-      if (endDate) {
-        url += `&endDate=${formatDate(endDate)}`;
-      }
+  //     const companyId = activeFirm._id;
+  //     // Placeholder endpoint; replace with correct one when confirmed
+  //     let url = `${NODE_API_ENDPOINT}/analytics/download-report?companyId=${companyId}&type=leftover-stock-product-wise`;
+  //     if (startDate) {
+  //       url += `&startDate=${formatDate(startDate)}`;
+  //     }
+  //     if (endDate) {
+  //       url += `&endDate=${formatDate(endDate)}`;
+  //     }
 
-      console.log('Full download URL:', url);
-      console.log('Token used:', currentUser?.token ? 'Present' : 'Missing');
+  //     console.log('Full download URL:', url);
+  //     console.log('Token used:', currentUser?.token ? 'Present' : 'Missing');
 
-      const { dirs } = RNFetchBlob.fs;
-      const dirPath = Platform.OS === 'ios' ? dirs.DocumentDir : dirs.DownloadDir;
-      const timestamp = new Date().getTime();
-      const filename = `report_leftover_stock_${companyId}_${timestamp}.pdf`;
-      const filePath = `${dirPath}/${filename}`;
+  //     const { dirs } = RNFetchBlob.fs;
+  //     const dirPath = Platform.OS === 'ios' ? dirs.DocumentDir : dirs.DownloadDir;
+  //     const timestamp = new Date().getTime();
+  //     const filename = `report_leftover_stock_${companyId}_${timestamp}.pdf`;
+  //     const filePath = `${dirPath}/${filename}`;
 
-      if (Platform.OS === 'android') {
-        const exists = await RNFetchBlob.fs.exists(dirPath);
-        if (!exists) {
-          await RNFetchBlob.fs.mkdir(dirPath);
-        }
-      }
+  //     if (Platform.OS === 'android') {
+  //       const exists = await RNFetchBlob.fs.exists(dirPath);
+  //       if (!exists) {
+  //         await RNFetchBlob.fs.mkdir(dirPath);
+  //       }
+  //     }
 
-      const downloadConfig =
-        Platform.OS === 'android'
-          ? {
-              fileCache: true,
-              path: filePath,
-              addAndroidDownloads: {
-                useDownloadManager: true,
-                notification: true,
-                title: 'Report Downloaded',
-                description: 'Your report has been downloaded successfully',
-                mime: 'application/pdf',
-                mediaScannable: true,
-                path: filePath,
-              },
-            }
-          : {
-              fileCache: true,
-              path: filePath,
-            };
+  //     const downloadConfig =
+  //       Platform.OS === 'android'
+  //         ? {
+  //             fileCache: true,
+  //             path: filePath,
+  //             addAndroidDownloads: {
+  //               useDownloadManager: true,
+  //               notification: true,
+  //               title: 'Report Downloaded',
+  //               description: 'Your report has been downloaded successfully',
+  //               mime: 'application/pdf',
+  //               mediaScannable: true,
+  //               path: filePath,
+  //             },
+  //           }
+  //         : {
+  //             fileCache: true,
+  //             path: filePath,
+  //           };
 
-      const res = await RNFetchBlob.config(downloadConfig).fetch('GET', url, {
-        Authorization: `Bearer ${currentUser?.token}`,
-        'Content-Type': 'application/json',
-        Accept: 'application/pdf',
-      });
+  //     const res = await RNFetchBlob.config(downloadConfig).fetch('GET', url, {
+  //       Authorization: `Bearer ${currentUser?.token}`,
+  //       'Content-Type': 'application/json',
+  //       Accept: 'application/pdf',
+  //     });
 
-      console.log('Response info:', res.info());
+  //     console.log('Response info:', res.info());
 
-      if (res.info().status === 401) {
-        Alert.alert('Session Expired', 'Your session has expired. Please log in again.');
-        navigation.navigate('LoginScreen');
-        return;
-      }
+  //     if (res.info().status === 401) {
+  //       Alert.alert('Session Expired', 'Your session has expired. Please log in again.');
+  //       navigation.navigate('LoginScreen');
+  //       return;
+  //     }
 
-      if (res.info().status === 404) {
-        throw new Error('Report download endpoint not found. Please contact support.');
-      }
+  //     if (res.info().status === 404) {
+  //       throw new Error('Report download endpoint not found. Please contact support.');
+  //     }
 
-      if (!(res.info().status >= 200 && res.info().status < 300)) {
-        const errorText = await res.text();
-        console.log('Response error text:', errorText);
-        throw new Error(`Failed to download report: ${res.info().status} ${errorText}`);
-      }
+  //     if (!(res.info().status >= 200 && res.info().status < 300)) {
+  //       const errorText = await res.text();
+  //       console.log('Response error text:', errorText);
+  //       throw new Error(`Failed to download report: ${res.info().status} ${errorText}`);
+  //     }
 
-      const fileExists = await RNFetchBlob.fs.exists(filePath);
-      if (!fileExists) {
-        throw new Error('File does not exist after download');
-      }
+  //     const fileExists = await RNFetchBlob.fs.exists(filePath);
+  //     if (!fileExists) {
+  //       throw new Error('File does not exist after download');
+  //     }
 
-      const fileSize = await RNFetchBlob.fs.stat(filePath).then((stats) => stats.size);
-      console.log(`File exists: ${fileExists}, size: ${fileSize}B`);
+  //     const fileSize = await RNFetchBlob.fs.stat(filePath).then((stats) => stats.size);
+  //     console.log(`File exists: ${fileExists}, size: ${fileSize}B`);
 
-      if (fileSize <= 0) {
-        throw new Error('Downloaded file is empty (0B)');
-      }
+  //     if (fileSize <= 0) {
+  //       throw new Error('Downloaded file is empty (0B)');
+  //     }
 
-      Alert.alert('Success', 'Report downloaded successfully');
+  //     Alert.alert('Success', 'Report downloaded successfully');
 
-      if (Platform.OS === 'ios') {
-        RNFetchBlob.ios.openDocument(filePath);
-      } else {
-        RNFetchBlob.android.actionViewIntent(filePath, 'application/pdf');
-      }
-    } catch (error) {
-      console.error('Error downloading report:', error);
-      Alert.alert('Error', error.message || 'Failed to download report. Please try again.');
-    } finally {
-      setLoading(false);
-    }
-  };
+  //     if (Platform.OS === 'ios') {
+  //       RNFetchBlob.ios.openDocument(filePath);
+  //     } else {
+  //       RNFetchBlob.android.actionViewIntent(filePath, 'application/pdf');
+  //     }
+  //   } catch (error) {
+  //     console.error('Error downloading report:', error);
+  //     Alert.alert('Error', error.message || 'Failed to download report. Please try again.');
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
 
   // Prepare data for AreaChart
   const lineChartData = monthlyStockData.map((item) => item.stock);
@@ -617,7 +618,7 @@ const LeftoverstockDesignwiseScreen: React.FC<LeftoverstockDesignwiseScreenProps
         {/* Download Button */}
         <View className="mt-12 pb-5">
           <TouchableOpacity
-            onPress={downloadReport}
+            onPress={()=>ToastAndroid.show('Feature Coming Soon', ToastAndroid.SHORT)}
             className="bg-[#DB9245] py-4 rounded-xl items-center"
             disabled={loading}
           >

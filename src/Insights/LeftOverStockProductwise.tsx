@@ -10,6 +10,7 @@ import {
   StatusBar,
   ActivityIndicator,
   Alert,
+  ToastAndroid,
 } from 'react-native';
 import { Dropdown } from 'react-native-element-dropdown';
 import Ionicons from 'react-native-vector-icons/Ionicons';
@@ -607,7 +608,7 @@ const LeftoverstockproductwiseScreen: React.FC<LeftoverstockproductwiseScreenPro
         {/* Download Button */}
         <View className=" mt-12 pb-5">
           <TouchableOpacity
-            onPress={downloadReport}
+            onPress={()=>ToastAndroid.show('Feature Coming Soon', ToastAndroid.SHORT)}
             className="bg-[#DB9245] py-4 rounded-xl items-center"
             disabled={loading}
           >
