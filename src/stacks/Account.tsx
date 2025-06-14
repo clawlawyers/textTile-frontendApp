@@ -28,7 +28,7 @@ import InvoicesScreen from '../screens/InvoicesScreen';
 import InvoiceUpdated from '../screens/InvoiceUpdated';
 import InvoiceItemsScreen from '../screens/InvoiceItemsScreen';
 import InvoicePaymentScreen from '../screens/InvoicePaymentScreen';
-import TestInvoicesScreen from '../screens/TestInvoicesScreen'
+import ActiveInvoiceScreen from '../screens/ActiveInvoiceScreen';
 // import AccountScreen from '../screens/AccountScreen';
 // import OrderScreen from '../screens/OrdersScreen';
 // import OrderDetailsScreen from '../screens/OrderDetailsScreen';
@@ -88,32 +88,75 @@ export type AccountStackParamList = {
   MonthlyDesignwiseOrdersScreen: undefined;
   MonthlyOrderPlacementAnalyticsScreen: undefined;
   MonthlyProductwiseOrdersScreen: undefined;
-  GenerateInvoiceScreen:{ invoiceStatus: 'new' | 'active' | 'completed';
-    orderId: string; 
+  GenerateInvoiceScreen:{ invoiceStatus?: string;
+    orderId?: string;
+    testOrderId?: string;
+    invoiceNumber?: string;
+    billingDetails?: any;
+    paymentDetails?: any;
+    paymentHistory?: any[];
+    cartProducts?: Item[];
+    discountValue?: string;
+    discountMode?: 'percent' | 'rupees';
+    gstValue?: string;
   };
   PreviousInvoiceScreen:undefined;
   InvoicesScreen:undefined;
-  InvoiceItemsScreen:{
-    invoiceStatus: 'new' | 'active' | 'completed';
-    orderId: string;
-    invoiceNumber: string;
-    billingDetails: BillingDetails;
+  InvoiceItemsScreen: {
+    invoiceStatus?: string;
+    orderId?: string;
+    testOrderId?: string;
+    invoiceNumber?: string;
+    billingDetails?: any;
+    paymentDetails?: any;
+    discountValue?: string;
+    discountMode?: 'percent' | 'rupees';
+    gstValue?: string;
+    paymentHistory?: any[];
+    cartProducts?: Item[];
   };
-  InvoiceUpdated:undefined;
+  InvoiceUpdated:{
+    invoiceStatus?: string;
+    orderId?: string;
+    testOrderId?: string;
+    invoiceNumber?: string;
+    billingDetails?: any;
+    discountValue?: string;
+    discountMode?: 'percent' | 'rupees';
+    gstValue?: string;
+    paymentDetails?: any;
+    paymentHistory?: any[];
+    cartProducts?: Item[];
+  }
   TestInvoicesScreen:undefined;
-  InvoicePaymentScreen:{ invoiceStatus: 'new' | 'active' | 'completed';
-   orderId: string;
-    invoiceNumber: string;
-    billingDetails: BillingDetails;
-    paymentDetails: PaymentDetails;
-    paymentHistory?: Array<{
-      amount: number;
-      modeOfPayment: string;
-    }>
+  InvoicePaymentScreen: {
+    invoiceStatus?: string;
+    orderId?: string;
+    testOrderId?: string;
+    invoiceNumber?: string;
+    billingDetails?: any;
+    discountValue?: string;
+    discountMode?: 'percent' | 'rupees';
+    gstValue?: string;
+    paymentDetails?: any;
+    paymentHistory?: any[];
+    cartProducts?: Item[];
   };
-
-  
-};
+  ActiveInvoiceScreen: {
+    invoice: {
+      _id: string;
+      billingFrom: { firmName: string; firmAddress: string; firmGstNumber: string };
+      billingTo: { firmName: string; firmAddress: string; firmGstNumber: string };
+      billingDetails: { billingDate: string; billingDueDate: string };
+      dueAmount: number;
+      totalAmount: number;
+      items: Array<{ id: string; name: string; quantity: number; price: number }>;
+      payments: Array<{ amount: number; date: string; mode: string }>;
+      discountAmount: number;
+      discountPercentage: number;
+    };
+  };
+}
 
 const AccountStack = createNativeStackNavigator<AccountStackParamList>();
 
@@ -232,7 +275,11 @@ function AccountStackNavigator() {
         component={MonthlyProductwiseOrdersScreen}
         options={{headerShown: false}}
       />
-
+      <AccountStack.Screen
+        name="ActiveInvoiceScreen"
+        component={ActiveInvoiceScreen}
+        options={{headerShown: false}}
+      />
       <AccountStack.Screen
         name="GenerateInvoiceScreen"
         component={GenerateInvoiceScreen}

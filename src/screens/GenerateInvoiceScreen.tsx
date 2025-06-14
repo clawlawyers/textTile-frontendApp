@@ -9,315 +9,255 @@ import {
   StyleSheet,
   Platform,
 } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import DateTimePicker from '@react-native-community/datetimepicker';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { scale, verticalScale } from '../utils/scaling';
-import { AccountStackParamList } from '../stacks/Account';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
-import ReactNativeBlobUtil from 'react-native-blob-util';
-import { NODE_API_ENDPOINT } from '../utils/util';
 import { useSelector } from 'react-redux';
 import { RootState } from '../redux/store';
+
+type Item = {
+  id: string;
+  name: string;
+  quantity: number;
+  price: number;
+};
+
+type AccountStackParamList = {
+  GenerateInvoiceScreen: undefined;
+  InvoiceItemsScreen: {
+    orderId?: string;
+    invoiceStatus?: string;
+    invoiceNumber?: string;
+    billingDetails?: any;
+    cartProducts?: Item[];
+    paymentDetails?: any;
+    paymentHistory?: any[];
+    discountValue?: string;
+    discountMode?: 'percent' | 'rupees';
+    gstValue?: string;
+    testOrderId?: string;
+  };
+  InvoicePaymentScreen: {
+    invoiceStatus?: string;
+    orderId?: string;
+    testOrderId?: string;
+    invoiceNumber?: string;
+    billingDetails?: any;
+    paymentDetails?: any;
+    paymentHistory?: any[];
+    cartProducts?: Item[];
+    discountValue?: string;
+    discountMode?: 'percent' | 'rupees';
+    gstValue?: string;
+  };
+  InvoiceDetailsScreen: {
+    invoiceStatus?: string;
+    orderId?: string;
+    testOrderId?: string;
+    invoiceNumber?: string;
+    billingDetails?: any;
+    paymentDetails?: any;
+    paymentHistory?: any[];
+    cartProducts?: Item[];
+    discountValue?: string;
+    discountMode?: 'percent' | 'rupees';
+    gstValue?: string;
+  };
+  LoginScreen: undefined;
+};
 
 type GenerateInvoiceProps = NativeStackScreenProps<
   AccountStackParamList,
   'GenerateInvoiceScreen'
 >;
 
-interface Item {
-  name: string;
-  price: number;
-  quantity: number;
-  gst: number;
-  discount: number;
-  discountType: 'percentage' | 'rupees';
-}
-
-const GenerateInvoiceScreen = ({ navigation, route }: GenerateInvoiceProps) => {
-  const [billTo, setBillTo] = useState<string>('');
-  const [billToGSTIN, setBillToGSTIN] = useState<string>('');
-  const [billingFrom, setBillingFrom] = useState<string>('');
-  const [billingFromGSTIN, setBillingFromGSTIN] = useState<string>('');
-  const [date, setDate] = useState<string>('');
-  const [duedate, setDueDate] = useState<string>('');
-  const [items, setItems] = useState<Item[]>([]);
-  const [invoiceNumber, setInvoiceNumber] = useState<string>('');
-  const [amountPaid, setAmountPaid] = useState<string>('0');
-  const [billToAddress, setBillToAddress] = useState<string>('');
-  const [billingFromAddress, setBillingFromAddress] = useState<string>('');
-  const [loading, setLoading] = useState<boolean>(false);
-
-  const invoiceStatus = route.params?.invoiceStatus || 'new';
-  const orderId = route.params?.orderId; // Renamed from invoiceId to orderId
-
+const GenerateInvoiceScreen = ({ navigation }: GenerateInvoiceProps) => {
   const currentUser = useSelector((state: RootState) => state.auth.user);
 
-  // Validate orderId
-  const isValidObjectId = (id: string) => /^[0-9a-fA-F]{24}$/.test(id);
+  // State for form inputs
+  const [billingFrom, setBillingFrom] = useState({
+    firmName: '',
+    firmAddress: '',
+    firmGstNumber: '',
+  });
+  const [billingTo, setBillingTo] = useState({
+    firmName: '',
+    firmAddress: '',
+    firmGstNumber: '',
+  });
+  const [billingDate, setBillingDate] = useState<Date | null>(null);
+  const [billingDueDate, setBillingDueDate] = useState<Date | null>(null);
+  const [showDatePicker, setShowDatePicker] = useState(false);
+  const [datePickerMode, setDatePickerMode] = useState<'billing' | 'due' | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [orderId, setOrderId] = useState<string | null>(null);
+  const [invoiceNumber, setInvoiceNumber] = useState<string>('A00001');
 
-  if (!orderId || !isValidObjectId(orderId)) {
-    Alert.alert('Error', 'Invalid Order ID. Please try again.');
-    navigation.goBack();
-    return null;
-  }
+  const invoiceStatus = 'new';
 
+  // Generate six-digit order ID (A00000-Z99999)
+  const generateOrderId = async (increment: boolean = false): Promise<string> => {
+    try {
+      const key = 'invoice_counter';
+      let counter = parseInt(await AsyncStorage.getItem(key) || '0', 10);
+      if (isNaN(counter) || counter < 0) {
+        counter = 0;
+        await AsyncStorage.setItem(key, '0');
+      }
+      if (increment) {
+        counter += 1;
+        if (counter > 2599999) {
+          throw new Error('Maximum invoice limit reached (Z99999)');
+        }
+        await AsyncStorage.setItem(key, counter.toString());
+      }
+      const letter = String.fromCharCode(65 + Math.floor(counter / 100000)); // A-Z
+      const number = (counter % 100000).toString().padStart(5, '0'); // 00000-99999
+      const orderId = `${letter}${number}`;
+      if (!/^[A-Z]\d{5}$/.test(orderId)) {
+        throw new Error(`Invalid order ID format: ${orderId}`);
+      }
+      console.log(`Generated orderId: ${orderId} (counter: ${counter})`);
+      return orderId;
+    } catch (error) {
+      console.error('Error generating order ID:', error);
+      throw new Error(`Failed to generate order ID: ${error.message}`);
+    }
+  };
+
+  // Initialize invoice number
   useEffect(() => {
-    const loadInvoiceData = async () => {
-      if (invoiceStatus === 'new') {
-        try {
-          const response = await fetch(
-            `${NODE_API_ENDPOINT}/orders/custom-invoice/latest-invoice-number`,
-            {
-              method: 'GET',
-              headers: {
-                'Authorization': `Bearer ${currentUser?.token}`,
-                'Content-Type': 'application/json',
-              },
-            }
-          );
-
-          if (response.status === 401) {
-            Alert.alert('Session Expired', 'Your session has expired. Please log in again.');
-            navigation.navigate('LoginScreen');
-            return;
-          }
-
-          if (!response.ok) {
-            const errorText = await response.text();
-            throw new Error(`Failed to fetch latest invoice number: ${response.status} ${errorText}`);
-          }
-
-          const data = await response.json();
-          console.log('Fetched latest invoice number:', data); // Debug log
-          setInvoiceNumber(data.invoiceNumber || 'INV-2025-001'); // Fallback in case of failure
-        } catch (error) {
-          console.error('Error fetching invoice number:', error);
-          Alert.alert('Error', 'Failed to fetch invoice number. Using default value.');
-          setInvoiceNumber('INV-2025-001'); // Fallback
-        }
-
-        // Set default dates for new invoices
-        setDate(new Date().toISOString());
-        setDueDate(new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString());
-      } else {
-        try {
-          const response = await fetch(
-            `${NODE_API_ENDPOINT}/orders/custom-invoice/${orderId}`,
-            {
-              method: 'GET',
-              headers: {
-                'Authorization': `Bearer ${currentUser?.token}`,
-                'Content-Type': 'application/json',
-              },
-            }
-          );
-
-          if (response.status === 401) {
-            Alert.alert('Session Expired', 'Your session has expired. Please log in again.');
-            navigation.navigate('LoginScreen');
-            return;
-          }
-
-          if (response.status === 404) {
-            Alert.alert('Error', 'Order not found. Please create the order first.');
-            navigation.goBack();
-            return;
-          }
-
-          if (!response.ok) {
-            const errorText = await response.text();
-            throw new Error(`Failed to fetch invoice details: ${response.status} ${errorText}`);
-          }
-
-          const data = await response.json();
-          console.log('Fetched invoice details:', data); // Debug log
-          setBillTo(data.clientDetails.name || '');
-          setBillToGSTIN(data.clientDetails.firmGSTNumber || '');
-          setBillToAddress(data.clientDetails.address || '');
-          setBillingFrom(data.clientDetails.firmName || '');
-          setBillingFromAddress(data.clientDetails.billingFromAddress || '');
-          setBillingFromGSTIN(data.clientDetails.billingFromGSTIN || '');
-          setDate(data.invoiceDate || '');
-          setDueDate(data.dueDate || '');
-          setItems(
-            data.products?.map((prod: any) => ({
-              name: prod.inventoryProduct?.bail_number || 'Unknown Product',
-              price: prod.unitPrice || 0,
-              quantity: prod.quantity || 0,
-              gst: 18,
-              discount: 0,
-              discountType: 'percentage' as 'percentage' | 'rupees',
-            })) || []
-          );
-          setAmountPaid(data.paidAmount?.toString() || '0');
-          setInvoiceNumber(data.invoiceNumber || 'INV-2025-001');
-        } catch (error) {
-          console.error('Error fetching invoice details:', error);
-          Alert.alert('Error', 'Failed to fetch invoice details');
-        }
+    const initInvoiceNumber = async () => {
+      try {
+        const nextOrderId = await generateOrderId(false);
+        setInvoiceNumber(nextOrderId);
+        console.log(`Initialized invoiceNumber: ${nextOrderId}`);
+      } catch (error) {
+        console.error('Error initializing invoice number:', error);
+        Alert.alert('Error', 'Failed to initialize invoice number');
       }
     };
+    initInvoiceNumber();
+  }, []);
 
-    if (!currentUser?.token) {
-      Alert.alert('Error', 'Authentication token is missing. Please log in again.');
-      navigation.navigate('LoginScreen');
+  const formatDate = (date: Date | null): string => {
+    if (!date) return 'Select Date';
+    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  };
+
+  const handleDateChange = (event: any, selectedDate: Date | undefined) => {
+    setShowDatePicker(false);
+    if (Platform.OS === 'android' && event.type === 'dismissed') {
+      setDatePickerMode(null);
+      return;
+    }
+    if (selectedDate && datePickerMode) {
+      if (datePickerMode === 'billing') {
+        setBillingDate(selectedDate);
+        if (billingDueDate && selectedDate > billingDueDate) {
+          setBillingDueDate(null);
+        }
+      } else if (datePickerMode === 'due') {
+        if (billingDate && selectedDate < billingDate) {
+          Alert.alert('Error', 'Due date must be after billing date');
+          return;
+        }
+        setBillingDueDate(selectedDate);
+      }
+      setDatePickerMode(null);
+    }
+  };
+
+  const handleCalendarPress = (mode: 'billing' | 'due') => {
+    setDatePickerMode(mode);
+    setShowDatePicker(true);
+  };
+
+  const handleSaveInvoice = async () => {
+    if (loading) return;
+
+    // Check if invoice is new
+    if (invoiceStatus === 'new') {
+      Alert.alert('Error', 'GST and discount can\'t be empty');
       return;
     }
 
-    loadInvoiceData();
-  }, [invoiceStatus, orderId, currentUser?.token, navigation]);
-
-  const calculateItemTotal = (item: Item) => {
-    const baseTotal = item.price * item.quantity;
-    const gstAmount = (baseTotal * item.gst) / 100;
-    let discountAmount = item.discount;
-
-    if (item.discountType === 'percentage') {
-      discountAmount = (baseTotal * item.discount) / 100;
-    }
-
-    return baseTotal + gstAmount - discountAmount;
-  };
-
-  const calculateGrandTotal = () => {
-    return items.reduce((sum, item) => sum + calculateItemTotal(item), 0);
-  };
-
-  const saveInvoice = async () => {
-    if (!billTo || !billToGSTIN || !billingFrom || !billingFromGSTIN || !date || !duedate) {
+    // Validate required fields
+    if (
+      !billingFrom.firmName ||
+      !billingFrom.firmAddress ||
+      !billingFrom.firmGstNumber ||
+      !billingTo.firmName ||
+      !billingTo.firmAddress ||
+      !billingTo.firmGstNumber ||
+      !billingDate ||
+      !billingDueDate
+    ) {
       Alert.alert('Error', 'Please fill in all required fields');
       return;
     }
 
-    if (invoiceStatus === 'completed') {
-      Alert.alert('Info', 'This invoice is completed and cannot be edited.');
+    if (!currentUser?.token) {
+      Alert.alert('Error', 'User not authenticated. Please log in.');
+      navigation.navigate('LoginScreen');
       return;
     }
 
     setLoading(true);
 
-    const total = calculateGrandTotal();
-    const paidAmountValue = parseFloat(amountPaid || '0');
-    const status = paidAmountValue >= total ? 'completed' : 'active';
-
-    const payload = {
-      clientDetails: {
-        name: billTo,
-        firmName: billingFrom,
-        address: billToAddress,
-        firmGSTNumber: billToGSTIN,
-        billingFromAddress: billingFromAddress,
-        billingFromGSTIN: billingFromGSTIN,
-      },
-      customProducts: items.map(item => ({
-        inventoryProduct: '60d5ec49f8c7b00015e4a1b2', // Replace with actual product ID
-        quantity: item.quantity,
-        unitPrice: item.price,
-        totalPrice: item.price * item.quantity,
-      })),
-      totalAmount: total,
-      paidAmount: paidAmountValue,
-      dueAmount: Math.max(0, total - paidAmountValue),
-      paymentStatus: status === 'completed' ? 'completed' : 'pending',
-      notes: 'This invoice reflects a special agreement.',
-      forceGenerate: true,
-      invoiceNumber: invoiceNumber,
-      invoiceDate: date,
-      dueDate: duedate,
-    };
-
     try {
-      const endpoint = `${NODE_API_ENDPOINT}/orders/custom-invoice/${orderId}`;
-      const method = invoiceStatus === 'new' ? 'POST' : 'PATCH';
+      // Generate new order ID
+      const newOrderId = await generateOrderId(true);
+      const newInvoiceNumber = newOrderId;
 
-      console.log('Saving invoice with payload:', JSON.stringify(payload, null, 2)); // Debug log
+      setOrderId(newOrderId);
+      setInvoiceNumber(newInvoiceNumber);
 
-      const saveResponse = await fetch(endpoint, {
-        method: method,
-        headers: {
-          'Authorization': `Bearer ${currentUser?.token}`,
-          'Content-Type': 'application/json',
+      // Navigate to InvoiceItemsScreen with billing details and initial params
+      navigation.navigate('InvoiceItemsScreen', {
+        invoiceStatus,
+        orderId: newOrderId,
+        invoiceNumber: newInvoiceNumber,
+        billingDetails: {
+          billTo: billingTo.firmName,
+          billToGSTIN: billingTo.firmGstNumber,
+          billToAddress: billingTo.firmAddress,
+          billingFrom: billingFrom.firmName,
+          billingFromGSTIN: billingFrom.firmGstNumber,
+          billingFromAddress: billingFrom.firmAddress,
+          date: billingDate ? billingDate.toISOString() : '',
+          duedate: billingDueDate ? billingDueDate.toISOString() : '',
+          amountPaid: '0',
         },
-        body: JSON.stringify(payload),
+        cartProducts: [],
+        paymentDetails: { totalAmount: '0', dueAmount: '0', payments: [] },
+        paymentHistory: [],
+        discountValue: '0',
+        discountMode: 'percent',
+        gstValue: '0',
       });
 
-      if (saveResponse.status === 401) {
-        Alert.alert('Session Expired', 'Your session has expired. Please log in again.');
-        navigation.navigate('LoginScreen');
-        return;
+      Alert.alert('Success', 'Proceeding to add invoice items');
+    } catch (error) {
+      console.error('Error generating order ID:', error);
+      Alert.alert('Error', `Failed to proceed: ${error.message}`);
+      // Revert counter on failure
+      try {
+        const key = 'invoice_counter';
+        let counter = parseInt(await AsyncStorage.getItem(key) || '0', 10);
+        if (counter > 0) {
+          await AsyncStorage.setItem(key, (counter - 1).toString());
+          console.log(`Reverted counter to: ${counter - 1}`);
+        }
+      } catch (revertError) {
+        console.error('Error reverting counter:', revertError);
       }
-
-      if (saveResponse.status === 404) {
-        Alert.alert('Error', 'Order not found. Please create the order first.');
-        navigation.goBack();
-        return;
-      }
-
-      if (!saveResponse.ok) {
-        const errorText = await saveResponse.text();
-        throw new Error(
-          `Failed to ${invoiceStatus === 'new' ? 'create' : 'update'} invoice: ${saveResponse.status} ${errorText}`
-        );
-      }
-
-      // Generate PDF
-      console.log('Generating PDF for invoice:', invoiceNumber); // Debug log
-      const generateResponse = await fetch(endpoint, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${currentUser?.token}`,
-          'Content-Type': 'application/json',
-          'Accept': 'application/pdf',
-        },
-        body: JSON.stringify(payload),
-      });
-
-      if (generateResponse.status === 401) {
-        Alert.alert('Session Expired', 'Your session has expired. Please log in again.');
-        navigation.navigate('LoginScreen');
-        return;
-      }
-
-      if (generateResponse.status === 404) {
-        Alert.alert('Error', 'Order not found. Please create the order first.');
-        navigation.goBack();
-        return;
-      }
-
-      if (!generateResponse.ok) {
-        const errorText = await generateResponse.text();
-        throw new Error(`Failed to generate invoice PDF: ${generateResponse.status} ${errorText}`);
-      }
-
-      const blob = await generateResponse.blob();
-      const filename = `invoice_${invoiceNumber}.pdf`;
-      const dir = Platform.OS === 'android'
-        ? ReactNativeBlobUtil.fs.dirs.DownloadDir
-        : ReactNativeBlobUtil.fs.dirs.DocumentDir;
-      const path = `${dir}/${filename}`;
-
-      const reader = new FileReader();
-      reader.readAsDataURL(blob);
-      const base64data = await new Promise<string>((resolve) => {
-        reader.onloadend = () => resolve(reader.result?.toString().split(',')[1] || '');
-      });
-
-      await ReactNativeBlobUtil.fs.writeFile(path, base64data, 'base64');
-
-      Alert.alert(
-        'Success',
-        `Invoice ${invoiceNumber} ${invoiceStatus === 'new' ? 'created' : 'updated'} and PDF downloaded to ${path}`
-      );
-
+    } finally {
       setLoading(false);
-      navigation.goBack();
-    } catch (error: any) {
-      setLoading(false);
-      console.error('Error processing invoice:', error);
-      Alert.alert('Error', error.message || 'Failed to process invoice');
     }
   };
-
-  const isEditable = invoiceStatus !== 'completed';
 
   return (
     <View className="flex-1 bg-[#FBDBB5]">
@@ -333,17 +273,15 @@ const GenerateInvoiceScreen = ({ navigation, route }: GenerateInvoiceProps) => {
       >
         <View className="flex-row justify-between px-8 pt-10 w-full items-center mb-8">
           <TouchableOpacity
-            onPress={() => navigation.goBack()}
+            onPress={() => navigation.navigate('InvoicesScreen')}
             className="w-10 h-10 rounded-full border bg-[#DB9245] justify-center items-center"
-            disabled={!isEditable}
           >
             <Icon name="home" size={20} color="#FBDBB5" />
           </TouchableOpacity>
-
           <TouchableOpacity
-            onPress={saveInvoice}
+            onPress={handleSaveInvoice}
             className="w-10 h-10 rounded-full border bg-[#DB9245] justify-center items-center"
-            disabled={!isEditable || loading}
+            disabled={invoiceStatus === 'new' || loading}
           >
             <Icon name="download" size={20} color="#FBDBB5" />
           </TouchableOpacity>
@@ -359,74 +297,70 @@ const GenerateInvoiceScreen = ({ navigation, route }: GenerateInvoiceProps) => {
           <Text style={styles.label}>Billing From:</Text>
           <TextInput
             style={styles.input}
-            value={billingFrom}
-            onChangeText={setBillingFrom}
+            value={billingFrom.firmName}
+            onChangeText={(text) => setBillingFrom({ ...billingFrom, firmName: text })}
             placeholder="Firm Name"
-            placeholderTextColor="#FFFF"
-            editable={isEditable}
+            placeholderTextColor="#FFF"
           />
           <TextInput
             style={styles.input}
-            value={billingFromAddress}
-            onChangeText={setBillingFromAddress}
+            value={billingFrom.firmAddress}
+            onChangeText={(text) => setBillingFrom({ ...billingFrom, firmAddress: text })}
             placeholder="Firm Address"
             placeholderTextColor="#FFF"
-            editable={isEditable}
           />
           <TextInput
             style={styles.input}
-            value={billingFromGSTIN}
-            onChangeText={setBillingFromGSTIN}
+            value={billingFrom.firmGstNumber}
+            onChangeText={(text) => setBillingFrom({ ...billingFrom, firmGstNumber: text })}
             placeholder="Enter GSTIN number"
             placeholderTextColor="#FFF"
-            editable={isEditable}
           />
         </View>
         <View className="bg-[#DB9245] rounded-lg px-4 py-3 mb-2">
           <Text style={styles.label}>Billing To:</Text>
           <TextInput
             style={styles.input}
-            value={billTo}
-            onChangeText={setBillTo}
+            value={billingTo.firmName}
+            onChangeText={(text) => setBillingTo({ ...billingTo, firmName: text })}
             placeholder="Firm Name"
             placeholderTextColor="#FFF"
-            editable={isEditable}
           />
           <TextInput
             style={styles.input}
-            value={billToAddress}
-            onChangeText={setBillToAddress}
+            value={billingTo.firmAddress}
+            onChangeText={(text) => setBillingTo({ ...billingTo, firmAddress: text })}
             placeholder="Firm Address"
             placeholderTextColor="#FFF"
-            editable={isEditable}
           />
           <TextInput
             style={styles.input}
-            value={billToGSTIN}
-            onChangeText={setBillToGSTIN}
+            value={billingTo.firmGstNumber}
+            onChangeText={(text) => setBillingTo({ ...billingTo, firmGstNumber: text })}
             placeholder="Enter GSTIN number"
             placeholderTextColor="#FFF"
-            editable={isEditable}
           />
         </View>
         <View className="bg-[#DB9245] rounded-lg px-4 py-3">
           <Text style={styles.label}>Billing Details:</Text>
-          <TextInput
+          <TouchableOpacity
             style={styles.input}
-            value={date}
-            onChangeText={setDate}
-            placeholder="Enter Billing Date"
-            placeholderTextColor="#fff"
-            editable={isEditable}
-          />
-          <TextInput
+            onPress={() => handleCalendarPress('billing')}
+          >
+            <Text style={{ color: billingDate ? '#FFF' : '#FFF', fontSize: 14 }}>
+              {formatDate(billingDate)}
+            </Text>
+            <Icon name="calendar" size={20} color="#FFF" />
+          </TouchableOpacity>
+          <TouchableOpacity
             style={styles.input}
-            value={duedate}
-            onChangeText={setDueDate}
-            placeholder="Enter Billing Due Date"
-            placeholderTextColor="#fff"
-            editable={isEditable}
-          />
+            onPress={() => handleCalendarPress('due')}
+          >
+            <Text style={{ color: billingDueDate ? '#FFF' : '#FFF', fontSize: 14 }}>
+              {formatDate(billingDueDate)}
+            </Text>
+            <Icon name="calendar" size={20} color="#FFF" />
+          </TouchableOpacity>
         </View>
       </View>
       <View className="bg-[#FBDBB5] px-4 py-3">
@@ -434,25 +368,30 @@ const GenerateInvoiceScreen = ({ navigation, route }: GenerateInvoiceProps) => {
           <TouchableOpacity
             className="bg-[#292C33] rounded-lg justify-center py-3 mb-4 flex-1"
             style={{ height: verticalScale(45) }}
-            onPress={() =>
+            onPress={() => {
               navigation.navigate('InvoiceItemsScreen', {
                 invoiceStatus,
-                orderId, // Pass orderId instead of invoiceId
+                orderId: orderId || undefined,
                 invoiceNumber,
                 billingDetails: {
-                  billTo,
-                  billToGSTIN,
-                  billToAddress,
-                  billingFrom,
-                  billingFromGSTIN,
-                  billingFromAddress,
-                  date,
-                  duedate,
-                  amountPaid,
+                  billTo: billingTo.firmName,
+                  billToGSTIN: billingTo.firmGstNumber,
+                  billToAddress: billingTo.firmAddress,
+                  billingFrom: billingFrom.firmName,
+                  billingFromGSTIN: billingFrom.firmGstNumber,
+                  billingFromAddress: billingFrom.firmAddress,
+                  date: billingDate ? billingDate.toISOString() : '',
+                  duedate: billingDueDate ? billingDueDate.toISOString() : '',
+                  amountPaid: '0',
                 },
-              })
-            }
-            disabled={!isEditable}
+                cartProducts: [],
+                paymentDetails: { totalAmount: '0', dueAmount: '0', payments: [] },
+                paymentHistory: [],
+                discountValue: '0',
+                discountMode: 'percent',
+                gstValue: '0',
+              });
+            }}
           >
             <Text className="text-center text-white text-lg font-bold">
               Invoice Items
@@ -461,15 +400,25 @@ const GenerateInvoiceScreen = ({ navigation, route }: GenerateInvoiceProps) => {
           <TouchableOpacity
             className="bg-[#DB9245] rounded-lg py-3 mb-4 flex-1 justify-center"
             style={{ height: verticalScale(45) }}
-            onPress={saveInvoice}
-            disabled={loading || !isEditable}
+            onPress={handleSaveInvoice}
+            disabled={invoiceStatus === 'new' || loading}
           >
             <Text className="text-center text-white font-bold text-lg">
-              {loading ? 'Saving...' : (invoiceStatus === 'new' ? 'Save Invoice' : 'Update Invoice')}
+              {loading ? 'Saving...' : 'Save Invoice'}
             </Text>
           </TouchableOpacity>
         </View>
       </View>
+
+      {showDatePicker && (
+        <DateTimePicker
+          value={datePickerMode === 'billing' ? billingDate || new Date() : billingDueDate || new Date()}
+          mode="date"
+          display={Platform.OS === 'android' ? 'default' : 'inline'}
+          onChange={handleDateChange}
+          maximumDate={new Date()}
+        />
+      )}
     </View>
   );
 };
@@ -507,6 +456,9 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontSize: 14,
     marginBottom: 4,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
   },
 });
 

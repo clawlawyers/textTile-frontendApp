@@ -1,4 +1,4 @@
-import React, {useCallback, useEffect, useState} from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -6,43 +6,26 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   TextInput,
+  Alert,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/Feather';
 import LinearGradient from 'react-native-linear-gradient';
-import {NativeStackScreenProps} from '@react-navigation/native-stack';
-import {OrderHistoryParamList} from '../stacks/OrderHistory';
-import {useSelector} from 'react-redux';
-import {RootState} from '../redux/store';
-import {NODE_API_ENDPOINT} from '../utils/util';
-import {useFocusEffect} from '@react-navigation/native';
+import { NativeStackScreenProps } from '@react-navigation/native-stack';
+import { useSelector } from 'react-redux';
+import { RootState } from '../redux/store';
+import { useFocusEffect } from '@react-navigation/native';
+import { AccountStackParamList } from '../stacks/Account';
+import { NODE_API_ENDPOINT } from '../utils/util';
 
-type CompletedOrderProps = NativeStackScreenProps<
-  OrderHistoryParamList,
-  'CompletedOrder'
+type PreviousInvoiceScreenProps = NativeStackScreenProps<
+  AccountStackParamList,
+  'PreviousInvoiceScreen'
 >;
 
-// const orders = [
-//   {
-//     id: '123456',
-//     title: '22KG Rayon Print',
-//     customer: 'Ranvir Singh Emporium',
-//     date: '02/02/2025',
-//   },
-//   {
-//     id: '123455',
-//     title: '2KG Rayon Print',
-//     customer: 'Ranbir Kapoor Textiles',
-//     date: '02/02/2025',
-//   },
-// ];
-
-const CompletedOrdersScreen = ({navigation}: CompletedOrderProps) => {
+const PreviousInvoiceScreen = ({ navigation }: PreviousInvoiceScreenProps) => {
   const currentUser = useSelector((state: RootState) => state.auth.user);
-  const [loading, setLoading] = React.useState(true);
-
-  const activeFirm = useSelector((state: RootState) => state.common.activeFirm);
-
-  const [orders, setOrders] = React.useState([]);
+  const [loading, setLoading] = useState(true);
+  const [orders, setOrders] = useState([]);
   const [filteredOrders, setFilteredOrders] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -52,76 +35,49 @@ const CompletedOrdersScreen = ({navigation}: CompletedOrderProps) => {
       return;
     }
 
+    const queryLower = searchQuery.toLowerCase();
     const filtered = orders.filter((order: any) => {
-      const clientName = order?.client?.name?.toLowerCase?.() ?? '';
-      const queryLower = searchQuery.toLowerCase();
-
-      const orderDate = order?.createdAt ? new Date(order.createdAt) : null;
-      if (!orderDate || isNaN(orderDate.getTime())) return false;
-
-      // Use UTC methods to avoid timezone issues
-      const day = orderDate.getUTCDate().toString().padStart(2, '0');
-      const month = (orderDate.getUTCMonth() + 1).toString().padStart(2, '0');
-      const year = orderDate.getUTCFullYear().toString();
-
-      // Format date as MM/DD/YYYY and DD/MM/YYYY
-      const formattedDateMMDDYYYY = `${month}${day}${year}`; // e.g., "05/06/2025"
-      const formattedDateDDMMYYYY = `${day}${month}${year}`; // e.g., "06/05/2025"
-      const dateMMDD = `${month}${day}`; // e.g., "0506"
-      const dateDDMM = `${day}${month}`; // e.g., "0605"
-
-      // Allow partial and full date matches
-      const dateParts = [
-        year,
-        month,
-        day,
-        formattedDateMMDDYYYY,
-        formattedDateDDMMYYYY,
-        dateMMDD,
-        dateDDMM,
-      ];
-
-      // Remove all non-digit characters for date search
-      const matchesDate = dateParts.some(part =>
-        part.includes(searchQuery.replace(/\//g, '')),
-      );
-
-      return clientName.includes(queryLower) || matchesDate;
+      const firmName = order?.billingFrom?.firmName?.toLowerCase?.() ?? '';
+      const status = order?.dueAmount === 0 ? 'completed' : 'active';
+      return firmName.includes(queryLower) || status.includes(queryLower);
     });
 
     setFilteredOrders(filtered);
   }, [searchQuery, orders]);
+
 
   useFocusEffect(
     useCallback(() => {
       const getOrders = async () => {
         setLoading(true);
         try {
-          const response = await fetch(
-            `${NODE_API_ENDPOINT}/orders/${activeFirm?._id}`,
-            {
-              method: 'GET',
-              headers: {
-                'Content-Type': 'application/json',
-                Authorization: `Bearer ${currentUser?.token}`,
-              },
+          const response = await fetch(`${NODE_API_ENDPOINT}/custom-orders/`, {
+            method: 'GET',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${currentUser?.token}`,
             },
-          );
+          });
+
+          if (response.status === 401) {
+            Alert.alert('Session Expired', 'Please log in again.');
+            navigation.navigate('LoginScreen');
+            return;
+          }
 
           if (!response.ok) {
             const errorText = await response.text();
             throw new Error(
-              `Failed to fetch orders: ${response.status} ${errorText}`,
+              `Failed to fetch invoices: ${response.status} ${errorText}`,
             );
           }
 
           const data = await response.json();
-          const completedOrder = data.orders.filter(
-            (order: any) => order.status === 'completed',
-          );
-          setOrders(completedOrder);
+          console.log('Available IDs:', data.orders.map((order: any) => order._id));
+          setOrders(data.orders || []);
         } catch (error) {
-          console.error('Error fetching orders:', error);
+          console.error('Error fetching invoices:', error);
+          Alert.alert('Error', `Failed to fetch invoices: ${error.message}`);
         } finally {
           setLoading(false);
         }
@@ -132,14 +88,14 @@ const CompletedOrdersScreen = ({navigation}: CompletedOrderProps) => {
       }
 
       return () => {};
-    }, [currentUser?.token, activeFirm]),
+    }, [currentUser?.token, navigation]),
   );
 
   if (loading) {
     return (
       <View className="flex-1 justify-center items-center bg-[#FAD9B3]">
         <ActivityIndicator size="large" color="#DB9245" />
-        <Text className="mt-2 text-black">Loading Orders...</Text>
+        <Text className="mt-2 text-black">Loading Invoices...</Text>
       </View>
     );
   }
@@ -150,72 +106,71 @@ const CompletedOrdersScreen = ({navigation}: CompletedOrderProps) => {
       <View className="flex-row justify-between items-center mb-4">
         <TouchableOpacity
           onPress={() => navigation.goBack()}
-          className="w-10 h-10 rounded-full border border-[#292C33] justify-center items-center mb-6">
+          className="w-10 h-10 rounded-full border border-[#292C33] justify-center items-center mb-6"
+        >
           <Icon name="arrow-left" size={20} color="#292C33" />
         </TouchableOpacity>
       </View>
 
       {/* Fixed Title */}
-      <Text className="text-lg font-semibold text-black mb-4">
-        Completed Orders
-      </Text>
+      <Text className="text-lg font-semibold text-black mb-4">All Invoices</Text>
 
+      {/* Search Bar */}
       <View className="mb-2 rounded-lg">
         <TextInput
           className="bg-[#292C33] rounded-lg px-4 py-3 text-white text-lg"
-          placeholder="Search by client name or date..."
+          placeholder="Search by billing from name or status..."
           placeholderTextColor="#fff"
           value={searchQuery}
           onChangeText={setSearchQuery}
         />
       </View>
 
-      {/* Scrollable Orders List */}
+      {/* Scrollable Invoices List */}
       <ScrollView
         className="flex-1 mb-8"
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={{paddingBottom: 20}}>
+        contentContainerStyle={{ paddingBottom: 20 }}
+      >
         {filteredOrders.length > 0 ? (
           filteredOrders.map((order: any) => (
             <TouchableOpacity
               key={order._id}
               onPress={() => {
-                navigation.navigate('InvoiceDetailScreen', {
-                  orderDetails: order,
+                navigation.navigate('ActiveInvoiceScreen', {
+                  invoice: order,
                 });
-              }}>
+              }}
+            >
               <LinearGradient
                 colors={['#C7742D', '#FAD9B3']}
-                start={{x: 0, y: 0}}
-                end={{x: 1, y: 0}}
-                className="rounded-lg px-4 py-3 mb-2 flex-row justify-between items-center">
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+                className="rounded-lg px-4 py-3 mb-2 flex-row justify-between items-center"
+              >
                 <View>
                   <Text className="text-xs text-white">
-                    Order No: {order?._id}
+                    Invoice ID: {order?._id || 'N/A'}
                   </Text>
                   <Text className="text-base text-white font-semibold">
-                    {order?.client?.name || 'Unknown Client'}
+                    {order?.billingTo?.firmName || 'Unknown Client'}
                   </Text>
                 </View>
-                <Text className="text-xs text-[#292C33]">
-                  {order?.createdAt
-                    ? new Date(order.createdAt).toLocaleDateString('en-US', {
-                        year: 'numeric',
-                        month: '2-digit',
-                        day: '2-digit',
-                      })
-                    : 'N/A'}
-                </Text>
+                <View className="flex-row items-center">
+                  <Text className="text-md font-semibold text-[#292C33]">
+                    {order?.dueAmount === 0 ? 'Completed' : 'Active'}
+                  </Text>
+                </View>
               </LinearGradient>
             </TouchableOpacity>
           ))
         ) : orders.length > 0 ? (
           <View className="flex-1 justify-center items-center">
-            <Text className="mt-2 text-black">No matching orders found</Text>
+            <Text className="mt-2 text-black">No matching invoices found</Text>
           </View>
         ) : (
           <View className="flex-1 justify-center items-center">
-            <Text className="mt-2 text-black">No Completed Orders</Text>
+            <Text className="mt-2 text-black">No Invoices Found</Text>
           </View>
         )}
       </ScrollView>
@@ -223,4 +178,4 @@ const CompletedOrdersScreen = ({navigation}: CompletedOrderProps) => {
   );
 };
 
-export default CompletedOrdersScreen;
+export default PreviousInvoiceScreen;

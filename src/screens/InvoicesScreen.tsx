@@ -87,7 +87,7 @@ const InvoiceScreen = ({navigation}: AddNewUserProps) => {
               onPress={() => navigation.navigate('PreviousInvoiceScreen')}>
               <Text className="text-center text-white font-semibold text-lg justify-center align-center"
                style={{height:verticalScale(25)}}>
-                Generate Invoice
+                Previous Invoices
               </Text>
             </Pressable>
       </View>
