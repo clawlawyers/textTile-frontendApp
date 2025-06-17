@@ -36,7 +36,7 @@ const InvoiceScreen = ({navigation}: AddNewUserProps) => {
       {/* Top Header Icons */}
       <View className="flex-row justify-between items-center mb-14">
         <TouchableOpacity
-          onPress={() => navigation.goBack()}
+          onPress={() => navigation.navigate('Account')}
           className="w-10 h-10 rounded-full border border-[#292C33] justify-center items-center">
           <Icon1 name="arrow-left" size={20} color="#292C33" />
         </TouchableOpacity>

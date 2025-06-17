@@ -1,5 +1,4 @@
 /* eslint-disable react-native/no-inline-styles */
-import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import React, { useState, useEffect } from 'react';
 import {
   View,
@@ -8,30 +7,25 @@ import {
   TextInput,
   ScrollView,
   Dimensions,
-  Alert,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/Feather';
 import { AccountStackParamList } from '../stacks/Account';
-import { useSelector } from 'react-redux';
+import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootState } from '../redux/store';
+import { useSelector, useDispatch } from 'react-redux';
+import { setPaymentDetails } from '../redux/customInvoiceSlice';
+import { scale, verticalScale } from '../utils/scaling';
+
+type InvoicePaymentProps = NativeStackScreenProps<
+  AccountStackParamList,
+  'InvoicePaymentScreen'
+>;
 
 type PaymentItem = {
   id: string;
   amount: string;
   mode: string;
 };
-
-type Item = {
-  id: string;
-  name: string;
-  quantity: number;
-  price: number;
-};
-
-type AddNewUserProps = NativeStackScreenProps<
-  AccountStackParamList,
-  'InvoicePaymentScreen'
->;
 
 const modeOptions = [
   { label: 'Advance', value: 'Advance' },
@@ -41,72 +35,71 @@ const modeOptions = [
   { label: 'Cheque', value: 'Cheque' },
 ];
 
-const MAX_AMOUNT = 1_000_000_000; // 1 billion
-
-const isValidObjectId = (id: string) => {
-  return /^[0-9a-fA-F]{24}$/.test(id);
-};
-
-const InvoicePaymentScreen = ({ navigation, route }: AddNewUserProps) => {
-  const currentClient = useSelector(
-    (state: RootState) => state.common.currentClient,
+const InvoicePaymentScreen = ({ navigation, route }: InvoicePaymentProps) => {
+  const dispatch = useDispatch();
+  const { invoiceNumber, paymentDetails, items } = useSelector(
+    (state: RootState) => state.customInvoice
   );
+
+  const {
+    invoiceStatus,
+    orderId,
+    testOrderId,
+    billingDetails,
+    paymentHistory,
+    cartProducts,
+    discountValue,
+    discountMode,
+    gstValue,
+  } = route.params;
+
+  const [paymentData, setPaymentData] = useState<PaymentItem[]>(
+    paymentDetails?.payments?.map((p, index) => ({
+      id: `payment-${Date.now()}-${index}`,
+      amount: `₹ ${p.amount.toLocaleString('en-IN')}`,
+      mode: p.paymentMethod,
+    })) || []
+  );
+  const [paymentAmount, setPaymentAmount] = useState('');
+  const [currentDueAmount, setCurrentDueAmount] = useState(() => {
+    const dueAmountStr = paymentDetails?.dueAmount?.toString() || '0';
+    return parseFloat(dueAmountStr.replace(/[₹,\s]/g, '')) || 0;
+  });
+  const [openDropdownId, setOpenDropdownId] = useState<string | null>(null);
 
   const { height } = Dimensions.get('window');
   const headerHeight = height * 0.15;
 
-  // Get invoice details from navigation params
-  const invoiceStatus = route.params?.invoiceStatus || 'new';
-  const orderId = route.params?.orderId; // Custom orderId (e.g., A00009)
-  const testOrderId = route.params?.testOrderId; // MongoDB _id
-  const invoiceNumber = route.params?.invoiceNumber || 'INV-2025-001';
-  const billingDetails = route.params?.billingDetails || {};
-  const paymentDetails = route.params?.paymentDetails || {
-    totalAmount: '0',
-    dueAmount: '0',
-    payments: [],
-  };
-  const paymentHistory = route.params?.paymentHistory || [];
-  const cartProducts = route.params?.cartProducts || [];
-  const discountValue = route.params?.discountValue || '0';
-  const discountMode = route.params?.discountMode || 'percent';
-  const gstValue = route.params?.gstValue || '0';
-
-  const [paymentData, setPaymentData] = useState<PaymentItem[]>([]);
-  const [paymentAmount, setPaymentAmount] = useState('');
-  const [currentDueAmount, setCurrentDueAmount] = useState<number>(0);
-  const [openDropdownId, setOpenDropdownId] = useState<string | null>(null);
-
-  // Parse totalAmount and dueAmount from paymentDetails
-  const totalAmount = parseFloat(paymentDetails.totalAmount?.replace(/[₹,\s]/g, '') || '0');
-
-  // Initialize due amount
+  // Calculate due amount
   useEffect(() => {
-    const due = parseFloat(paymentDetails.dueAmount?.replace(/[₹,\s]/g, '') || totalAmount.toString());
-    setCurrentDueAmount(due);
-  }, [totalAmount, paymentDetails]);
+    const totalAmountStr = paymentDetails?.totalAmount?.toString() || '0';
+    const totalAmount = parseFloat(totalAmountStr.replace(/[₹,\s]/g, '')) || 0;
 
-  // Recalculate due amount when payment data changes
-  useEffect(() => {
-    const advancePaid = paymentData.reduce((sum, item) => {
+    const totalPaid = paymentData.reduce((sum, item) => {
       const amount = parseFloat(item.amount.replace(/[₹,\s]/g, '')) || 0;
       return sum + amount;
     }, 0);
 
-    const paymentHistoryPaid = paymentHistory.reduce((sum: number, item: any) => {
-      return sum + (item.amount || 0);
-    }, 0) || 0;
+    const newDueAmount = Math.max(0, totalAmount - totalPaid);
+    const formattedDueAmount = newDueAmount.toLocaleString('en-IN');
 
-    const newDueAmount = Math.max(0, totalAmount - advancePaid - paymentHistoryPaid);
     setCurrentDueAmount(newDueAmount);
-  }, [paymentData, paymentHistory, totalAmount]);
+    const updatedPaymentDetails = {
+      totalAmount: paymentDetails?.totalAmount || '0',
+      dueAmount: formattedDueAmount,
+      payments:
+        paymentData?.length > 0
+          ? paymentData
+              .filter(item => parseFloat(item.amount.replace(/[₹,\s]/g, '')) > 0)
+              .map(item => ({
+                amount: parseFloat(item.amount.replace(/[₹,\s]/g, '')),
+                paymentMethod: item.mode,
+              }))
+          : [],
+    };
 
-  // Calculate payment totals by mode
-  const paymentByMode = paymentHistory.reduce((acc: { [key: string]: number }, item: any) => {
-    const mode = item.paymentMethod || item.modeOfPayment || 'Unknown';
-    acc[mode] = (acc[mode] || 0) + (item.amount || 0);
-    return acc;
-  }, {});
+    setPaymentDetails(updatedPaymentDetails);
+  }, [paymentData, paymentDetails?.totalAmount]);
 
   const handleModeChange = (index: number, value: string) => {
     const updatedData = [...paymentData];
@@ -120,10 +113,10 @@ const InvoicePaymentScreen = ({ navigation, route }: AddNewUserProps) => {
   };
 
   const addPaymentOption = () => {
-    const newId = Date.now().toString();
+    const newId = `payment-${Date.now()}`;
     let defaultAmount = paymentAmount;
     if (!defaultAmount) {
-      defaultAmount = '';
+      defaultAmount = `₹ ${currentDueAmount.toLocaleString('en-IN')}`;
     } else if (!defaultAmount.startsWith('₹')) {
       defaultAmount = `₹ ${defaultAmount}`;
     }
@@ -146,47 +139,47 @@ const InvoicePaymentScreen = ({ navigation, route }: AddNewUserProps) => {
   };
 
   const handleUpdatePayment = () => {
-    if (paymentData.length === 0) {
-      Alert.alert('Error', 'Please add at least one payment.');
-      return;
-    }
-
-    const formattedPayments = paymentData.map(item => ({
-      amount: parseFloat(item.amount.replace(/[₹,\s]/g, '')) || 0,
-      modeOfPayment: item.mode,
-    }));
+    const formattedPayments =
+      paymentData?.length > 0
+        ? paymentData
+            .filter(item => parseFloat(item.amount.replace(/[₹,\s]/g, '')) > 0)
+            .map(item => ({
+              amount: parseFloat(item.amount.replace(/[₹,\s]/g, '')),
+              paymentMethod: item.mode,
+            }))
+        : [];
 
     const finalPaymentDetails = {
-      totalAmount: totalAmount.toLocaleString('en-IN'),
+      totalAmount: paymentDetails?.totalAmount || '0',
       dueAmount: currentDueAmount.toLocaleString('en-IN'),
       payments: formattedPayments,
     };
 
-    // Reset paymentData and paymentAmount
-    setPaymentData([]);
-    setPaymentAmount('');
+    console.log('Updating payment details in Redux:', finalPaymentDetails);
+    dispatch(setPaymentDetails(finalPaymentDetails));
 
     navigation.navigate('InvoiceItemsScreen', {
       invoiceStatus,
       orderId,
-      invoiceNumber,
+      testOrderId,
+      invoiceNumber: invoiceNumber || 'INV-2025-001',
       billingDetails,
       paymentDetails: finalPaymentDetails,
-      paymentHistory: [...paymentHistory, ...formattedPayments.map(p => ({
-        amount: p.amount,
-        paymentMethod: p.modeOfPayment,
-      }))],
-      cartProducts,
+      paymentHistory: [...(paymentHistory || []), ...formattedPayments],
+      cartProducts: cartProducts || [],
       discountValue,
       discountMode,
       gstValue,
     });
+  };
 
-    Alert.alert('Success', 'Payment details updated. Save invoice to confirm.');
+  const handleDownload = () => {
+    console.log('Download invoice:', invoiceNumber);
+    // Placeholder for download functionality
   };
 
   return (
-    <View className="flex-1 bg-[#F4D5B2]">
+    <View className="flex-1 bg-[#F4D5B2] pb-2">
       <View
         className="bg-[#292C33] px-4 pt-10"
         style={{
@@ -207,26 +200,20 @@ const InvoicePaymentScreen = ({ navigation, route }: AddNewUserProps) => {
           >
             <Icon name="arrow-left" size={20} color="#FBDBB5" />
           </TouchableOpacity>
-          <View className="flex-1 items-end -ml-4">
+          <View className="flex-1 items-end">
             <Text className="text-sm text-[#FBDBB5]">Invoice ID:</Text>
-            <Text className="text-base font-bold text-[#FBDBB5]">{invoiceNumber}</Text>
+            <Text className="text-base font-bold text-[#FBDBB5]">
+              {invoiceNumber || 'INV-2025-001'}
+            </Text>
           </View>
+          
         </View>
       </View>
 
       <ScrollView
-        className="flex-1 bg-[#FBDBB5] p-4"
-        style={{ paddingTop: headerHeight + 10 }}
+        className="flex-1 bg-[#F4D5B2] p-4"
+        style={{ paddingTop: headerHeight + verticalScale(10) }}
       >
-        <View className="flex-row justify-between items-center mb-4">
-          <View className="flex-1 items-end -ml-4">
-            <Text className="text-sm text-black">Order Creation For</Text>
-            <Text className="text-base font-bold text-black">
-              {currentClient?.name}
-            </Text>
-          </View>
-        </View>
-
         <Text className="text-lg font-semibold text-center mb-4">
           Payment Details
         </Text>
@@ -237,7 +224,7 @@ const InvoicePaymentScreen = ({ navigation, route }: AddNewUserProps) => {
           </View>
           <View className="px-4 py-3 flex-1">
             <Text className="text-right text-base font-semibold">
-              ₹ {totalAmount.toLocaleString('en-IN')}
+              ₹ {paymentDetails?.totalAmount || '0'}
             </Text>
           </View>
         </View>
@@ -277,9 +264,7 @@ const InvoicePaymentScreen = ({ navigation, route }: AddNewUserProps) => {
               >
                 <Text style={{ color: '#fff', fontSize: 14 }}>{item.mode}</Text>
                 <Icon
-                  name={
-                    openDropdownId === item.id ? 'chevron-up' : 'chevron-down'
-                  }
+                  name={openDropdownId === item.id ? 'chevron-up' : 'chevron-down'}
                   size={18}
                   color="#fff"
                 />
@@ -331,7 +316,7 @@ const InvoicePaymentScreen = ({ navigation, route }: AddNewUserProps) => {
 
         <TouchableOpacity
           onPress={addPaymentOption}
-          className="flex-row items-center justify-center bg-[#DB9245] rounded-lg py-3 mb-6"
+          className="flex-row items-center justify-center bg-[#FBDBB5] rounded-lg py-3 mb-6"
         >
           <Icon name="plus" size={18} color="#292C33" />
           <Text className="ml-2 text-[#292C33] font-medium">
@@ -339,23 +324,7 @@ const InvoicePaymentScreen = ({ navigation, route }: AddNewUserProps) => {
           </Text>
         </TouchableOpacity>
 
-        {Object.keys(paymentByMode).length > 0 && (
-          <>
-            <Text className="text-base font-semibold mb-2">Payment Summary by Mode</Text>
-            {Object.entries(paymentByMode).map(([mode, amount], index) => (
-              <View key={index} className="flex-row items-center mb-3">
-                <Text className="flex-1 border border-[#DB9245] rounded-lg px-4 py-3 mr-2 text-base">
-                  ₹ {amount.toLocaleString('en-IN')}
-                </Text>
-                <Text className="flex-1 border border-[#DB9245] bg-[#DB9245] rounded-lg px-4 py-3 mr-2 text-base text-white">
-                  {mode}
-                </Text>
-              </View>
-            ))}
-          </>
-        )}
-
-        {paymentHistory.length > 0 && (
+        {paymentHistory?.length > 0 && (
           <>
             <Text className="text-base font-semibold mb-2">Payment History</Text>
             {paymentHistory.map((item: any, index: number) => (
@@ -373,13 +342,11 @@ const InvoicePaymentScreen = ({ navigation, route }: AddNewUserProps) => {
       </ScrollView>
 
       <TouchableOpacity
-        className="bg-[#DB9245] py-3 rounded-lg items-center mt-auto mb-10 mx-4"
-        disabled={paymentData.length === 0}
+        className="bg-[#D1853A] py-3 rounded-lg items-center mt-auto mb-10 mx-4"
+        disabled={paymentData?.length === 0}
         onPress={handleUpdatePayment}
       >
-        <Text className="text-white font-semibold text-base">
-          Update Payment
-        </Text>
+        <Text className="text-white font-semibold text-base">Update Payment</Text>
       </TouchableOpacity>
     </View>
   );

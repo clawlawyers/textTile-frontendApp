@@ -11,7 +11,9 @@ import {
   SafeAreaView,
   ActivityIndicator,
   StyleSheet,
+  Platform,
 } from 'react-native';
+
 import Icon from 'react-native-vector-icons/Feather';
 import { scale, verticalScale } from '../utils/scaling';
 import { AccountStackParamList } from '../stacks/Account';
@@ -33,6 +35,7 @@ import {
 } from '../redux/customInvoiceSlice';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import isEqual from 'lodash/isEqual';
+import RNFetchBlob from 'rn-fetch-blob';
 
 type Item = {
   id: string;
@@ -41,12 +44,12 @@ type Item = {
   rate: number;
 };
 
-type InvoiceItemsProps = NativeStackScreenProps<
+type ActiveInvoiceItemsProps = NativeStackScreenProps<
   AccountStackParamList,
-  'InvoiceItemsScreen'
+  'ActiveInvoiceItems'
 >;
 
-const InvoiceItemsScreen = ({ navigation, route }: InvoiceItemsProps) => {
+const ActiveInvoiceItemScreen = ({ navigation, route }: ActiveInvoiceItemsProps) => {
   const dispatch = useDispatch();
   const {
     invoiceNumber,
@@ -65,13 +68,12 @@ const InvoiceItemsScreen = ({ navigation, route }: InvoiceItemsProps) => {
   } = useSelector((state: RootState) => state.customInvoice);
   const currentUser = useSelector((state: RootState) => state.auth.user);
 
+  const { invoice } = route.params; // Invoice data passed from PreviousInvoiceScreen
   const [newItemName, setNewItemName] = useState<string>('');
+  const [downloading,setDownloading] =useState(false);
   const [newItemRate, setNewItemRate] = useState<string>('');
   const [newItemQuantity, setNewItemQuantity] = useState<string>('1');
-  const [testOrderId, setTestOrderId] = useState<string | null>(
-    route.params?.testOrderId || null
-  );
-  const invoiceStatus = route.params?.invoiceStatus || 'new';
+  const [testOrderId, setTestOrderId] = useState<string | null>(invoice._id);
 
   const { width, height } = Dimensions.get('window');
   const isSmallDevice = width < 375;
@@ -102,20 +104,56 @@ const InvoiceItemsScreen = ({ navigation, route }: InvoiceItemsProps) => {
       2 * bottomButtonHeight +
       marginSpacing);
 
-  // Initialize items from Redux
-  useEffect(() => {
-    if (route.params?.orderId && route.params?.orderId !== savedOrderId) {
-      // Load existing invoice if orderId is provided
-      dispatch(setOrderId(route.params.orderId));
-      // Assume API call or Redux hydration sets items, billing, etc.
-    }
-  }, [dispatch, route.params?.orderId, savedOrderId]);
+  // Calculate if invoice is completed
+  const totalPaidAmount = invoice.payments.reduce(
+    (sum: number, payment: { amount: number }) => sum + (payment.amount || 0),
+    0,
+  );
+  const isCompleted = totalPaidAmount >= invoice.totalAmount;
 
-  // Calculate paymentDetails
+  // Initialize items from Redux or invoice data
+  useEffect(() => {
+    // Set orderId from invoice data
+    dispatch(setOrderId(invoice._id));
+
+    // Initialize items if not already set in Redux
+    if (!items.length) {
+      const invoiceItems = invoice.items.map((item: any) => ({
+        id: item._id,
+        itemName: item.itemName,
+        quantity: item.quantity,
+        rate: item.rate,
+      }));
+      dispatch(setItems(invoiceItems));
+    }
+
+    // Initialize payment details
+    const initialPaymentDetails = {
+      totalAmount: invoice.totalAmount.toLocaleString('en-IN'),
+      dueAmount: invoice.dueAmount.toLocaleString('en-IN'),
+      payments: invoice.payments.map((payment: any) => ({
+        amount: payment.amount,
+        paymentMethod: payment.paymentMethod,
+      })),
+    };
+    dispatch(setPaymentDetails(initialPaymentDetails));
+
+    // Initialize discount and GST only if not already set
+    if (discountPercentage === 0 && discountAmount === 0) {
+      dispatch(setDiscountPercentage(invoice.discountPercentage || 0));
+      dispatch(setDiscountAmount(invoice.discountAmount || 0));
+      dispatch(setDiscountMode(invoice.discountPercentage ? 'percent' : 'rupees'));
+    }
+    if (gstPercentage === 0) {
+      dispatch(setGstPercentage(invoice.gstPercentage || 0));
+    }
+  }, [dispatch, invoice, items.length, discountPercentage, discountAmount, gstPercentage]);
+
+  // Calculate paymentDetails whenever items, discount, or GST changes
   useEffect(() => {
     const baseTotal = items.reduce(
       (sum, item) => sum + item.quantity * item.rate,
-      0
+      0,
     );
     const discount =
       discountMode === 'percent'
@@ -147,36 +185,9 @@ const InvoiceItemsScreen = ({ navigation, route }: InvoiceItemsProps) => {
     paymentDetails,
   ]);
 
-  const generateOrderId = async (increment: boolean = false): Promise<string> => {
-    try {
-      const key = 'invoice_counter';
-      let counter = parseInt((await AsyncStorage.getItem(key)) || '0', 10);
-      if (isNaN(counter) || counter < 0) {
-        counter = 0;
-        await AsyncStorage.setItem(key, '0');
-      }
-      if (increment) {
-        counter += 1;
-        if (counter > 2599999) {
-          throw new Error('Maximum invoice limit reached (Z99999)');
-        }
-        await AsyncStorage.setItem(key, counter.toString());
-      }
-      const letter = String.fromCharCode(65 + Math.floor(counter / 100000));
-      const number = (counter % 100000).toString().padStart(5, '0');
-      const orderId = `${letter}${number}`;
-      if (!/^[A-Z]\d{5}$/.test(orderId)) {
-        throw new Error(`Invalid order ID format: ${orderId}`);
-      }
-      console.log(`Generated orderId: ${orderId} (counter: ${counter})`);
-      return orderId;
-    } catch (error: any) {
-      console.error('Error generating order ID:', error);
-      throw new Error(`Failed to generate order ID: ${error.message}`);
-    }
-  };
-
   const handleAddItem = () => {
+    if (isCompleted) return; // Prevent adding items if invoice is complete
+
     if (!newItemName || !newItemRate || !newItemQuantity) {
       Alert.alert('Error', 'Please fill in all item details');
       return;
@@ -233,6 +244,8 @@ const InvoiceItemsScreen = ({ navigation, route }: InvoiceItemsProps) => {
   }, [baseTotalPrice, discount, gstAmount]);
 
   const handleRemoveItem = (index: number) => {
+    if (isCompleted) return; // Prevent removing items if invoice is complete
+
     Alert.alert('Remove Item', 'Are you sure you want to remove this item?', [
       { text: 'Cancel', style: 'cancel' },
       {
@@ -245,7 +258,51 @@ const InvoiceItemsScreen = ({ navigation, route }: InvoiceItemsProps) => {
     ]);
   };
 
+  const fetchUpdatedInvoice = async () => {
+    try {
+      const res = await fetch(`${NODE_API_ENDPOINT}/custom-orders/${invoice._id}`, {
+        headers: {
+          Authorization: `Bearer ${currentUser.token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+      if (!res.ok) {
+        throw new Error(`Failed to fetch updated invoice: ${res.status}`);
+      }
+      const updatedInvoice = await res.json();
+
+      // Update relevant Redux states with new values
+      dispatch(setDiscountPercentage(updatedInvoice.discountPercentage || 0));
+      dispatch(setDiscountAmount(updatedInvoice.discountAmount || 0));
+      dispatch(setDiscountMode(updatedInvoice.discountPercentage ? 'percent' : 'rupees'));
+      dispatch(setGstPercentage(updatedInvoice.gstPercentage || 0));
+
+      const invoiceItems = updatedInvoice.items.map((item: any) => ({
+        id: item._id,
+        itemName: item.itemName,
+        quantity: item.quantity,
+        rate: item.rate,
+      }));
+      dispatch(setItems(invoiceItems));
+
+      const newPaymentDetails = {
+        totalAmount: updatedInvoice.totalAmount.toLocaleString('en-IN'),
+        dueAmount: updatedInvoice.dueAmount.toLocaleString('en-IN'),
+        payments: updatedInvoice.payments.map((payment: any) => ({
+          amount: payment.amount,
+          paymentMethod: payment.paymentMethod,
+        })),
+      };
+      dispatch(setPaymentDetails(newPaymentDetails));
+    } catch (err) {
+      // console.error('Failed to refetch updated invoice', err);
+      // Alert.alert('Error', 'Failed to fetch updated invoice data');
+    }
+  };
+
   const handlePriceChange = (index: number, newRate: string) => {
+    if (isCompleted) return; // Prevent editing prices if invoice is complete
+
     const updatedItems = [...items];
     updatedItems[index] = {
       ...updatedItems[index],
@@ -254,27 +311,33 @@ const InvoiceItemsScreen = ({ navigation, route }: InvoiceItemsProps) => {
     dispatch(setItems(updatedItems));
   };
 
-  const saveInvoice = async () => {
+  const handleDiscountModeChange = (mode: 'percent' | 'rupees') => {
+    if (isCompleted) return;
+    dispatch(setDiscountMode(mode));
+    // Reset the other discount value when switching modes
+    if (mode === 'percent') {
+      dispatch(setDiscountAmount(0));
+    } else {
+      dispatch(setDiscountPercentage(0));
+    }
+  };
+
+  const handleSaveInvoice = async () => {
+    if (isCompleted || loading) return;
+
     if (items.length === 0) {
       Alert.alert('Error', 'Please add at least one item.');
-      return null;
+      return;
     }
 
     if (!currentUser?.token) {
       Alert.alert('Error', 'User not authenticated. Please log in.');
       navigation.navigate('LoginScreen');
-      return null;
+      return;
     }
 
     dispatch(setLoading(true));
     try {
-      let finalOrderId = savedOrderId;
-      let isNewOrder = !finalOrderId;
-
-      if (isNewOrder) {
-        finalOrderId = await generateOrderId(true);
-      }
-
       const payload = {
         billingFrom,
         billingTo,
@@ -284,21 +347,14 @@ const InvoiceItemsScreen = ({ navigation, route }: InvoiceItemsProps) => {
           quantity: item.quantity,
           rate: item.rate,
         })),
-        ...(discountMode === 'percent' ? { discountPercentage } : { discountAmount }),
+        discountPercentage: discountMode === 'percent' ? discountPercentage : 0,
+        discountAmount: discountMode === 'rupees' ? discountAmount : 0,
+        gstPercentage: gstPercentage || 0,
       };
 
-      let endpoint = `${NODE_API_ENDPOINT}/custom-orders`;
-      let method = 'POST';
-      if (!isNewOrder) {
-        endpoint = `${NODE_API_ENDPOINT}/custom-orders/${finalOrderId}`;
-        method = 'PATCH';
-      }
-
-      console.log(`${method} invoice at:`, endpoint);
-      console.log('Payload:', JSON.stringify(payload, null, 2));
-
+      const endpoint = `${NODE_API_ENDPOINT}/custom-orders/${invoice._id}`;
       const saveResponse = await fetch(endpoint, {
-        method,
+        method: 'PUT',
         headers: {
           Authorization: `Bearer ${currentUser.token}`,
           'Content-Type': 'application/json',
@@ -309,189 +365,151 @@ const InvoiceItemsScreen = ({ navigation, route }: InvoiceItemsProps) => {
       if (saveResponse.status === 401) {
         Alert.alert('Session Expired', 'Please log in again.');
         navigation.navigate('LoginScreen');
-        return null;
+        return;
       }
 
       if (!saveResponse.ok) {
         const errorText = await saveResponse.text();
-        if (isNewOrder) {
-          try {
-            const key = 'invoice_counter';
-            let counter = parseInt((await AsyncStorage.getItem(key)) || '0', 10);
-            if (counter > 0) {
-              await AsyncStorage.setItem(key, (counter - 1).toString());
-              console.log(`Reverted counter to: ${counter - 1}`);
-            }
-          } catch (revertError) {
-            console.error('Error reverting counter:', revertError);
-          }
-        }
-        throw new Error(`Failed to save invoice: ${saveResponse.status} ${errorText}`);
+        throw new Error(`Failed to update invoice: ${saveResponse.status} ${errorText}`);
       }
 
-      const saveData = await saveResponse.json();
-      const mongoOrderId = saveData.order._id;
-      setTestOrderId(mongoOrderId);
-      console.log('MongoDB _id:', mongoOrderId);
-      console.log('Save response:', JSON.stringify(saveData, null, 2));
-
-      dispatch(setOrderId(finalOrderId));
-      dispatch(setItems(payload.items));
-
-      return { orderId: finalOrderId, testOrderId: mongoOrderId };
+      Alert.alert('Success', 'Invoice updated successfully');
+      await fetchUpdatedInvoice(); // Fetch updated invoice to refresh Redux state
     } catch (error: any) {
-      console.error('Error saving invoice:', error);
-      dispatch(setError(error.message || 'Failed to save invoice'));
-      Alert.alert('Error', `Failed to save invoice: ${error.message}`);
-      return null;
+      console.error('Error updating invoice:', error);
+      dispatch(setError(error.message || 'Failed to update invoice'));
+      Alert.alert('Error', `Failed to update invoice: ${error.message}`);
     } finally {
       dispatch(setLoading(false));
     }
   };
 
-  const handleConfirmOrder = async () => {
-    const result = await saveInvoice();
-    if (!result) return;
-
-    const { orderId, testOrderId } = result;
-
-    try {
-      let lastDueAmount =
-        adjustedTotalPrice -
-        (paymentDetails?.payments?.reduce((sum, p) => sum + p.amount, 0) || 0);
-      let lastStatus = lastDueAmount === 0 ? 'complete' : 'active';
-      const newPayments = [];
-
-      for (const payment of paymentDetails?.payments || []) {
-        const amount = payment.amount;
-        const paymentPayload = {
-          orderId: testOrderId,
-          amount,
-          paymentMethod: payment.paymentMethod, // Updated from modeOfPayment
-          paymentReference: `TXN-${Date.now()}`,
-          paymentDate: new Date().toISOString().split('T')[0],
-          notes: lastDueAmount === 0 ? 'complete' : 'active',
-          receivedBy: currentUser?._id || 'unknown',
-          receivedByType: currentUser?.role || 'unknown',
-        };
-
-        const paymentEndpoint = `${NODE_API_ENDPOINT}/custom-orders/payment`;
-        console.log('Creating payment at:', paymentEndpoint);
-        console.log('Payment payload:', JSON.stringify(paymentPayload, null, 2));
-
-        const paymentResponse = await fetch(paymentEndpoint, {
-          method: 'POST',
-          headers: {
-            Authorization: `Bearer ${currentUser.token}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(paymentPayload),
-        });
-        const paymentResponseText = await paymentResponse.text();
-        let  paymentResponseData1 = JSON.parse(paymentResponseText);
-        console.log(
-          '✅ Payment response:',
-          JSON.stringify(paymentResponseData1, null, 2)
+  const handleDownloadInvoice = async () => {
+    if (downloading) return;
+  
+    // Check for storage permission on Android
+    if (Platform.OS === 'android') {
+      const hasPermission = await checkPermission();
+      if (!hasPermission) {
+        Alert.alert(
+          'Permission Denied',
+          'Storage permission is required to download invoices',
         );
-        let paymentResponseData;
-
-        if (paymentResponse.status === 401) {
-          Alert.alert('Session Expired', 'Please log in again.');
-          navigation.navigate('LoginScreen');
-          return;
-        }
-
-        if (!paymentResponse.ok) {
-          try {
-            paymentResponseData = JSON.parse(paymentResponseText);
-            throw new Error(
-              paymentResponseData.error || paymentResponseData.message || 'Unknown error'
-            );
-          } catch {
-            throw new Error(
-              `Failed to create payment: ${paymentResponse.status} ${paymentResponseText}`
-            );
-          }
-        }
-
-        try {
-          paymentResponseData = JSON.parse(paymentResponseText);
-          console.log(
-            'Payment response:',
-            JSON.stringify(paymentResponseData, null, 2)
-          );
-        } catch {
-          throw new Error(`Invalid payment response: ${paymentResponseText}`);
-        }
-
-        if (!paymentResponseData.customOrderPaymentStatus) {
-          throw new Error('Missing payment status in response');
-        }
-
-        lastDueAmount = paymentResponseData.customOrderPaymentStatus.dueAmount;
-        lastStatus = lastDueAmount === 0 ? 'complete' : 'active';
-
-        newPayments.push({
-          amount,
-          paymentMethod: payment.paymentMethod, // Updated from modeOfPayment
-          paymentReference: paymentPayload.paymentReference,
-          paymentDate: paymentPayload.paymentDate,
-          notes: paymentPayload.notes,
-          receivedBy: paymentPayload.receivedBy,
-          receivedByType: paymentPayload.receivedByType,
-        });
+        return;
       }
-
-      const finalPaymentDetails = {
-        totalAmount: adjustedTotalPrice.toLocaleString('en-IN'),
-        dueAmount: lastDueAmount.toLocaleString('en-IN'),
-        payments: paymentDetails?.payments || [],
-      };
-
-      dispatch(resetInvoice());
-
-      Alert.alert(
-        'Success',
-        `Invoice ${invoiceNumber || 'INV-2025-001'} saved successfully`
+    }
+  
+    setDownloading(true);
+  
+    try {
+      // Get the invoice ID
+      const invoiceId = invoice?._id;
+  
+      // Set download path based on platform
+      const { dirs } = RNFetchBlob.fs;
+      const dirPath =
+        Platform.OS === 'ios' ? dirs.DocumentDir : dirs.DownloadDir;
+  
+      // Create filename with timestamp
+      const timestamp = new Date().getTime();
+      const filename = `invoice_${invoiceId}_${timestamp}.pdf`;
+      const filePath = `${dirPath}/${filename}`;
+  
+      const apiUrl = `${NODE_API_ENDPOINT}/custom-orders/${invoiceId}`;
+      console.log(`Downloading invoice from: ${apiUrl}`);
+  
+      // For Android, check if the directory exists
+      if (Platform.OS === 'android') {
+        const exists = await RNFetchBlob.fs.exists(dirPath);
+        if (!exists) {
+          await RNFetchBlob.fs.mkdir(dirPath);
+        }
+      }
+  
+      // Configure download with notification for Android
+      const downloadConfig =
+        Platform.OS === 'android'
+          ? {
+              fileCache: true,
+              path: filePath,
+              addAndroidDownloads: {
+                useDownloadManager: true,
+                notification: true,
+                title: 'Invoice Downloaded',
+                description: 'Your invoice has been downloaded successfully',
+                mime: 'application/pdf',
+                mediaScannable: true,
+                path: filePath,
+              },
+            }
+          : {
+              fileCache: true,
+              path: filePath,
+            };
+  
+      // Download the file
+      const res = await RNFetchBlob.config(downloadConfig).fetch(
+        'GET',
+        apiUrl,
+        {
+          Authorization: `Bearer ${currentUser?.token}`,
+        },
       );
-
-      navigation.navigate('InvoiceUpdated', {
-        invoiceStatus: lastStatus,
-        orderId,
-        testOrderId,
-        invoiceNumber: invoiceNumber || `INV-${orderId}`,
-        billingDetails: billingDetails || {},
-        paymentDetails: finalPaymentDetails,
-        paymentHistory: [...(paymentDetails?.payments || []), ...newPayments],
-        cartProducts: [],
-        discountValue: '0',
-        discountMode: 'percent',
-        gstValue: '0',
-      });
-    } catch (error: any) {
-      console.error('Error processing payments:', error);
-      dispatch(setError(error.message || 'Failed to process payments'));
-      Alert.alert('Error', `Failed to process payments: ${error.message}`);
+  
+      // Check response info
+      console.log('Response info:', res.info());
+  
+      // Check if the file exists and has content
+      const fileExists = await RNFetchBlob.fs.exists(filePath);
+      if (!fileExists) {
+        throw new Error('File does not exist after download');
+      }
+  
+      const fileSize = await RNFetchBlob.fs
+        .stat(filePath)
+        .then(stats => stats.size);
+      console.log(`File exists: ${fileExists}, size: ${fileSize}B`);
+  
+      if (fileSize <= 0) {
+        throw new Error('Downloaded file is empty (0B)');
+      }
+  
+      // Show success message
+      Alert.alert('Success', 'Invoice downloaded successfully');
+  
+      // Open the PDF
+      if (Platform.OS === 'ios') {
+        RNFetchBlob.ios.openDocument(filePath);
+      } else {
+        // For Android, use action view intent
+        RNFetchBlob.android.actionViewIntent(filePath, 'application/pdf');
+      }
+    } catch (error) {
+      console.error('Error downloading invoice:', error);
+  
+      // Handle specific error cases
+      if (error.message.includes('401')) {
+        Alert.alert('Session Expired', 'Please log in again.');
+        navigation.navigate('LoginScreen');
+      } else {
+        Alert.alert('Error', `Failed to download invoice: ${error.message}`);
+      }
+    } finally {
+      setDownloading(false);
     }
   };
-
   const handlePaymentDetails = () => {
     if (items.length === 0) {
       Alert.alert('Error', 'Please add at least one item before adding payment details.');
       return;
     }
 
-    console.log(
-      'Navigating to InvoicePaymentScreen with orderId:',
-      savedOrderId,
-      'testOrderId:',
-      testOrderId
-    );
-    navigation.navigate('InvoicePaymentScreen', {
-      invoiceStatus,
-      orderId: savedOrderId,
-      testOrderId,
-      invoiceNumber: invoiceNumber || 'INV-2025-001',
+    navigation.navigate('ActiveInvoicePaymentScreen', {
+      invoice,
+      orderId: invoice._id,
+      testOrderId: invoice._id,
+      invoiceNumber: invoice._id,
+      invoiceStatus: isCompleted ? 'complete' : 'active',
     });
   };
 
@@ -520,7 +538,7 @@ const InvoiceItemsScreen = ({ navigation, route }: InvoiceItemsProps) => {
           <View className="flex-1 items-end -ml-4">
             <Text className="text-sm text-[#FBDBB5]">Invoice ID:</Text>
             <Text className="text-base font-bold text-[#FBDBB5]">
-              {invoiceNumber || 'INV-2025-001'}
+              {invoice._id}
             </Text>
           </View>
         </View>
@@ -536,6 +554,7 @@ const InvoiceItemsScreen = ({ navigation, route }: InvoiceItemsProps) => {
               onChangeText={setNewItemName}
               placeholder="Item Name"
               placeholderTextColor="#FFF"
+              editable={!isCompleted}
             />
             <View
               className="flex-row justify-between gap-2"
@@ -548,6 +567,7 @@ const InvoiceItemsScreen = ({ navigation, route }: InvoiceItemsProps) => {
                 placeholder="Quantity"
                 placeholderTextColor="#FFF"
                 keyboardType="numeric"
+                editable={!isCompleted}
               />
               <TextInput
                 style={styles.input2}
@@ -556,12 +576,14 @@ const InvoiceItemsScreen = ({ navigation, route }: InvoiceItemsProps) => {
                 placeholder="Rate"
                 placeholderTextColor="#FFF"
                 keyboardType="numeric"
+                editable={!isCompleted}
               />
             </View>
             <TouchableOpacity
               className="bg-[#292C33] rounded-lg items-center mt-2"
               style={{ width: scale(320), paddingVertical: 12 }}
               onPress={handleAddItem}
+              disabled={isCompleted}
             >
               <Text className="text-white font-medium">Add Item</Text>
             </TouchableOpacity>
@@ -632,6 +654,7 @@ const InvoiceItemsScreen = ({ navigation, route }: InvoiceItemsProps) => {
                         value={item.rate.toString()}
                         onChangeText={text => handlePriceChange(index, text)}
                         keyboardType="numeric"
+                        editable={!isCompleted}
                       />
                     </View>
                     <Text
@@ -644,6 +667,7 @@ const InvoiceItemsScreen = ({ navigation, route }: InvoiceItemsProps) => {
                       style={{ width: '10%' }}
                       className="items-center"
                       onPress={() => handleRemoveItem(index)}
+                      disabled={isCompleted}
                     >
                       <Icon name="trash-2" size={16} color="#fff" />
                     </TouchableOpacity>
@@ -676,6 +700,7 @@ const InvoiceItemsScreen = ({ navigation, route }: InvoiceItemsProps) => {
                   className={`flex-1 items-center justify-center rounded-md px-4 py-3 ${
                     discountMode === 'percent' ? 'bg-[#DB9245]' : ''
                   }`}
+                  disabled={isCompleted}
                 >
                   <Text className="text-sm font-medium text-black">%</Text>
                 </TouchableOpacity>
@@ -684,6 +709,7 @@ const InvoiceItemsScreen = ({ navigation, route }: InvoiceItemsProps) => {
                   className={`flex-1 items-center justify-center px-4 rounded-md ${
                     discountMode === 'rupees' ? 'bg-[#DB9245]' : ''
                   }`}
+                  disabled={isCompleted}
                 >
                   <Text className="text-sm font-medium text-black">₹</Text>
                 </TouchableOpacity>
@@ -710,6 +736,7 @@ const InvoiceItemsScreen = ({ navigation, route }: InvoiceItemsProps) => {
                   keyboardType="numeric"
                   className="text-[#000000] text-sm font-medium flex-1 text-right leading-[0.55rem]"
                   style={{ minWidth: 40 }}
+                  editable={!isCompleted}
                 />
                 {discountMode === 'percent' && (
                   <Text className="text-sm text-[#292C33] font-medium ml-1">%</Text>
@@ -742,6 +769,7 @@ const InvoiceItemsScreen = ({ navigation, route }: InvoiceItemsProps) => {
                   placeholderTextColor="#000000"
                   keyboardType="numeric"
                   className="text-[#000000] text-sm font-medium text-right min-w-[40px] flex-1 leading-[0.55rem]"
+                  editable={!isCompleted}
                 />
                 <Text className="text-sm text-[#292C33] font-medium ml-1">%</Text>
                 <Icon
@@ -785,26 +813,42 @@ const InvoiceItemsScreen = ({ navigation, route }: InvoiceItemsProps) => {
               <TouchableOpacity
                 className="flex-1 py-3 rounded-xl items-center justify-center border bg-[#292C33]"
                 onPress={handlePaymentDetails}
-                disabled={!items.length}
+                disabled={ !items.length}
               >
                 <Text className="font-bold text-center text-white py-2">
                   Payment Details
                 </Text>
               </TouchableOpacity>
 
-              <TouchableOpacity
-                className="flex-1 py-3 rounded-xl items-center justify-center border border-[#DB9245] bg-[#DB9245]"
-                onPress={handleConfirmOrder}
-                disabled={loading || !items.length}
-              >
-                {loading ? (
-                  <ActivityIndicator color="#fff" size="small" />
-                ) : (
-                  <Text className="text-white font-bold text-center">
-                    {invoiceStatus === 'new' ? 'Save Invoice' : 'Update Invoice'}
-                  </Text>
-                )}
-              </TouchableOpacity>
+              {isCompleted ? (
+                <TouchableOpacity
+                  className="flex-1 py-3 rounded-xl items-center justify-center border border-[#DB9245] bg-[#DB9245]"
+                  onPress={handleDownloadInvoice}
+                  disabled={loading}
+                >
+                  {loading ? (
+                    <ActivityIndicator color="#fff" size="small" />
+                  ) : (
+                    <Text className="text-white font-bold text-center">
+                      Download Invoice
+                    </Text>
+                  )}
+                </TouchableOpacity>
+              ) : (
+                <TouchableOpacity
+                  className="flex-1 py-3 rounded-xl items-center justify-center border border-[#DB9245] bg-[#DB9245]"
+                  onPress={handleSaveInvoice}
+                  disabled={loading || !items.length}
+                >
+                  {loading ? (
+                    <ActivityIndicator color="#fff" size="small" />
+                  ) : (
+                    <Text className="text-white font-bold text-center">
+                      Update Invoice
+                    </Text>
+                  )}
+                </TouchableOpacity>
+              )}
             </View>
           </View>
         </View>
@@ -840,4 +884,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default InvoiceItemsScreen;
+export default ActiveInvoiceItemScreen;

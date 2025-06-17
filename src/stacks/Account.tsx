@@ -29,6 +29,8 @@ import InvoiceUpdated from '../screens/InvoiceUpdated';
 import InvoiceItemsScreen from '../screens/InvoiceItemsScreen';
 import InvoicePaymentScreen from '../screens/InvoicePaymentScreen';
 import ActiveInvoiceScreen from '../screens/ActiveInvoiceScreen';
+import ActiveInvoiceItems from '../screens/ActiveInvoiceItems'
+import ActiveInvoicePaymentScreen from '../screens/ActiveInvoicePaymentScreen';
 // import AccountScreen from '../screens/AccountScreen';
 // import OrderScreen from '../screens/OrdersScreen';
 // import OrderDetailsScreen from '../screens/OrderDetailsScreen';
@@ -100,7 +102,7 @@ export type AccountStackParamList = {
     discountMode?: 'percent' | 'rupees';
     gstValue?: string;
   };
-  PreviousInvoiceScreen:undefined;
+  PreviousInvoiceScreen:{status:string;};
   InvoicesScreen:undefined;
   InvoiceItemsScreen: {
     invoiceStatus?: string;
@@ -155,6 +157,35 @@ export type AccountStackParamList = {
       discountAmount: number;
       discountPercentage: number;
     };
+    status:string;
+  };
+  ActiveInvoiceItems: {
+    invoice: {
+      _id: string;
+      billingFrom: { firmName: string; firmAddress: string; firmGstNumber: string };
+      billingTo: { firmName: string; firmAddress: string; firmGstNumber: string };
+      billingDetails: { billingDate: string; billingDueDate: string };
+      dueAmount: number;
+      totalAmount: number;
+      items: Array<{ id: string; name: string; quantity: number; price: number }>;
+      payments: Array<{ amount: number; date: string; mode: string }>;
+      discountAmount: number;
+      discountPercentage: number;
+    };
+  }
+  ActiveInvoicePaymentScreen: {
+    invoice: Invoice;
+    invoiceStatus: string;
+    orderId: string;
+    testOrderId: string;
+    invoiceNumber: string;
+    billingDetails: any;
+    paymentDetails: { totalAmount: string; dueAmount: string; payments: any[] };
+    paymentHistory: any[];
+    cartProducts: Item[];
+    discountValue: string;
+    discountMode: 'percent' | 'rupees';
+    gstValue: string;
   };
 }
 
@@ -281,6 +312,11 @@ function AccountStackNavigator() {
         options={{headerShown: false}}
       />
       <AccountStack.Screen
+        name="ActiveInvoiceItems"
+        component={ActiveInvoiceItems}
+        options={{headerShown: false}}
+      />
+      <AccountStack.Screen
         name="GenerateInvoiceScreen"
         component={GenerateInvoiceScreen}
         options={{headerShown: false}}
@@ -309,6 +345,12 @@ function AccountStackNavigator() {
       <AccountStack.Screen
         name="InvoicePaymentScreen"
         component={InvoicePaymentScreen}
+        options={{headerShown: false,
+        }}
+      />
+      <AccountStack.Screen
+        name="ActiveInvoicePaymentScreen"
+        component={ActiveInvoicePaymentScreen}
         options={{headerShown: false,
         }}
       />

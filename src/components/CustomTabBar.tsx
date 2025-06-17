@@ -61,7 +61,10 @@ const HIDDEN_ROUTES = [
   'InvoicesScreen',
   'InvoiceUpdated',
   'PreviousInvoiceScreen',
-  'InvoicePaymentScreen'
+  'InvoicePaymentScreen',
+  'ActiveInvoiceScreen',
+  'ActiveInvoiceItems',
+  'ActiveInvoicePaymentScreen'
 
 ];
 

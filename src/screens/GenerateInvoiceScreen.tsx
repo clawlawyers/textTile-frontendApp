@@ -14,58 +14,33 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { scale, verticalScale } from '../utils/scaling';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { useSelector } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from '../redux/store';
-
-type Item = {
-  id: string;
-  name: string;
-  quantity: number;
-  price: number;
-};
+import {
+  setBillingFrom,
+  setBillingTo,
+  setBillingDetails,
+  setInvoiceNumber,
+  setLoading,
+  setError,
+} from '../redux/customInvoiceSlice';
+import { setCurrentClient } from '../redux/commonSlice';
 
 type AccountStackParamList = {
   GenerateInvoiceScreen: undefined;
   InvoiceItemsScreen: {
-    orderId?: string;
     invoiceStatus?: string;
-    invoiceNumber?: string;
-    billingDetails?: any;
-    cartProducts?: Item[];
-    paymentDetails?: any;
-    paymentHistory?: any[];
-    discountValue?: string;
-    discountMode?: 'percent' | 'rupees';
-    gstValue?: string;
-    testOrderId?: string;
   };
   InvoicePaymentScreen: {
-    invoiceStatus?: string;
     orderId?: string;
-    testOrderId?: string;
-    invoiceNumber?: string;
-    billingDetails?: any;
-    paymentDetails?: any;
-    paymentHistory?: any[];
-    cartProducts?: Item[];
-    discountValue?: string;
-    discountMode?: 'percent' | 'rupees';
-    gstValue?: string;
+    invoiceStatus?: string;
   };
   InvoiceDetailsScreen: {
-    invoiceStatus?: string;
     orderId?: string;
-    testOrderId?: string;
-    invoiceNumber?: string;
-    billingDetails?: any;
-    paymentDetails?: any;
-    paymentHistory?: any[];
-    cartProducts?: Item[];
-    discountValue?: string;
-    discountMode?: 'percent' | 'rupees';
-    gstValue?: string;
+    invoiceStatus?: string;
   };
   LoginScreen: undefined;
+  InvoicesScreen: undefined;
 };
 
 type GenerateInvoiceProps = NativeStackScreenProps<
@@ -74,31 +49,35 @@ type GenerateInvoiceProps = NativeStackScreenProps<
 >;
 
 const GenerateInvoiceScreen = ({ navigation }: GenerateInvoiceProps) => {
+  const dispatch = useDispatch();
   const currentUser = useSelector((state: RootState) => state.auth.user);
+  const currentClient = useSelector((state: RootState) => state.common.currentClient);
+  const { loading, error, invoiceNumber } = useSelector(
+    (state: RootState) => state.customInvoice
+  );
 
   // State for form inputs
-  const [billingFrom, setBillingFrom] = useState({
-    firmName: '',
-    firmAddress: '',
-    firmGstNumber: '',
+  const [billingFrom, setLocalBillingFrom] = useState({
+    firmName: currentUser?.firmName || '',
+    firmAddress: currentUser?.address || '',
+    firmGstNumber: currentUser?.gstin || '',
   });
-  const [billingTo, setBillingTo] = useState({
-    firmName: '',
-    firmAddress: '',
-    firmGstNumber: '',
+  const [billingTo, setLocalBillingTo] = useState({
+    firmName: currentClient?.name || '',
+    firmAddress: currentClient?.address || '',
+    firmGstNumber: currentClient?.gstNumber || '',
+    mobileNumber: currentClient?.phone || '',
   });
-  const [billingDate, setBillingDate] = useState<Date | null>(null);
+  const [billingDate, setBillingDate] = useState<Date | null>(new Date());
   const [billingDueDate, setBillingDueDate] = useState<Date | null>(null);
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [datePickerMode, setDatePickerMode] = useState<'billing' | 'due' | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [orderId, setOrderId] = useState<string | null>(null);
-  const [invoiceNumber, setInvoiceNumber] = useState<string>('A00001');
+  const [localInvoiceNumber, setLocalInvoiceNumber] = useState<string>('A00001');
 
   const invoiceStatus = 'new';
 
-  // Generate six-digit order ID (A00000-Z99999)
-  const generateOrderId = async (increment: boolean = false): Promise<string> => {
+  // Generate six-digit invoice number (A00000-Z99999)
+  const generateInvoiceNumber = async (increment: boolean = false): Promise<string> => {
     try {
       const key = 'invoice_counter';
       let counter = parseInt(await AsyncStorage.getItem(key) || '0', 10);
@@ -113,34 +92,89 @@ const GenerateInvoiceScreen = ({ navigation }: GenerateInvoiceProps) => {
         }
         await AsyncStorage.setItem(key, counter.toString());
       }
-      const letter = String.fromCharCode(65 + Math.floor(counter / 100000)); // A-Z
-      const number = (counter % 100000).toString().padStart(5, '0'); // 00000-99999
-      const orderId = `${letter}${number}`;
-      if (!/^[A-Z]\d{5}$/.test(orderId)) {
-        throw new Error(`Invalid order ID format: ${orderId}`);
+      const letter = String.fromCharCode(65 + Math.floor(counter / 100000));
+      const number = (counter % 100000).toString().padStart(5, '0');
+      const invoiceId = `${letter}${number}`;
+      if (!/^[A-Z]\d{5}$/.test(invoiceId)) {
+        throw new Error(`Invalid invoice ID format: ${invoiceId}`);
       }
-      console.log(`Generated orderId: ${orderId} (counter: ${counter})`);
-      return orderId;
-    } catch (error) {
-      console.error('Error generating order ID:', error);
-      throw new Error(`Failed to generate order ID: ${error.message}`);
+      console.log(`Generated invoiceNumber: ${invoiceId} (counter: ${counter})`);
+      return invoiceId;
+    } catch (error: any) {
+      console.error('Error generating invoice number:', error);
+      throw new Error(`Failed to generate invoice number: ${error.message}`);
     }
   };
 
-  // Initialize invoice number
+  // Initialize invoice number and billingFrom
   useEffect(() => {
     const initInvoiceNumber = async () => {
       try {
-        const nextOrderId = await generateOrderId(false);
-        setInvoiceNumber(nextOrderId);
-        console.log(`Initialized invoiceNumber: ${nextOrderId}`);
-      } catch (error) {
-        console.error('Error initializing invoice number:', error);
-        Alert.alert('Error', 'Failed to initialize invoice number');
+        const nextInvoiceId = await generateInvoiceNumber(false);
+        setLocalInvoiceNumber(nextInvoiceId);
+        if (!setInvoiceNumber) {
+          throw new Error('setInvoiceNumber is undefined');
+        }
+        const invoiceAction = setInvoiceNumber(nextInvoiceId);
+        if (!invoiceAction || !invoiceAction.type) {
+          throw new Error('Invalid setInvoiceNumber action');
+        }
+        dispatch(invoiceAction);
+        // Prefill billingFrom from currentUser
+        if (currentUser && (currentUser.firmName || currentUser.address)) {
+          setLocalBillingFrom({
+            firmName: currentUser.firmName || '',
+            firmAddress: currentUser.address || '',
+            firmGstNumber: currentUser.gstin || '',
+          });
+          if (!setBillingFrom) {
+            throw new Error('setBillingFrom is undefined');
+          }
+          const billingFromAction = setBillingFrom({
+            firmName: currentUser.firmName || '',
+            firmAddress: currentUser.address || '',
+            firmGstNumber: currentUser.gstin || undefined,
+          });
+          if (!billingFromAction || !billingFromAction.type) {
+            throw new Error('Invalid setBillingFrom action');
+          }
+          dispatch(billingFromAction);
+        }
+      } catch (error: any) {
+        console.error('Initialization error:', error);
+        dispatch(setError('Failed to initialize invoice number'));
       }
     };
     initInvoiceNumber();
-  }, []);
+  }, [dispatch, currentUser]);
+
+  // Prefill billingTo from currentClient
+  useEffect(() => {
+    if (currentClient) {
+      setLocalBillingTo({
+        firmName: currentClient.name || '',
+        firmAddress: currentClient.address || '',
+        firmGstNumber: currentClient.gstNumber || '',
+        mobileNumber: currentClient.phone || '',
+      });
+      if (!setBillingTo) {
+        console.error('setBillingTo is undefined');
+        Alert.alert('Error', 'setBillingTo is undefined');
+        return;
+      }
+      const billingToAction = setBillingTo({
+        firmName: currentClient.name || '',
+        firmAddress: currentClient.address || '',
+        firmGstNumber: currentClient.gstNumber || undefined,
+        mobileNumber: currentClient.phone ? Number(currentClient.phone) : undefined,
+      });
+      if (!billingToAction || !billingToAction.type) {
+        console.error('Invalid setBillingTo action:', billingToAction);
+        return;
+      }
+      dispatch(billingToAction);
+    }
+  }, [currentClient, dispatch]);
 
   const formatDate = (date: Date | null): string => {
     if (!date) return 'Select Date';
@@ -178,20 +212,13 @@ const GenerateInvoiceScreen = ({ navigation }: GenerateInvoiceProps) => {
   const handleSaveInvoice = async () => {
     if (loading) return;
 
-    // Check if invoice is new
-    if (invoiceStatus === 'new') {
-      Alert.alert('Error', 'GST and discount can\'t be empty');
-      return;
-    }
-
     // Validate required fields
     if (
       !billingFrom.firmName ||
       !billingFrom.firmAddress ||
-      !billingFrom.firmGstNumber ||
       !billingTo.firmName ||
       !billingTo.firmAddress ||
-      !billingTo.firmGstNumber ||
+      !billingTo.mobileNumber ||
       !billingDate ||
       !billingDueDate
     ) {
@@ -199,50 +226,76 @@ const GenerateInvoiceScreen = ({ navigation }: GenerateInvoiceProps) => {
       return;
     }
 
-    if (!currentUser?.token) {
-      Alert.alert('Error', 'User not authenticated. Please log in.');
-      navigation.navigate('LoginScreen');
-      return;
-    }
-
-    setLoading(true);
+    dispatch(setLoading(true));
 
     try {
-      // Generate new order ID
-      const newOrderId = await generateOrderId(true);
-      const newInvoiceNumber = newOrderId;
+      // Generate new invoice number
+      const newInvoiceNumber = await generateInvoiceNumber(true);
 
-      setOrderId(newOrderId);
-      setInvoiceNumber(newInvoiceNumber);
+      // Store data in Redux
+      const actions = [
+        setInvoiceNumber ? setInvoiceNumber(newInvoiceNumber) : undefined,
+        setBillingFrom
+          ? setBillingFrom({
+              firmName: billingFrom.firmName,
+              firmAddress: billingFrom.firmAddress,
+              firmGstNumber: billingFrom.firmGstNumber || undefined,
+            })
+          : undefined,
+        setBillingTo
+          ? setBillingTo({
+              firmName: billingTo.firmName,
+              firmAddress: billingTo.firmAddress,
+              firmGstNumber: billingTo.firmGstNumber || undefined,
+              mobileNumber: Number(billingTo.mobileNumber),
+            })
+          : undefined,
+        setBillingDetails
+          ? setBillingDetails({
+              billingDate: billingDate.toISOString(),
+              billingDueDate: billingDueDate.toISOString(),
+            })
+          : undefined,
+        setCurrentClient
+          ? setCurrentClient({
+              name: billingTo.firmName,
+              address: billingTo.firmAddress,
+              gstNumber: billingTo.firmGstNumber,
+              phone: billingTo.mobileNumber,
+            })
+          : undefined,
+      ];
 
-      // Navigate to InvoiceItemsScreen with billing details and initial params
+      actions.forEach((action, index) => {
+        if (!action || !action.type) {
+          console.error(`Invalid action at index ${index}:`, action);
+          throw new Error(`Invalid action at index ${index}`);
+        }
+        console.log(`Dispatching action ${index}:`, action);
+        dispatch(action);
+      });
+
+      // Log Redux state for debugging
+      console.log('Redux state after dispatch:', {
+        invoiceNumber: newInvoiceNumber,
+        billingFrom,
+        billingTo,
+        billingDetails: {
+          billingDate: billingDate?.toISOString(),
+          billingDueDate: billingDueDate?.toISOString(),
+        },
+      });
+
+      // Navigate to InvoiceItemsScreen
       navigation.navigate('InvoiceItemsScreen', {
         invoiceStatus,
-        orderId: newOrderId,
-        invoiceNumber: newInvoiceNumber,
-        billingDetails: {
-          billTo: billingTo.firmName,
-          billToGSTIN: billingTo.firmGstNumber,
-          billToAddress: billingTo.firmAddress,
-          billingFrom: billingFrom.firmName,
-          billingFromGSTIN: billingFrom.firmGstNumber,
-          billingFromAddress: billingFrom.firmAddress,
-          date: billingDate ? billingDate.toISOString() : '',
-          duedate: billingDueDate ? billingDueDate.toISOString() : '',
-          amountPaid: '0',
-        },
-        cartProducts: [],
-        paymentDetails: { totalAmount: '0', dueAmount: '0', payments: [] },
-        paymentHistory: [],
-        discountValue: '0',
-        discountMode: 'percent',
-        gstValue: '0',
       });
 
       Alert.alert('Success', 'Proceeding to add invoice items');
-    } catch (error) {
-      console.error('Error generating order ID:', error);
-      Alert.alert('Error', `Failed to proceed: ${error.message}`);
+    } catch (error: any) {
+      console.error('Error saving invoice:', error);
+      dispatch(setError(error.message || 'Failed to save invoice data'));
+      Alert.alert('Error', `Failed to save invoice: ${error.message}`);
       // Revert counter on failure
       try {
         const key = 'invoice_counter';
@@ -255,7 +308,7 @@ const GenerateInvoiceScreen = ({ navigation }: GenerateInvoiceProps) => {
         console.error('Error reverting counter:', revertError);
       }
     } finally {
-      setLoading(false);
+      dispatch(setLoading(false));
     }
   };
 
@@ -263,15 +316,15 @@ const GenerateInvoiceScreen = ({ navigation }: GenerateInvoiceProps) => {
     <View className="flex-1 bg-[#FBDBB5]">
       <View
         style={{
-          flex: 1,
+          height: verticalScale(170),
           justifyContent: 'center',
           alignItems: 'center',
           backgroundColor: '#292C33',
-          marginBottom: 16,
+          marginBottom: 10,
           paddingVertical: verticalScale(10),
         }}
       >
-        <View className="flex-row justify-between px-8 pt-10 w-full items-center mb-8">
+        <View className="flex-row justify-between px-8 pt-10 mt-8 w-full items-center mb-8">
           <TouchableOpacity
             onPress={() => navigation.navigate('InvoicesScreen')}
             className="w-10 h-10 rounded-full border bg-[#DB9245] justify-center items-center"
@@ -281,14 +334,14 @@ const GenerateInvoiceScreen = ({ navigation }: GenerateInvoiceProps) => {
           <TouchableOpacity
             onPress={handleSaveInvoice}
             className="w-10 h-10 rounded-full border bg-[#DB9245] justify-center items-center"
-            disabled={invoiceStatus === 'new' || loading}
+            disabled={loading}
           >
             <Icon name="download" size={20} color="#FBDBB5" />
           </TouchableOpacity>
         </View>
-        <View className="pb-1 pt-3">
+        <View className="pb-1 pt-3 mb-8">
           <Text style={styles.title}>Create New Invoice</Text>
-          <Text style={styles.invoiceNumber}>Invoice ID: {invoiceNumber}</Text>
+          <Text style={styles.invoiceNumber}>Invoice ID: {invoiceNumber || localInvoiceNumber}</Text>
         </View>
       </View>
 
@@ -298,21 +351,21 @@ const GenerateInvoiceScreen = ({ navigation }: GenerateInvoiceProps) => {
           <TextInput
             style={styles.input}
             value={billingFrom.firmName}
-            onChangeText={(text) => setBillingFrom({ ...billingFrom, firmName: text })}
+            onChangeText={(text) => setLocalBillingFrom({ ...billingFrom, firmName: text })}
             placeholder="Firm Name"
             placeholderTextColor="#FFF"
           />
           <TextInput
             style={styles.input}
             value={billingFrom.firmAddress}
-            onChangeText={(text) => setBillingFrom({ ...billingFrom, firmAddress: text })}
+            onChangeText={(text) => setLocalBillingFrom({ ...billingFrom, firmAddress: text })}
             placeholder="Firm Address"
             placeholderTextColor="#FFF"
           />
           <TextInput
             style={styles.input}
             value={billingFrom.firmGstNumber}
-            onChangeText={(text) => setBillingFrom({ ...billingFrom, firmGstNumber: text })}
+            onChangeText={(text) => setLocalBillingFrom({ ...billingFrom, firmGstNumber: text })}
             placeholder="Enter GSTIN number"
             placeholderTextColor="#FFF"
           />
@@ -322,23 +375,31 @@ const GenerateInvoiceScreen = ({ navigation }: GenerateInvoiceProps) => {
           <TextInput
             style={styles.input}
             value={billingTo.firmName}
-            onChangeText={(text) => setBillingTo({ ...billingTo, firmName: text })}
+            onChangeText={(text) => setLocalBillingTo({ ...billingTo, firmName: text })}
             placeholder="Firm Name"
             placeholderTextColor="#FFF"
           />
           <TextInput
             style={styles.input}
             value={billingTo.firmAddress}
-            onChangeText={(text) => setBillingTo({ ...billingTo, firmAddress: text })}
+            onChangeText={(text) => setLocalBillingTo({ ...billingTo, firmAddress: text })}
             placeholder="Firm Address"
             placeholderTextColor="#FFF"
           />
           <TextInput
             style={styles.input}
             value={billingTo.firmGstNumber}
-            onChangeText={(text) => setBillingTo({ ...billingTo, firmGstNumber: text })}
+            onChangeText={(text) => setLocalBillingTo({ ...billingTo, firmGstNumber: text })}
             placeholder="Enter GSTIN number"
             placeholderTextColor="#FFF"
+          />
+          <TextInput
+            style={styles.input}
+            value={billingTo.mobileNumber}
+            onChangeText={(text) => setLocalBillingTo({ ...billingTo, mobileNumber: text })}
+            placeholder="Phone Number"
+            placeholderTextColor="#FFF"
+            keyboardType="phone-pad"
           />
         </View>
         <View className="bg-[#DB9245] rounded-lg px-4 py-3">
@@ -369,27 +430,65 @@ const GenerateInvoiceScreen = ({ navigation }: GenerateInvoiceProps) => {
             className="bg-[#292C33] rounded-lg justify-center py-3 mb-4 flex-1"
             style={{ height: verticalScale(45) }}
             onPress={() => {
+              if (
+                !billingFrom.firmName ||
+                !billingFrom.firmAddress ||
+                !billingTo.firmName ||
+                !billingTo.firmAddress ||
+                !billingTo.mobileNumber ||
+                !billingDate ||
+                !billingDueDate
+              ) {
+                Alert.alert('Error', 'Please fill in all required fields');
+                return;
+              }
+              if (!setBillingFrom || !setBillingTo || !setBillingDetails) {
+                console.error('Action creators missing:', {
+                  setBillingFrom,
+                  setBillingTo,
+                  setBillingDetails,
+                });
+                Alert.alert('Error', 'Action creators are undefined');
+                return;
+              }
+              const actions = [
+                setBillingFrom({
+                  firmName: billingFrom.firmName,
+                  firmAddress: billingFrom.firmAddress,
+                  firmGstNumber: billingFrom.firmGstNumber || undefined,
+                }),
+                setBillingTo({
+                  firmName: billingTo.firmName,
+                  firmAddress: billingTo.firmAddress,
+                  firmGstNumber: billingTo.firmGstNumber || undefined,
+                  mobileNumber: Number(billingTo.mobileNumber),
+                }),
+                setBillingDetails({
+                  billingDate: billingDate.toISOString(),
+                  billingDueDate: billingDueDate.toISOString(),
+                }),
+              ];
+              actions.forEach((action, index) => {
+                if (!action || !action.type) {
+                  console.error(`Invalid action at index ${index}:`, action);
+                  Alert.alert('Error', `Invalid action at index ${index}`);
+                  return;
+                }
+                console.log(`Dispatching action ${index}:`, action);
+                dispatch(action);
+              });
+              // Log Redux state for debugging
+              console.log('Redux state after dispatch:', {
+                invoiceNumber,
+                billingFrom,
+                billingTo,
+                billingDetails: {
+                  billingDate: billingDate?.toISOString(),
+                  billingDueDate: billingDueDate?.toISOString(),
+                },
+              });
               navigation.navigate('InvoiceItemsScreen', {
                 invoiceStatus,
-                orderId: orderId || undefined,
-                invoiceNumber,
-                billingDetails: {
-                  billTo: billingTo.firmName,
-                  billToGSTIN: billingTo.firmGstNumber,
-                  billToAddress: billingTo.firmAddress,
-                  billingFrom: billingFrom.firmName,
-                  billingFromGSTIN: billingFrom.firmGstNumber,
-                  billingFromAddress: billingFrom.firmAddress,
-                  date: billingDate ? billingDate.toISOString() : '',
-                  duedate: billingDueDate ? billingDueDate.toISOString() : '',
-                  amountPaid: '0',
-                },
-                cartProducts: [],
-                paymentDetails: { totalAmount: '0', dueAmount: '0', payments: [] },
-                paymentHistory: [],
-                discountValue: '0',
-                discountMode: 'percent',
-                gstValue: '0',
               });
             }}
           >
@@ -401,7 +500,7 @@ const GenerateInvoiceScreen = ({ navigation }: GenerateInvoiceProps) => {
             className="bg-[#DB9245] rounded-lg py-3 mb-4 flex-1 justify-center"
             style={{ height: verticalScale(45) }}
             onPress={handleSaveInvoice}
-            disabled={invoiceStatus === 'new' || loading}
+            disabled={loading}
           >
             <Text className="text-center text-white font-bold text-lg">
               {loading ? 'Saving...' : 'Save Invoice'}
@@ -437,7 +536,7 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   section: {
-    marginBottom: verticalScale(80),
+    marginBottom: verticalScale(45),
     paddingVertical: verticalScale(2),
     paddingHorizontal: scale(12),
     marginTop: verticalScale(8),
@@ -463,3 +562,4 @@ const styles = StyleSheet.create({
 });
 
 export default GenerateInvoiceScreen;
+
