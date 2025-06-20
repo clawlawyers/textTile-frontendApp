@@ -65,7 +65,7 @@ const InvoiceUpdated = ({ navigation, route }: InvoiceUpdatedProps) => {
       const filename = `invoice_${invoiceId}_${timestamp}.pdf`;
       const filePath = `${dirPath}/${filename}`;
 
-      const apiUrl = `${NODE_API_ENDPOINT}/custom-orders/${invoiceId}`;
+      const apiUrl = `${NODE_API_ENDPOINT}/custom-orders/invoice/${invoiceId}`;
       console.log(`Downloading invoice from: ${apiUrl}`);
 
       // For Android, check if the directory exists

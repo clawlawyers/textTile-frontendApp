@@ -43,7 +43,7 @@ const FirmAddedScreen = ({navigation}: FirmAddedScreenProps) => {
           <Text className="text-white text-xl font-bold">!</Text>
         </View> */}
         <View className="mb-5">
-          <Ionicons name="alert-circle" size={40} color="#CA6800" />
+          <Ionicons name="checkmark-circle" size={40} color="green" />
         </View>
 
         <Text className="text-black text-xl font-bold mb-2">
