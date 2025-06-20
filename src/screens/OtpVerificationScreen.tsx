@@ -1,5 +1,5 @@
 import {NativeStackScreenProps} from '@react-navigation/native-stack';
-import React, {useState, useEffect} from 'react';
+import React, {useState, useEffect, useRef} from 'react';
 import {
   View,
   Text,
@@ -20,11 +20,14 @@ type OptVerificationProps = NativeStackScreenProps<
 
 const OTP_LENGTH = 6;
 
-const OtpVerificationScreen = ({navigation}: OptVerificationProps) => {
+const OtpVerificationScreen = ({navigation, route}: OptVerificationProps) => {
   const [otp, setOtp] = useState<string[]>(Array(OTP_LENGTH).fill(''));
   const [timer, setTimer] = useState(60);
+  const { email } = route.params;
+  const inputRefs = useRef<(TextInput | null)[]>(Array(OTP_LENGTH).fill(null));
 
   useEffect(() => {
+    // Timer countdown
     const countdown = setInterval(() => {
       setTimer(prev => {
         if (prev === 1) {
@@ -34,6 +37,8 @@ const OtpVerificationScreen = ({navigation}: OptVerificationProps) => {
         return prev - 1;
       });
     }, 1000);
+
+    // Cleanup
     return () => clearInterval(countdown);
   }, []);
 
@@ -42,11 +47,21 @@ const OtpVerificationScreen = ({navigation}: OptVerificationProps) => {
       const newOtp = [...otp];
       newOtp[index] = text;
       setOtp(newOtp);
+
+      // Auto-move to next input
+      if (text && index < OTP_LENGTH - 1) {
+        inputRefs.current[index + 1]?.focus();
+      }
+
+      // Handle backspace to move to previous input
+      if (!text && index > 0) {
+        inputRefs.current[index - 1]?.focus();
+      }
     }
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-[#FDD9A0] px-6 pt-16">
+    <SafeAreaView className="flex-1 bg-[#FBDBB5] px-6 pt-16">
       <KeyboardAvoidingView
         className="flex-1 justify-between"
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
@@ -68,7 +83,7 @@ const OtpVerificationScreen = ({navigation}: OptVerificationProps) => {
               Enter the OTP that we just sent in your Email ID
             </Text>
             <Text className="font-semibold text-black mt-1">
-              soumyabanik0@gmail.com
+              {email}
             </Text>
           </View>
 
@@ -77,11 +92,13 @@ const OtpVerificationScreen = ({navigation}: OptVerificationProps) => {
               {otp.map((digit, index) => (
                 <TextInput
                   key={index}
+                  ref={ref => (inputRefs.current[index] = ref)}
                   className="w-12 h-14 border border-[#A87E58] text-center rounded-lg text-lg"
                   keyboardType="numeric"
                   maxLength={1}
                   value={digit}
                   onChangeText={text => handleChange(text, index)}
+                  autoFocus={index === 0}
                 />
               ))}
             </View>
@@ -99,7 +116,7 @@ const OtpVerificationScreen = ({navigation}: OptVerificationProps) => {
         {/* Bottom Button */}
         <TouchableOpacity
           className="mt-6 bg-[#DB9245] px-6 py-3 rounded-lg w-full mb-4"
-          onPress={() => navigation.navigate('NewPassword')}>
+          onPress={() => navigation.navigate('NewPassword',{email})}>
           <Text className="text-white text-base font-semibold text-center">
             Verify OTP
           </Text>

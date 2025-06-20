@@ -284,6 +284,7 @@ const InvoiceItemsScreen = ({ navigation, route }: InvoiceItemsProps) => {
           quantity: item.quantity,
           rate: item.rate,
         })),
+        gstPercentage:gstPercentage,
         ...(discountMode === 'percent' ? { discountPercentage } : { discountAmount }),
       };
 
@@ -304,8 +305,10 @@ const InvoiceItemsScreen = ({ navigation, route }: InvoiceItemsProps) => {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify(payload),
+        
       });
 
+    
       if (saveResponse.status === 401) {
         Alert.alert('Session Expired', 'Please log in again.');
         navigation.navigate('LoginScreen');

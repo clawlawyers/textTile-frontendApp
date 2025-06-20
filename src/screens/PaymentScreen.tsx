@@ -7,6 +7,9 @@ import {
   TouchableOpacity,
   TextInput,
   ScrollView,
+  Platform,
+  KeyboardAvoidingView,
+  SafeAreaView,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/Feather';
 import {HomeStackParamList} from '../stacks/Home';
@@ -203,6 +206,10 @@ const PaymentScreen = ({navigation, route}: AddNewUserProps) => {
   };
 
   return (
+    <SafeAreaView className="flex-1 bg-[#FAD8B0]">
+    <KeyboardAvoidingView
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      className="flex-1 bg-[#FAD8B0]">
     <View className="flex-1 bg-[#F4D5B2] p-4 pt-10">
       <ScrollView className="flex-1 bg-[#F4D5B2] p-4">
         {/* Header */}
@@ -367,6 +374,8 @@ const PaymentScreen = ({navigation, route}: AddNewUserProps) => {
         </Text>
       </TouchableOpacity>
     </View>
+    </KeyboardAvoidingView>
+    </SafeAreaView>
   );
 };
 

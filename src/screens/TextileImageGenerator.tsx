@@ -6,6 +6,8 @@ import {
   Image,
   SafeAreaView,
   ToastAndroid,
+  KeyboardAvoidingView,
+  Platform,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import {HomeStackParamList} from '../stacks/Home';
@@ -26,6 +28,9 @@ type TextileImageGeneratorProps = NativeStackScreenProps<
 const TextileImageGenerator = ({navigation}: TextileImageGeneratorProps) => {
   const [selected, setSelected] = useState('');
   return (
+    <KeyboardAvoidingView
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      className="flex-1 bg-[#FAD8B0]">
     <View className="flex-1 bg-[#f8dfc5] relative">
       {/* Background image (not full screen) */}
       <Image
@@ -70,7 +75,18 @@ const TextileImageGenerator = ({navigation}: TextileImageGeneratorProps) => {
             {options.map((item, index) => (
               <TouchableOpacity
                 key={index}
-                onPress={() => setSelected(item.label)}
+                onPress={() => {setSelected(item.label);
+                  if(item.label=='Generate'){
+                  navigation.navigate('GenerateImageScreen')}
+                  if(item.label=='Edit'){
+                    navigation.navigate('EditImageScreen', {imageUrl: null})}
+                    if(item.label=='Tile To Grid'){
+                      navigation.navigate('PatternToGridScreen', {
+                        imageUrl: null})}
+                      if(item.label==='Colourify'){
+                        ToastAndroid.show('Feature Coming Soon', ToastAndroid.SHORT);
+                      }}
+                }
                 className={`items-center flex-1 py-3 px-1 mx-1 ${
                   selected === item.label && 'bg-[#FBDBB5] rounded-md'
                 } `}>
@@ -90,7 +106,7 @@ const TextileImageGenerator = ({navigation}: TextileImageGeneratorProps) => {
           </View>
 
           {/* CTA Button */}
-          <TouchableOpacity
+          {/* <TouchableOpacity
             className="bg-[#292C33] py-5 rounded-xl"
             onPress={() => {
               if (selected === 'Generate') {
@@ -112,10 +128,11 @@ const TextileImageGenerator = ({navigation}: TextileImageGeneratorProps) => {
             <Text className="text-white text-center font-bold text-base">
               Start Image Generation
             </Text>
-          </TouchableOpacity>
+          </TouchableOpacity> */}
         </View>
       </View>
     </View>
+    </KeyboardAvoidingView>
   );
 };
 

@@ -1,6 +1,6 @@
 import {NativeStackScreenProps} from '@react-navigation/native-stack';
 import React from 'react';
-import {View, Text, TouchableOpacity, Image, StatusBar} from 'react-native';
+import {View, Text, TouchableOpacity, Image, StatusBar, Platform, KeyboardAvoidingView, SafeAreaView} from 'react-native';
 import Icon1 from 'react-native-vector-icons/Feather'; // You can change this to Ionicons, FontAwesome, etc.
 import {HomeStackParamList} from '../stacks/Home';
 
@@ -11,6 +11,10 @@ type AddNewUserProps = NativeStackScreenProps<
 
 const InventoryUpdatingScreen = ({navigation}: AddNewUserProps) => {
   return (
+    <SafeAreaView className="flex-1 bg-[#FAD8B0]">
+<KeyboardAvoidingView
+  behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+  className="flex-1 bg-[#FAD8B0]">
     <View className="flex-1 bg-[#FAD9B3] pt-12 px-6">
       <StatusBar barStyle="dark-content" backgroundColor="#FAD9B3" />
 
@@ -42,6 +46,8 @@ const InventoryUpdatingScreen = ({navigation}: AddNewUserProps) => {
         </Text>
       </View>
     </View>
+    </KeyboardAvoidingView>
+    </SafeAreaView>
   );
 };
 

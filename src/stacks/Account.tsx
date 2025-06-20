@@ -1,5 +1,6 @@
 // ================== Type Definitions ==================
 import React from 'react';
+import { createStackNavigator, CardStyleInterpolators } from '@react-navigation/stack';
 import {createNativeStackNavigator} from '@react-navigation/native-stack';
 import {Text, View} from 'react-native';
 import AdminDetailsScreen, {adminInfo} from '../screens/AdminDetailsScreen';
@@ -30,7 +31,14 @@ import InvoiceItemsScreen from '../screens/InvoiceItemsScreen';
 import InvoicePaymentScreen from '../screens/InvoicePaymentScreen';
 import ActiveInvoiceScreen from '../screens/ActiveInvoiceScreen';
 import ActiveInvoiceItems from '../screens/ActiveInvoiceItems'
+import AddInventoryScreen from '../screens/AddInventoryScreen';
+import InventoryProductDetails from '../screens/InventoryProductDetails';
 import ActiveInvoicePaymentScreen from '../screens/ActiveInvoicePaymentScreen';
+import StockManagement from '../screens/StockManagement';
+import EditInventoryProduct from '../screens/EditInventoryProduct';
+import AddInventoryProduct from '../screens/AddInventoryProduct';
+import UploadCSVScreen from '../screens/UploadCSVScreen';
+import InventoryEmptyScreen from '../screens/InventoryEmptyScreen';
 // import AccountScreen from '../screens/AccountScreen';
 // import OrderScreen from '../screens/OrdersScreen';
 // import OrderDetailsScreen from '../screens/OrderDetailsScreen';
@@ -74,22 +82,27 @@ export type AccountStackParamList = {
   PaymentMethod: undefined;
   MyReviews: undefined;
   Setting: undefined;
-  Home: undefined;
+  Home: undefined; 
+  UploadCSVScreen: undefined;
   EditAccountDetails: {userDetails: adminInfo};
   InventoryProductList: {companyId: string};
+  AddInventoryScreen:undefined;
   AddNewFirmScreen: undefined;
   Notification: undefined;
   UserPermissions: {salesmanId: string};
   AddNewUser: undefined;
   LoginScreen: undefined;
+  InventoryEmptyScreen: undefined;
   AddNewUserAdded: undefined;
   InsightsEmpty: undefined;
+  InventoryProductDetails: {productDetails: {}};
   LeftoverstockDesignwiseScreen: undefined;
   LeftoverstockproductwiseScreen: undefined;
   MonthlyAdvanceVsDuesProductwiseScreen: undefined;
   MonthlyDesignwiseOrdersScreen: undefined;
   MonthlyOrderPlacementAnalyticsScreen: undefined;
   MonthlyProductwiseOrdersScreen: undefined;
+  EditInventoryProduct: {productDetails: {}};
   GenerateInvoiceScreen:{ invoiceStatus?: string;
     orderId?: string;
     testOrderId?: string;
@@ -171,8 +184,10 @@ export type AccountStackParamList = {
       payments: Array<{ amount: number; date: string; mode: string }>;
       discountAmount: number;
       discountPercentage: number;
+      gstPercentage:number,
     };
   }
+  AddInventoryProduct: undefined;
   ActiveInvoicePaymentScreen: {
     invoice: Invoice;
     invoiceStatus: string;
@@ -187,13 +202,18 @@ export type AccountStackParamList = {
     discountMode: 'percent' | 'rupees';
     gstValue: string;
   };
+  StockManagement: {productDetails: {}};
 }
 
 const AccountStack = createNativeStackNavigator<AccountStackParamList>();
 
 function AccountStackNavigator() {
   return (
-    <AccountStack.Navigator initialRouteName="Account">
+    <AccountStack.Navigator initialRouteName="Account"
+    screenOptions={{
+      animation: 'slide_from_right',
+    }}
+    >
       <AccountStack.Screen
         name="Account"
         component={AdminDetailsScreen}
@@ -208,6 +228,48 @@ function AccountStackNavigator() {
       <AccountStack.Screen
         name="AddNewFirmScreen"
         component={AddNewFirmScreen}
+        options={{headerShown: false}}
+      />
+
+      <AccountStack.Screen
+        name="UploadCSVScreen"
+        component={UploadCSVScreen}
+        options={{headerShown: false}}
+      />
+
+      <AccountStack.Screen
+        name="EditInventoryProduct"
+        component={EditInventoryProduct}
+        options={{headerShown: false}}
+      />
+
+      <AccountStack.Screen
+        name="InventoryEmptyScreen"
+        component={InventoryEmptyScreen}
+        options={{headerShown: false}}
+      />
+
+      <AccountStack.Screen
+        name="StockManagement"
+        component={StockManagement}
+        options={{headerShown: false}}
+      />
+
+      <AccountStack.Screen
+        name="AddInventoryScreen"
+        component={AddInventoryScreen}
+        options={{headerShown: false}}
+      />
+
+      <AccountStack.Screen
+        name="AddInventoryProduct"
+        component={AddInventoryProduct}
+        options={{headerShown: false}}
+      />
+
+      <AccountStack.Screen
+        name="InventoryProductDetails"
+        component={InventoryProductDetails}
         options={{headerShown: false}}
       />
 

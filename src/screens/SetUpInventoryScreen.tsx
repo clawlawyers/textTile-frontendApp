@@ -9,6 +9,9 @@ import {
   Image,
   ToastAndroid,
   ActivityIndicator,
+  KeyboardAvoidingView,
+  Platform,
+  SafeAreaView,
 } from 'react-native';
 
 import FontistoIcon from 'react-native-vector-icons/Fontisto';
@@ -66,10 +69,14 @@ const SetUpInventoryScreen = ({navigation}: AddNewUserProps) => {
     console.log(allcomanies);
     dispatch(updateCompanies(allcomanies));
     setLoading(false);
-    navigation.replace('FirmAddedScreen');
+    navigation.replace('NewInventoryscreen');
   };
 
   return (
+    <SafeAreaView className="flex-1 bg-[#FAD8B0]">
+    <KeyboardAvoidingView
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      className="flex-1 bg-[#FAD8B0]">
     <View className="flex-1 bg-[#fdd8ac] px-4 pt-12 relative">
       {/* Top Header Icons */}
       <View className="flex-row justify-between items-center mb-14">
@@ -126,6 +133,8 @@ const SetUpInventoryScreen = ({navigation}: AddNewUserProps) => {
         )}
       </TouchableOpacity>
     </View>
+    </KeyboardAvoidingView>
+    </SafeAreaView>
   );
 };
 

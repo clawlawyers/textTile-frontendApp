@@ -1,5 +1,5 @@
 import React, {useState} from 'react';
-import {View, Text, ScrollView, TouchableOpacity} from 'react-native';
+import {View, Text, ScrollView, TouchableOpacity, SafeAreaView, KeyboardAvoidingView, Platform} from 'react-native';
 import FeatherIcon from 'react-native-vector-icons/Feather';
 import FontistoIcon from 'react-native-vector-icons/Fontisto';
 import MaterialIconsIcon from 'react-native-vector-icons/MaterialIcons';
@@ -47,6 +47,10 @@ export default function NotificationScreen({navigation}: NotificationProps) {
   const [notifications, setNotifications] = useState([]);
 
   return (
+    <SafeAreaView className="flex-1 bg-[#FAD8B0]">
+    <KeyboardAvoidingView
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      className="flex-1 bg-[#FAD8B0]">
     <View className="flex-1 bg-[#FFE0B2] pt-12 px-4">
       {/* Header */}
       <View className="flex flex-row justify-between px-3">
@@ -118,5 +122,7 @@ export default function NotificationScreen({navigation}: NotificationProps) {
         </ScrollView>
       </View>
     </View>
+    </KeyboardAvoidingView>
+    </SafeAreaView>
   );
 }

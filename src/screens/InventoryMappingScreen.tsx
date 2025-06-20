@@ -9,6 +9,8 @@ import {
   Alert,
   ActivityIndicator,
   Platform,
+  KeyboardAvoidingView,
+  SafeAreaView,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/Feather';
 import {Dropdown} from 'react-native-element-dropdown';
@@ -165,6 +167,10 @@ const InventoryMappingScreen = ({navigation, route}: AddNewUserProps) => {
   };
 
   return (
+    <SafeAreaView className="flex-1 bg-[#FAD8B0]">
+    <KeyboardAvoidingView
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      className="flex-1 bg-[#FAD8B0]">
     <View className="flex-1 bg-[#FAD9B3] pt-12 px-6">
       <StatusBar barStyle="dark-content" backgroundColor="#FAD9B3" />
 
@@ -330,6 +336,8 @@ const InventoryMappingScreen = ({navigation, route}: AddNewUserProps) => {
         )}
       </TouchableOpacity>
     </View>
+    </KeyboardAvoidingView>
+    </SafeAreaView>
   );
 };
 

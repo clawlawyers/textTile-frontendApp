@@ -10,6 +10,9 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   ToastAndroid,
+  KeyboardAvoidingView,
+  SafeAreaView,
+  Platform,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/Feather';
 import {HomeStackParamList} from '../stacks/Home';
@@ -85,6 +88,10 @@ const CreateAccountScreen = ({navigation}: SignupProps) => {
   };
 
   return (
+    <SafeAreaView className="flex-1 bg-[#FAD8B0]">
+<KeyboardAvoidingView
+  behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+  className="flex-1 bg-[#FAD8B0]">
     <ScrollView className="flex-1 bg-[#FAD9B3] px-6 pt-10">
       {/* Back Button */}
       <TouchableOpacity
@@ -183,6 +190,8 @@ const CreateAccountScreen = ({navigation}: SignupProps) => {
         </TouchableOpacity>
       </Text>
     </ScrollView>
+    </KeyboardAvoidingView>
+    </SafeAreaView>
   );
 };
 

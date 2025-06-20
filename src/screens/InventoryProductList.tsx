@@ -13,6 +13,8 @@ import {
   ActivityIndicator,
   PermissionsAndroid,
   Alert,
+  SafeAreaView,
+  KeyboardAvoidingView,
 } from 'react-native';
 import {Dropdown} from 'react-native-element-dropdown';
 import Ionicons from 'react-native-vector-icons/Ionicons';
@@ -23,11 +25,13 @@ import {NODE_API_ENDPOINT} from '../utils/util';
 import {useDispatch, useSelector} from 'react-redux';
 import {RootState} from '../redux/store';
 import {setInventoryName} from '../redux/commonSlice';
-
 import {useFocusEffect} from '@react-navigation/native';
 import {useCallback} from 'react';
 import {Platform} from 'react-native';
 import RNFetchBlob from 'rn-fetch-blob';
+import { scale } from '../utils/scaling';
+import LinearGradient from 'react-native-linear-gradient';
+import LottieView from 'lottie-react-native';
 
 const bailNumbers = [
   {label: 'Bail No', value: 'Bail No'},
@@ -35,13 +39,6 @@ const bailNumbers = [
   {label: 'Design No', value: 'Design No'},
   {label: 'Lot No', value: 'Lot No'},
 ];
-// const products = new Array(8).fill({
-//   category: 'Category Name',
-//   title: 'Product Name Line Goes Here ...',
-//   designCode: '3356896945',
-//   stock: 'In Stock',
-//   image: require('../assets/t-shirt.png'), // replace with your image
-// });
 
 type AddNewUserProps = NativeStackScreenProps<
   HomeStackParamList,
@@ -49,42 +46,63 @@ type AddNewUserProps = NativeStackScreenProps<
 >;
 
 const InventoryProductList = ({navigation, route}: AddNewUserProps) => {
-  // const [selectedBail, setSelectedBail] = React.useState(bailNumbers[0]);
-  const [downloading, setDownloading] = React.useState(false);
-  const [selectedBail, setSelectedBail] = useState('Bail No.');
+  const [downloading, setDownloading] = useState(false);
+  const [selectedBail, setSelectedBail] = useState('Bail No');
   const [loading, setLoading] = useState(true);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [searchText, setSearchText] = useState('');
   const [filteredProducts, setFilteredProducts] = useState([]);
+  const [selectedItemName, setSelectedItemName] = useState<string | null>(null);
+  const [itemNames, setItemNames] = useState<{label: string; value: string}[]>([]);
+  const [isItemNameDropdownOpen, setIsItemNameDropdownOpen] = useState(false);
 
   const dispatch = useDispatch();
-
   const [products, setProducts] = useState([]);
-
-  console.log(products);
-
   const currentUser = useSelector((state: RootState) => state.auth.user);
-
   const currentInventoryName = useSelector(
     (state: RootState) => state.common.inventoryName,
   );
   const activeFirm = useSelector((state: RootState) => state.common.activeFirm);
 
+  // Update item names for dropdown when products change
+  useEffect(() => {
+    const uniqueItemNames = Array.from(
+      new Set(products.map(item => item.category_code).filter(Boolean)),
+    ).map(name => ({label: name, value: name}));
+    setItemNames(uniqueItemNames);
+  }, [products]);
+
+  // Reset item name filter when selectedBail changes
+  useEffect(() => {
+    if (selectedBail !== 'Item Name') {
+      setSelectedItemName(null);
+    }
+  }, [selectedBail]);
+
+  // Filter products based on selected item name, search text, and bail filter
   useEffect(() => {
     if (!products || products.length === 0) {
       setFilteredProducts([]);
       return;
     }
 
-    // Filter products based on search text and selected filter
-    const filtered = products.filter(item => {
+    let filtered = products;
+
+    // Filter by selected item name first
+    if (selectedItemName) {
+      filtered = filtered.filter(
+        item => item.category_code === selectedItemName,
+      );
+    }
+
+    // Then apply search text and bail filter
+    filtered = filtered.filter(item => {
       if (!searchText.trim()) {
         return true; // Show all when no search text
       }
 
       const searchLower = searchText.toLowerCase().trim();
 
-      // Filter based on selected dropdown option
       switch (selectedBail) {
         case 'Bail No':
           return item.bail_number?.toLowerCase().includes(searchLower);
@@ -95,7 +113,6 @@ const InventoryProductList = ({navigation, route}: AddNewUserProps) => {
         case 'Lot No':
           return item.lot_number?.toLowerCase().includes(searchLower);
         default:
-          // Search in all fields if no specific filter is selected
           return (
             item.bail_number?.toLowerCase().includes(searchLower) ||
             item.category_code?.toLowerCase().includes(searchLower) ||
@@ -106,7 +123,7 @@ const InventoryProductList = ({navigation, route}: AddNewUserProps) => {
     });
 
     setFilteredProducts(filtered);
-  }, [searchText, selectedBail, products]);
+  }, [searchText, selectedBail, selectedItemName, products]);
 
   useFocusEffect(
     useCallback(() => {
@@ -150,9 +167,8 @@ const InventoryProductList = ({navigation, route}: AddNewUserProps) => {
         getProdList();
       }
 
-      // Cleanup (optional)
       return () => {
-        setProducts([]); // optional reset
+        setProducts([]);
       };
     }, [currentUser, route.params?.companyId, dispatch, navigation]),
   );
@@ -168,8 +184,6 @@ const InventoryProductList = ({navigation, route}: AddNewUserProps) => {
       );
       return result === PermissionsAndroid.RESULTS.GRANTED;
     } else if (+Platform.Version >= 29) {
-      // No need to request permission explicitly for DownloadDir
-      // DownloadManager can write without permission in scoped storage
       return true;
     } else {
       const result = await PermissionsAndroid.request(
@@ -196,7 +210,6 @@ const InventoryProductList = ({navigation, route}: AddNewUserProps) => {
   const downloadInvoiceInCsv = async () => {
     if (downloading) return;
 
-    // Check for storage permission on Android
     if (Platform.OS === 'android') {
       const hasPermission = await checkPermission();
       if (!hasPermission) {
@@ -211,23 +224,16 @@ const InventoryProductList = ({navigation, route}: AddNewUserProps) => {
     setDownloading(true);
 
     try {
-      // Get the order ID
       const inventoryId = activeFirm?.inventory;
-
-      // Set download path based on platform
       const {dirs} = RNFetchBlob.fs;
       const dirPath =
         Platform.OS === 'ios' ? dirs.DocumentDir : dirs.DownloadDir;
-
-      // Create filename with timestamp
       const timestamp = new Date().getTime();
       const filename = `inventrory_${inventoryId}_${timestamp}.csv`;
       const filePath = `${dirPath}/${filename}`;
-
       const apiUrl = `${NODE_API_ENDPOINT}/inventory/${inventoryId}/download/csv`;
       console.log(`Downloading inventory from: ${apiUrl}`);
 
-      // For Android, first check if the directory exists
       if (Platform.OS === 'android') {
         const exists = await RNFetchBlob.fs.exists(dirPath);
         if (!exists) {
@@ -235,7 +241,6 @@ const InventoryProductList = ({navigation, route}: AddNewUserProps) => {
         }
       }
 
-      // Configure download with notification for Android
       const downloadConfig =
         Platform.OS === 'android'
           ? {
@@ -256,7 +261,6 @@ const InventoryProductList = ({navigation, route}: AddNewUserProps) => {
               path: filePath,
             };
 
-      // Download the file
       const res = await RNFetchBlob.config(downloadConfig).fetch(
         'GET',
         apiUrl,
@@ -265,10 +269,8 @@ const InventoryProductList = ({navigation, route}: AddNewUserProps) => {
         },
       );
 
-      // Check if we have a valid response
       console.log('Response info:', res.info());
 
-      // Check if the file exists and has content
       const fileExists = await RNFetchBlob.fs.exists(filePath);
       if (!fileExists) {
         throw new Error('File does not exist after download');
@@ -283,16 +285,11 @@ const InventoryProductList = ({navigation, route}: AddNewUserProps) => {
         throw new Error('Downloaded file is empty (0B)');
       }
 
-      // Show success message
       Alert.alert('Success', 'Inventory Product List downloaded successfully');
 
-      // Open the PDF
       if (Platform.OS === 'ios') {
         RNFetchBlob.ios.openDocument(filePath);
       } else {
-        // For Android, use the action view intent
-        // If using download manager, this might not be necessary as the notification will allow opening
-        // But we'll include it anyway for better user experience
         RNFetchBlob.android.actionViewIntent(filePath, 'text/csv');
       }
     } catch (error) {
@@ -306,7 +303,6 @@ const InventoryProductList = ({navigation, route}: AddNewUserProps) => {
   const downloadInvoiceInPdf = async () => {
     if (downloading) return;
 
-    // Check for storage permission on Android
     if (Platform.OS === 'android') {
       const hasPermission = await checkPermission();
       if (!hasPermission) {
@@ -321,23 +317,16 @@ const InventoryProductList = ({navigation, route}: AddNewUserProps) => {
     setDownloading(true);
 
     try {
-      // Get the order ID
       const inventoryId = activeFirm?.inventory;
-
-      // Set download path based on platform
       const {dirs} = RNFetchBlob.fs;
       const dirPath =
         Platform.OS === 'ios' ? dirs.DocumentDir : dirs.DownloadDir;
-
-      // Create filename with timestamp
       const timestamp = new Date().getTime();
       const filename = `inventory_${inventoryId}_${timestamp}.pdf`;
       const filePath = `${dirPath}/${filename}`;
-
       const apiUrl = `${NODE_API_ENDPOINT}/inventory/${inventoryId}/download/pdf`;
       console.log(`Downloading inventory from: ${apiUrl}`);
 
-      // For Android, first check if the directory exists
       if (Platform.OS === 'android') {
         const exists = await RNFetchBlob.fs.exists(dirPath);
         if (!exists) {
@@ -345,7 +334,6 @@ const InventoryProductList = ({navigation, route}: AddNewUserProps) => {
         }
       }
 
-      // Configure download with notification for Android
       const downloadConfig =
         Platform.OS === 'android'
           ? {
@@ -366,7 +354,6 @@ const InventoryProductList = ({navigation, route}: AddNewUserProps) => {
               path: filePath,
             };
 
-      // Download the file
       const res = await RNFetchBlob.config(downloadConfig).fetch(
         'GET',
         apiUrl,
@@ -375,10 +362,8 @@ const InventoryProductList = ({navigation, route}: AddNewUserProps) => {
         },
       );
 
-      // Check if we have a valid response
       console.log('Response info:', res.info());
 
-      // Check if the file exists and has content
       const fileExists = await RNFetchBlob.fs.exists(filePath);
       if (!fileExists) {
         throw new Error('File does not exist after download');
@@ -393,16 +378,11 @@ const InventoryProductList = ({navigation, route}: AddNewUserProps) => {
         throw new Error('Downloaded file is empty (0B)');
       }
 
-      // Show success message
       Alert.alert('Success', 'Inventory Product List downloaded successfully');
 
-      // Open the PDF
       if (Platform.OS === 'ios') {
         RNFetchBlob.ios.openDocument(filePath);
       } else {
-        // For Android, use the action view intent
-        // If using download manager, this might not be necessary as the notification will allow opening
-        // But we'll include it anyway for better user experience
         RNFetchBlob.android.actionViewIntent(filePath, 'application/pdf');
       }
     } catch (error) {
@@ -416,13 +396,22 @@ const InventoryProductList = ({navigation, route}: AddNewUserProps) => {
   if (loading) {
     return (
       <View className="flex-1 justify-center items-center bg-[#FAD9B3]">
-        <ActivityIndicator size="large" color="#DB9245" />
+         <LottieView
+          source={require('../assets/lottieanimation1.json')} // Your downloaded .json file
+          autoPlay
+          loop
+          style={{ width: 180, height: 130 }}
+         />
         <Text className="mt-2 text-black">Loading inventory...</Text>
       </View>
     );
   }
 
   return (
+    <SafeAreaView className="flex-1 bg-[#FAD8B0]">
+<KeyboardAvoidingView
+  behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+  className="flex-1 bg-[#FAD8B0]">
     <View className="flex-1 bg-[#FAD9B3] pt-14 px-4 pb-2">
       {/* Header */}
       <View className="flex-row justify-between items-start mb-4">
@@ -450,7 +439,6 @@ const InventoryProductList = ({navigation, route}: AddNewUserProps) => {
               padding: 0,
             }}
             containerStyle={{
-              // width: '100%',
               borderRadius: 5,
               backgroundColor: '#D6872A',
               margin: 0,
@@ -525,8 +513,7 @@ const InventoryProductList = ({navigation, route}: AddNewUserProps) => {
             )}
           />
         </View>
-
-        <View className="flex-1 rounded-r-lg px-3 flex-row items-center">
+        <View className="flex-1 rounded-r-lg px-3 flex-row items-center bg-[#FAD9B3]">
           <TextInput
             placeholder="Search..."
             className="flex-1 text-black"
@@ -536,6 +523,95 @@ const InventoryProductList = ({navigation, route}: AddNewUserProps) => {
           <Ionicons name="search" size={18} color="black" />
         </View>
       </View>
+
+      {/* Item Name Dropdown */}
+      {selectedBail === 'Item Name' && (
+        <View className="mb-4">
+          <View className="w-full bg-[#D6872A] rounded-xl px-2">
+            <Dropdown
+              style={{
+                height: 42,
+                backgroundColor: 'transparent',
+                margin: 0,
+                padding: 0,
+              }}
+              containerStyle={{
+                borderRadius: 5,
+                backgroundColor: '#D6872A',
+                margin: 0,
+                padding: 0,
+              }}
+              itemContainerStyle={{
+                borderBottomWidth: 1,
+                borderBottomColor: 'rgba(255,255,255,0.2)',
+                padding: 0,
+              }}
+              placeholderStyle={{
+                color: '#fff',
+                fontSize: 14,
+                marginLeft: 8,
+              }}
+              selectedTextStyle={{
+                color: '#fff',
+                fontSize: 12,
+                marginLeft: 8,
+              }}
+              iconStyle={{
+                width: 20,
+                height: 20,
+                tintColor: '#fff',
+                marginRight: 8,
+              }}
+              itemTextStyle={{
+                color: '#fff',
+                fontSize: 14,
+                padding: 0,
+              }}
+              activeColor="rgba(255,255,255,0.2)"
+              data={[{label: 'All Items', value: ''}, ...itemNames]}
+              labelField="label"
+              valueField="value"
+              placeholder="Select Item Name"
+              value={selectedItemName || ''}
+              onChange={item => setSelectedItemName(item.value || null)}
+              onFocus={() => setIsItemNameDropdownOpen(true)}
+              onBlur={() => setIsItemNameDropdownOpen(false)}
+              renderRightIcon={() => (
+                <Ionicons
+                  name={isItemNameDropdownOpen ? 'chevron-up' : 'chevron-down'}
+                  size={18}
+                  color="#fff"
+                  style={{marginRight: 8}}
+                />
+              )}
+              renderItem={(item, selected) => (
+                <View
+                  className="py-2 px-2"
+                  style={{
+                    flexDirection: 'row',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    backgroundColor: selected
+                      ? 'rgba(255,255,255,0.2)'
+                      : 'transparent',
+                  }}>
+                  <Text
+                    style={{
+                      color: '#fff',
+                      fontWeight: selected ? 'bold' : 'normal',
+                      fontSize: 12,
+                    }}>
+                    {item.label}
+                  </Text>
+                  {selected && (
+                    <Ionicons name="checkmark" size={16} color="#fff" />
+                  )}
+                </View>
+              )}
+            />
+          </View>
+        </View>
+      )}
 
       {/* Download List */}
       <TouchableOpacity
@@ -553,60 +629,57 @@ const InventoryProductList = ({navigation, route}: AddNewUserProps) => {
 
       {/* Product Grid */}
       <FlatList
-        className="mb-20 rounded-lg"
-        data={filteredProducts}
-        keyExtractor={(_, i) => i.toString()}
-        numColumns={2}
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={{paddingBottom: 100}}
-        columnWrapperStyle={{justifyContent: 'space-between'}}
-        renderItem={({item}) => (
-          <TouchableOpacity
-            id={item._id}
-            className="w-[48%] bg-white rounded-lg mb-4 overflow-hidden border border-[#DB9245]"
-            onPress={() =>
-              navigation.navigate('InventoryProductDetails', {
-                productDetails: item,
-              })
-            }>
-            {item?.image ? (
+          className="mb-20 rounded-lg"
+          data={filteredProducts.length > 0 ? filteredProducts : products}
+          keyExtractor={(_, i) => i.toString()}
+          numColumns={2}
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={{ paddingBottom: 100, paddingHorizontal: 4 }}
+          columnWrapperStyle={{ justifyContent: 'space-between' }}
+          renderItem={({ item }) => (
+            <TouchableOpacity
+              key={item._id}
+              className="w-[48%] bg-white rounded-lg mb-4 overflow-hidden border border-[#DB9245]"
+              onPress={() =>
+                navigation.navigate('InventoryProductDetails', {
+                  productDetails: item,
+                })
+              }>
+              
+              {/* Image Container */}
+              <View className="w-full h-32 bg-[#DB9245] px-4 pt-4 pb-2 justify-center items-center">
               <Image
-                source={{uri: item?.image}}
-                className="w-full h-32 bg-white"
-                resizeMode="stretch"
+                source={
+                  item?.image
+                    ? { uri: item.image }
+                    : require('../assets/t-shirt.png')
+                }
+                className="w-full h-full rounded-lg"
+                resizeMode="cover"
               />
-            ) : (
-              <Image
-                source={require('../assets/t-shirt.png')}
-                className="w-full h-32 bg-white"
-                resizeMode="stretch"
-              />
-            )}
-            {/* <Image
-              source={{uri: item?.image}}
-              className="w-full h-32 bg-white"
-              resizeMode="stretch"
-            /> */}
-            <View className="bg-[#DB9245] p-2">
-              <Text className="text-[10px] text-white">
-                Bail No : {item.bail_number}
-              </Text>
-              <Text
-                numberOfLines={1}
-                className="text-[12px] font-semibold text-black mb-1">
-                Item Name:
-                {item.category_code}
-              </Text>
-              <Text className="text-[10px] text-white mt-2 mb-2">
-                Design Code : {item.design_code}
-              </Text>
-              <Text className="text-[10px] text-white border border-white text-center rounded-md">
-                {item.stock_amount ? 'in Stock' : 'out of Stock'}
-              </Text>
             </View>
-          </TouchableOpacity>
-        )}
-      />
+
+            {/* Details */}
+            <View className="bg-[#DB9245] p-2">
+              <Text className="text-sm font-semibold text-black">Bail No:</Text>
+              <Text className="text-sm font-semibold text-white mb-1">{item.bail_number}</Text>
+              <Text className="text-sm font-semibold text-black">Item Name:</Text>
+              <Text className="text-sm font-semibold text-white mb-1">{item.category_code}</Text>
+              <Text className="text-sm font-semibold text-black">Design Code:</Text>
+              <Text className="text-sm font-semibold text-white mb-1">{item.design_code}</Text>
+              <View
+                className="bg-[#FAD9B3] rounded-md flex-1 self-center px-2 py-1 mt-2"
+                style={{ width: 70 }}>
+                <Text className="text-sm text-black font-semibold text-center">
+                  {item.stock_amount ? 'In Stock' : 'Out Of Stock'}
+                </Text>
+              </View>
+            </View>
+            </TouchableOpacity>
+          )}
+        />
+          
+          
 
       {/* Bottom Actions */}
       <View className="absolute bottom-4 left-4 right-4 flex-row gap-4 mb-1 flex-1">
@@ -619,6 +692,8 @@ const InventoryProductList = ({navigation, route}: AddNewUserProps) => {
         </TouchableOpacity>
       </View>
     </View>
+    </KeyboardAvoidingView>
+    </SafeAreaView>
   );
 };
 

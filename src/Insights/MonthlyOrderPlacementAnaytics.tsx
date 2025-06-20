@@ -25,7 +25,7 @@ import { NODE_API_ENDPOINT } from '../utils/util';
 import { useFocusEffect } from '@react-navigation/native';
 import ReactNativeBlobUtil from 'react-native-blob-util';
 import { verticalScale } from '../utils/scaling';
-import { PieChart } from 'react-native-svg-charts';
+// import { PieChart } from 'react-native-svg-charts';
 import { AccountStackParamList } from '../stacks/Account';
 
 type MonthlyOrderPlacementAnalyticsScreenProps = NativeStackScreenProps<

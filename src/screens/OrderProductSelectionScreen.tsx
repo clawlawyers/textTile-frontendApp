@@ -5,12 +5,12 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
-  ScrollView,
   Image,
   FlatList,
-  Modal,
-  Pressable,
   ActivityIndicator,
+  Platform,
+  KeyboardAvoidingView,
+  SafeAreaView,
 } from 'react-native';
 import {Dropdown} from 'react-native-element-dropdown';
 import Ionicons from 'react-native-vector-icons/Ionicons';
@@ -22,6 +22,7 @@ import {NODE_API_ENDPOINT} from '../utils/util';
 import {useFocusEffect} from '@react-navigation/native';
 import {RootState} from '../redux/store';
 import {useDispatch, useSelector} from 'react-redux';
+import { scale } from '../utils/scaling';
 
 const bailNumbers = [
   {label: 'Bail No', value: 'Bail No'},
@@ -30,37 +31,27 @@ const bailNumbers = [
   {label: 'Lot No', value: 'Lot No'},
 ];
 
-const products = new Array(8).fill({
-  category: 'Category Name',
-  title: 'Product Name Line Goes Here ...',
-  designCode: '3356896945',
-  stock: 'In Stock',
-  image: require('../assets/t-shirt.png'), // replace with your image
-});
-
 type AddNewUserProps = NativeStackScreenProps<
   HomeStackParamList,
   'OrderProductSelectionScreen'
 >;
 
 const OrderProductSelectionScreen = ({navigation, route}: AddNewUserProps) => {
-  // const [selectedBail, setSelectedBail] = React.useState(bailNumbers[0]);
-  const [showDropdown, setShowDropdown] = React.useState(false);
-  const [selectedBail, setSelectedBail] = useState('Bail No.');
+  const [selectedBail, setSelectedBail] = useState('Bail No');
   const [loading, setLoading] = useState(true);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [searchText, setSearchText] = useState('');
   const [filteredProducts, setFilteredProducts] = useState([]);
+  const [products, setProducts] = useState([]);
+  const [selectedItemName, setSelectedItemName] = useState<string | null>(null);
+  const [itemNames, setItemNames] = useState<{ label: string; value: string }[]>([]);
 
   const dispatch = useDispatch();
-
-  const [products, setProducts] = useState([]);
 
   const currentUser = useSelector((state: RootState) => state.auth.user);
   const currentClienName = useSelector(
     (state: RootState) => state.common.currentClient,
   );
-
   const activeFirm = useSelector((state: RootState) => state.common.activeFirm);
 
   console.log(loading);
@@ -108,9 +99,8 @@ const OrderProductSelectionScreen = ({navigation, route}: AddNewUserProps) => {
         getProdList();
       }
 
-      // Cleanup (optional)
       return () => {
-        setProducts([]); // optional reset
+        setProducts([]);
       };
     }, [
       currentUser,
@@ -122,42 +112,60 @@ const OrderProductSelectionScreen = ({navigation, route}: AddNewUserProps) => {
   );
 
   useEffect(() => {
+    if (products && products.length > 0) {
+      const uniqueItemNames = Array.from(
+        new Set(products.map(item => item.category_code).filter(code => code)),
+      ).map(code => ({ label: code, value: code }));
+      setItemNames(uniqueItemNames);
+    } else {
+      setItemNames([]);
+    }
+  }, [products]);
+
+  useEffect(() => {
     if (!products || products.length === 0) {
       setFilteredProducts([]);
       return;
     }
 
-    // Filter products based on search text and selected filter
-    const filtered = products.filter(item => {
-      if (!searchText.trim()) {
-        return true; // Show all when no search text
-      }
+    let filtered = products;
+    console.log(filtered);
 
+    if (selectedBail === 'Item Name' && selectedItemName) {
+      filtered = products.filter(
+        item => item.category_code === selectedItemName,
+      );
+    } else if (searchText.trim()) {
       const searchLower = searchText.toLowerCase().trim();
-
-      // Filter based on selected dropdown option
-      switch (selectedBail) {
-        case 'Bail No':
-          return item.bail_number?.toLowerCase().includes(searchLower);
-        case 'Item Name':
-          return item.category_code?.toLowerCase().includes(searchLower);
-        case 'Design No':
-          return item.design_code?.toLowerCase().includes(searchLower);
-        case 'Lot No':
-          return item.lot_number?.toLowerCase().includes(searchLower);
-        default:
-          // Search in all fields if no specific filter is selected
-          return (
-            item.bail_number?.toLowerCase().includes(searchLower) ||
-            item.category_code?.toLowerCase().includes(searchLower) ||
-            item.design_code?.toLowerCase().includes(searchLower) ||
-            item.lot_number?.toLowerCase().includes(searchLower)
-          );
-      }
-    });
+      filtered = products.filter(item => {
+        switch (selectedBail) {
+          case 'Bail No':
+            return item.bail_number?.toLowerCase().includes(searchLower);
+          case 'Item Name':
+            return item.category_code?.toLowerCase().includes(searchLower);
+          case 'Design No':
+            return item.design_code?.toLowerCase().includes(searchLower);
+          case 'Lot No':
+            return item.lot_number?.toLowerCase().includes(searchLower);
+          default:
+            return (
+              item.bail_number?.toLowerCase().includes(searchLower) ||
+              item.category_code?.toLowerCase().includes(searchLower) ||
+              item.design_code?.toLowerCase().includes(searchLower) ||
+              item.lot_number?.toLowerCase().includes(searchLower)
+            );
+        }
+      });
+    }
 
     setFilteredProducts(filtered);
-  }, [searchText, selectedBail, products]);
+  }, [searchText, selectedBail, products, selectedItemName]);
+
+  useEffect(() => {
+    if (selectedBail !== 'Item Name') {
+      setSelectedItemName(null);
+    }
+  }, [selectedBail]);
 
   if (loading) {
     return (
@@ -167,8 +175,13 @@ const OrderProductSelectionScreen = ({navigation, route}: AddNewUserProps) => {
       </View>
     );
   }
+
   console.log(currentClienName);
   return (
+    <SafeAreaView className="flex-1 bg-[#FAD8B0]">
+    <KeyboardAvoidingView
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      className="flex-1 bg-[#FAD8B0]">
     <View className="flex-1 bg-[#FAD9B3] pt-14 px-4 pb-2">
       {/* Header */}
       <View className="flex-row justify-between items-start mb-4">
@@ -182,11 +195,6 @@ const OrderProductSelectionScreen = ({navigation, route}: AddNewUserProps) => {
           <Text className="text-base font-bold text-black">
             {currentClienName.name}
           </Text>
-          {/* <View className="w-full">
-            <Text className="text-xs text-center text-black">
-              Order Number : 023568458464
-            </Text>
-          </View> */}
         </View>
       </View>
 
@@ -201,7 +209,6 @@ const OrderProductSelectionScreen = ({navigation, route}: AddNewUserProps) => {
               padding: 0,
             }}
             containerStyle={{
-              // width: '100%',
               borderRadius: 5,
               backgroundColor: '#D6872A',
               margin: 0,
@@ -254,7 +261,6 @@ const OrderProductSelectionScreen = ({navigation, route}: AddNewUserProps) => {
               <View
                 className="py-3 px-2"
                 style={{
-                  // padding: 8,
                   flexDirection: 'row',
                   justifyContent: 'space-between',
                   alignItems: 'center',
@@ -289,6 +295,79 @@ const OrderProductSelectionScreen = ({navigation, route}: AddNewUserProps) => {
         </View>
       </View>
 
+      {/* Item Name Dropdown */}
+      {selectedBail === 'Item Name' && (
+        <View className="mb-4">
+          <Dropdown
+            style={{
+              height: 40,
+              backgroundColor: '#D6872A',
+              borderRadius: 10,
+              paddingHorizontal: 8,
+            }}
+            containerStyle={{
+              borderRadius: 5,
+              backgroundColor: '#D6872A',
+            }}
+            itemContainerStyle={{
+              borderBottomWidth: 1,
+              borderBottomColor: 'rgba(255,255,255,0.2)',
+            }}
+            placeholderStyle={{
+              color: '#fff',
+              fontSize: 14,
+            }}
+            selectedTextStyle={{
+              color: '#fff',
+              fontSize: 14,
+            }}
+            iconStyle={{
+              width: 20,
+              height: 20,
+              tintColor: '#fff',
+            }}
+            itemTextStyle={{
+              color: '#fff',
+              fontSize: 14,
+            }}
+            activeColor="rgba(255,255,255,0.2)"
+            data={itemNames}
+            labelField="label"
+            valueField="value"
+            placeholder="Select Item Name"
+            value={selectedItemName}
+            onChange={item => setSelectedItemName(item.value)}
+            renderRightIcon={() => (
+              <Ionicons
+                name={isDropdownOpen ? 'chevron-up' : 'chevron-down'}
+                size={18}
+                color="#fff"
+              />
+            )}
+            renderItem={(item, selected) => (
+              <View
+                className="py-3 px-2"
+                style={{
+                  flexDirection: 'row',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  backgroundColor: selected ? 'rgba(255,255,255,0.2)' : 'transparent',
+                }}>
+                <Text
+                  style={{
+                    color: '#fff',
+                    fontWeight: selected ? 'bold' : 'normal',
+                    fontSize: 12,
+                  }}>
+                  {item.label}
+                </Text>
+                {selected && <Ionicons name="checkmark" size={16} color="#fff" />}
+              </View>
+            )}
+          />
+        </View>
+      )}
+
       {/* Download List */}
       <TouchableOpacity className="self-end mb-3 flex-row items-center">
         <Ionicons name="cloud-download-outline" size={18} color="black" />
@@ -302,51 +381,45 @@ const OrderProductSelectionScreen = ({navigation, route}: AddNewUserProps) => {
         keyExtractor={(_, i) => i.toString()}
         numColumns={2}
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={{paddingBottom: 100}}
-        columnWrapperStyle={{justifyContent: 'space-between'}}
-        renderItem={({item}) => (
+        contentContainerStyle={{ paddingBottom: 100, paddingHorizontal: 4 }}
+        columnWrapperStyle={{ justifyContent: 'space-between' }}
+        renderItem={({ item }) => (
           <TouchableOpacity
-            id={item._id}
+            key={item._id}
             className="w-[48%] bg-white rounded-lg mb-4 overflow-hidden border border-[#DB9245]"
             onPress={() =>
               navigation.navigate('OrderProductDetailCard', {
                 productDetails: item,
               })
             }>
-            {item?.image ? (
+            {/* Image Container */}
+            <View className="w-full h-32 bg-[#DB9245] px-4 pt-4 pb-2 justify-center items-center">
               <Image
-                source={{uri: item?.image}}
-                className="w-full h-32 bg-white"
-                resizeMode="stretch"
+                source={
+                  item?.image
+                    ? { uri: item.image }
+                    : require('../assets/t-shirt.png')
+                }
+                className="w-full h-full rounded-lg"
+                resizeMode="cover"
               />
-            ) : (
-              <Image
-                source={require('../assets/t-shirt.png')}
-                className="w-full h-32 bg-white"
-                resizeMode="stretch"
-              />
-            )}
-            {/* <Image
-                    source={{uri: item?.image}}
-                    className="w-full h-32 bg-white"
-                    resizeMode="stretch"
-                  /> */}
+            </View>
+
+            {/* Details */}
             <View className="bg-[#DB9245] p-2">
-              <Text className="text-[10px] text-white">
-                Bail No : {item.bail_number}
-              </Text>
-              <Text
-                numberOfLines={1}
-                className="text-[12px] font-semibold text-black mb-1">
-                Item Name:
-                {item.category_code}
-              </Text>
-              <Text className="text-[10px] text-white mt-2 mb-2">
-                Design Code : {item.design_code}
-              </Text>
-              <Text className="text-[10px] text-white border border-white text-center rounded-md">
-                {item.stock_amount ? 'in Stock' : 'out of Stock'}
-              </Text>
+              <Text className="text-sm font-semibold text-black">Bail No:</Text>
+              <Text className="text-sm font-semibold text-white mb-1">{item.bail_number}</Text>
+              <Text className="text-sm font-semibold text-black">Item Name:</Text>
+              <Text className="text-sm font-semibold text-white mb-1">{item.category_code}</Text>
+              <Text className="text-sm font-semibold text-black">Design Code:</Text>
+              <Text className="text-sm font-semibold text-white mb-1">{item.design_code}</Text>
+              <View
+                className="bg-[#FAD9B3] rounded-md flex-1 self-center px-2 py-1 mt-2"
+                style={{ width: 70 }}>
+                <Text className="text-sm text-black font-semibold text-center">
+                  {item.stock_amount ? 'In Stock' : 'Out Of Stock'}
+                </Text>
+              </View>
             </View>
           </TouchableOpacity>
         )}
@@ -355,24 +428,18 @@ const OrderProductSelectionScreen = ({navigation, route}: AddNewUserProps) => {
       {/* Bottom Actions */}
       <View className="absolute bottom-4 left-4 right-4 flex-row gap-4 mb-1 flex-1">
         <TouchableOpacity
-          className=" flex-1 py-3 rounded-xl items-center border text-[#292C33]  border-[#292C33]"
+          className="flex-1 py-3 rounded-xl items-center border text-[#292C33] border-[#292C33]"
           onPress={() => navigation.navigate('OrderSummaryScreen')}>
-          <Text className=" font-semibold text-base text-[#292C33]">
+          <Text className="font-semibold text-base text-[#292C33]">
             Cart {'('}
             {currentClienName.cart.items.length}
             {')'}
           </Text>
         </TouchableOpacity>
-        {/* <TouchableOpacity
-          className=" flex-1 py-4 rounded-xl items-center border border-[#DB9245] bg-[#DB9245] "
-          // onPress={() => navigation.navigate('AddInventoryScreen')}
-        >
-          <Text className="text-white font-semibold text-base">
-            Create Order
-          </Text>
-        </TouchableOpacity> */}
       </View>
     </View>
+    </KeyboardAvoidingView>
+    </SafeAreaView>
   );
 };
 

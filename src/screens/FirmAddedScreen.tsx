@@ -1,5 +1,5 @@
 import React from 'react';
-import {View, Text, TouchableOpacity} from 'react-native';
+import {View, Text, TouchableOpacity, KeyboardAvoidingView, SafeAreaView, Platform} from 'react-native';
 import Icon from 'react-native-vector-icons/Feather';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import FontistoIcon from 'react-native-vector-icons/Fontisto';
@@ -13,6 +13,10 @@ type FirmAddedScreenProps = NativeStackScreenProps<
 
 const FirmAddedScreen = ({navigation}: FirmAddedScreenProps) => {
   return (
+    <SafeAreaView className="flex-1 bg-[#FAD8B0]">
+<KeyboardAvoidingView
+  behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+  className="flex-1 bg-[#FAD8B0]">
     <View className="flex-1 bg-[#FAD7AF] px-6 pt-12">
       {/* Top Header */}
       <View className="flex-row justify-between items-center mb-4">
@@ -50,6 +54,8 @@ const FirmAddedScreen = ({navigation}: FirmAddedScreenProps) => {
         </Text>
       </View>
     </View>
+    </KeyboardAvoidingView>
+    </SafeAreaView>
   );
 };
 

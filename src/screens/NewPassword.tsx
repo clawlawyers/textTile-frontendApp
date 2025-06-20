@@ -20,10 +20,10 @@ type NewPasswordProps = NativeStackScreenProps<
 
 const OTP_LENGTH = 6;
 
-const NewPassword = ({navigation}: NewPasswordProps) => {
+const NewPassword = ({navigation,route}: NewPasswordProps) => {
   const [otp, setOtp] = useState<string[]>(Array(OTP_LENGTH).fill(''));
   const [timer, setTimer] = useState(60);
-
+  const {email} = route.params
   useEffect(() => {
     const countdown = setInterval(() => {
       setTimer(prev => {
@@ -46,7 +46,7 @@ const NewPassword = ({navigation}: NewPasswordProps) => {
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-[#FDD9A0] px-6 pt-16">
+    <SafeAreaView className="flex-1 bg-[#FBDBB5] px-6 pt-16">
       <KeyboardAvoidingView
         className="flex-1 justify-between"
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
@@ -68,7 +68,7 @@ const NewPassword = ({navigation}: NewPasswordProps) => {
               Enter the OTP that we just sent in your Email ID
             </Text>
             <Text className="font-semibold text-black mt-1">
-              soumyabanik0@gmail.com
+              
             </Text>
           </View>
           <View className="mt-4">

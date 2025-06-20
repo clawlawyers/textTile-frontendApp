@@ -7,9 +7,9 @@ import HomeStackNavigator from './src/stacks/Home';
 import AddNewUserStackNavigator from './src/stacks/AddNewUser';
 import OrderHistoryNavigator from './src/stacks/OrderHistory';
 import AccountStackNavigator from './src/stacks/Account';
+import YourClientsStackNavigator from './src/stacks/YourClients';
 import {Provider, useDispatch, useSelector} from 'react-redux';
 import {RootState, store} from './src/redux/store';
-
 import CustomTabBar from './src/components/CustomTabBar';
 import {ActivityIndicator, StatusBar, View} from 'react-native';
 import {logout, retrieveAuth} from './src/redux/authSlice';
@@ -76,17 +76,20 @@ const AppInner: React.FC = () => {
   // }
 
   return (
+
     <NavigationContainer>
       <Tab.Navigator
         screenOptions={{headerShown: false}}
         tabBar={props => <CustomTabBar {...props} />}
         initialRouteName="Home">
         <Tab.Screen name="Home" component={HomeStackNavigator} />
+        <Tab.Screen name="YourClients" component={YourClientsStackNavigator} />
         <Tab.Screen name="AddNewUser" component={AddNewUserStackNavigator} />
         <Tab.Screen name="OrderHistory" component={OrderHistoryNavigator} />
         <Tab.Screen name="Account" component={AccountStackNavigator} />
       </Tab.Navigator>
-    </NavigationContainer>
+    </NavigationContainer> 
+  
   );
 };
 

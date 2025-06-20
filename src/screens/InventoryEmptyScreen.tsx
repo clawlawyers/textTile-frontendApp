@@ -1,6 +1,6 @@
 /* eslint-disable react-native/no-inline-styles */
 import React, {useState} from 'react';
-import {View, Text, TextInput, TouchableOpacity, Alert} from 'react-native';
+import {View, Text, TextInput, TouchableOpacity, Alert, KeyboardAvoidingView, SafeAreaView, Platform} from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import {useNavigation} from '@react-navigation/native';
 import {NativeStackScreenProps} from '@react-navigation/native-stack';
@@ -36,6 +36,10 @@ const InventoryEmptyScreen = ({navigation}: AddNewUserProps) => {
   );
 
   return (
+    <SafeAreaView className="flex-1 bg-[#FAD8B0]">
+    <KeyboardAvoidingView
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      className="flex-1 bg-[#FAD8B0]">
     <View className="flex-1 bg-[#fdd8ac] pt-12 px-4">
       {/* Header */}
       <View className="flex-row justify-between items-start px-1 mb-10">
@@ -126,6 +130,8 @@ const InventoryEmptyScreen = ({navigation}: AddNewUserProps) => {
         </Text>
       </TouchableOpacity>
     </View>
+    </KeyboardAvoidingView>
+    </SafeAreaView>
   );
 };
 

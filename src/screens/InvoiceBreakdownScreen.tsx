@@ -9,6 +9,8 @@ import {
   Alert,
   PermissionsAndroid,
   ActivityIndicator,
+  KeyboardAvoidingView,
+  SafeAreaView,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/Feather';
 import FontistoIcon from 'react-native-vector-icons/Fontisto';
@@ -235,6 +237,10 @@ const InvoiceBreakdownScreen = ({
   // const commonSlice = useSelector((state: RootState) => state.common);
 
   return (
+    <SafeAreaView className="flex-1 bg-[#FAD8B0]">
+<KeyboardAvoidingView
+  behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+  className="flex-1 bg-[#FAD8B0]">
     <ScrollView className="flex-1 bg-[#FAD7AF] px-6 pt-12">
       {/* Header */}
       <View className="flex-row justify-between items-center mb-4">
@@ -403,6 +409,8 @@ const InvoiceBreakdownScreen = ({
         </TouchableOpacity>
       </View>
     </ScrollView>
+    </KeyboardAvoidingView>
+    </SafeAreaView>
   );
 };
 

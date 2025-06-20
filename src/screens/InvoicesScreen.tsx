@@ -10,6 +10,9 @@ import {
   ToastAndroid,
   ActivityIndicator,
   Pressable,
+  Platform,
+  SafeAreaView,
+  KeyboardAvoidingView,
 } from 'react-native';
 
 import FontistoIcon from 'react-native-vector-icons/Fontisto';
@@ -32,6 +35,10 @@ type AddNewUserProps = NativeStackScreenProps<
 const InvoiceScreen = ({navigation}: AddNewUserProps) => {
 
   return (
+    <SafeAreaView className="flex-1 bg-[#FAD8B0]">
+<KeyboardAvoidingView
+  behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+  className="flex-1 bg-[#FAD8B0]">
     <View className="flex-1 bg-[#fdd8ac] px-6 pt-12 relative">
       {/* Top Header Icons */}
       <View className="flex-row justify-between items-center mb-14">
@@ -92,6 +99,8 @@ const InvoiceScreen = ({navigation}: AddNewUserProps) => {
             </Pressable>
       </View>
     </View>
+    </KeyboardAvoidingView>
+    </SafeAreaView>
   );
 };
 

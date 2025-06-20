@@ -20,6 +20,7 @@ import {NODE_API_ENDPOINT} from '../utils/util';
 import {useSelector} from 'react-redux';
 import {RootState} from '../redux/store';
 import InventoryProductList from './InventoryProductList';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 type AddNewUserProps = NativeStackScreenProps<
   HomeStackParamList,
@@ -196,11 +197,12 @@ const AddInventoryProduct = ({navigation, route}: AddNewUserProps) => {
   };
 
   return (
+    <SafeAreaView className="flex-1 bg-[#FAD8B0]">
     <KeyboardAvoidingView
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       className="flex-1 bg-[#FAD8B0]">
       <ScrollView
-        className="flex-1 px-4 py-6"
+        className="flex-1 px-4 py-2"
         showsVerticalScrollIndicator={false}>
         {/* Header */}
         <View className="flex-row justify-between items-start mb-4">
@@ -353,6 +355,7 @@ const AddInventoryProduct = ({navigation, route}: AddNewUserProps) => {
         </TouchableOpacity>
       </View>
     </KeyboardAvoidingView>
+    </SafeAreaView>
   );
 };
 

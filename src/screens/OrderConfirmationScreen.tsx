@@ -1,5 +1,5 @@
 import React from 'react';
-import {View, Text, TouchableOpacity, Alert} from 'react-native';
+import {View, Text, TouchableOpacity, Alert, SafeAreaView, Platform, KeyboardAvoidingView} from 'react-native';
 import Clipboard from '@react-native-clipboard/clipboard';
 import Icon1 from 'react-native-vector-icons/Feather'; // You can change this to Ionicons, FontAwesome, etc.
 import Icon from 'react-native-vector-icons/Ionicons'; // You can change this to Ionicons, FontAwesome, etc.
@@ -26,6 +26,10 @@ const OrderConfirmationScreen = ({navigation, route}: AddNewUserProps) => {
   );
 
   return (
+    <SafeAreaView className="flex-1 bg-[#FAD8B0]">
+<KeyboardAvoidingView
+  behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+  className="flex-1 bg-[#FAD8B0]">
     <View className="flex-1 bg-[#fdd8ac] px-4 pt-12 relative">
       {/* Back Button */}
       <View className="flex-row justify-between items-center mb-4">
@@ -49,7 +53,7 @@ const OrderConfirmationScreen = ({navigation, route}: AddNewUserProps) => {
 
       {/* Status */}
       <View className="flex-1 justify-center items-center">
-        <Icon name="alert-circle" size={40} color="#c05f00" />
+      <Icon name="checkmark-circle" size={40} color="green" />
         <Text className="text-xl font-bold text-black mt-4">Order Placed</Text>
         <Text className="text-center mt-2 text-black">
           Order Has Been Placed Successfully{'\n'}
@@ -67,6 +71,8 @@ const OrderConfirmationScreen = ({navigation, route}: AddNewUserProps) => {
         </Text>
       </TouchableOpacity>
     </View>
+    </KeyboardAvoidingView>
+    </SafeAreaView>
   );
 };
 

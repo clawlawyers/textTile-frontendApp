@@ -7,6 +7,9 @@ import {
   TextInput,
   ScrollView,
   Dimensions,
+  Platform,
+  KeyboardAvoidingView,
+  SafeAreaView,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/Feather';
 import { AccountStackParamList } from '../stacks/Account';
@@ -179,6 +182,10 @@ const InvoicePaymentScreen = ({ navigation, route }: InvoicePaymentProps) => {
   };
 
   return (
+    <SafeAreaView className="flex-1 bg-[#FAD8B0]">
+<KeyboardAvoidingView
+  behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+  className="flex-1 bg-[#FAD8B0]">
     <View className="flex-1 bg-[#F4D5B2] pb-2">
       <View
         className="bg-[#292C33] px-4 pt-10"
@@ -349,6 +356,8 @@ const InvoicePaymentScreen = ({ navigation, route }: InvoicePaymentProps) => {
         <Text className="text-white font-semibold text-base">Update Payment</Text>
       </TouchableOpacity>
     </View>
+    </KeyboardAvoidingView>
+    </SafeAreaView>
   );
 };
 

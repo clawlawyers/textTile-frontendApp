@@ -10,6 +10,8 @@ import {
   ScrollView,
   ToastAndroid,
   Dimensions,
+  KeyboardAvoidingView,
+  SafeAreaView,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import SimpleLineIcons from 'react-native-vector-icons/SimpleLineIcons';
@@ -77,6 +79,10 @@ const HomeScreen = ({navigation}: HomeProps) => {
 
   return (
     // <View style={{flex: 1, position: 'relative'}}>
+    <SafeAreaView className="flex-1 bg-[#FAD8B0]">
+    <KeyboardAvoidingView
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      className="flex-1 bg-[#FAD8B0]">
     <View style={{flex: 1, position: 'relative'}}>
       <ScrollView className="flex-1 bg-[#FAD9B3] px-4 pt-6">
         {/* Header */}
@@ -351,6 +357,8 @@ const HomeScreen = ({navigation}: HomeProps) => {
         </TouchableOpacity>
       </View>
     </View>
+    </KeyboardAvoidingView>
+    </SafeAreaView>
   );
 };
 

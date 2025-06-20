@@ -1,5 +1,5 @@
 import React from 'react';
-import {View, Text, TouchableOpacity, Image, StatusBar} from 'react-native';
+import {View, Text, TouchableOpacity, Image, StatusBar, KeyboardAvoidingView, Platform, SafeAreaView} from 'react-native';
 import Icon1 from 'react-native-vector-icons/Feather'; // You can change this to Ionicons, FontAwesome, etc.
 import {NativeStackScreenProps} from '@react-navigation/native-stack';
 import {HomeStackParamList} from '../stacks/Home';
@@ -18,6 +18,10 @@ const AddInventoryScreen = ({navigation}: AddNewUserProps) => {
 
   console.log(inventoryName);
   return (
+    <SafeAreaView className="flex-1 bg-[#FAD8B0]">
+    <KeyboardAvoidingView
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      className="flex-1 bg-[#FAD8B0]">
     <View className="flex-1 bg-[#FAD9B3] px-6 pt-12">
       <StatusBar barStyle="dark-content" backgroundColor="#FAD9B3" />
 
@@ -69,6 +73,8 @@ const AddInventoryScreen = ({navigation}: AddNewUserProps) => {
         <Text className="text-white font-semibold">Upload CSV</Text>
       </TouchableOpacity>
     </View>
+    </KeyboardAvoidingView>
+   </SafeAreaView>
   );
 };
 

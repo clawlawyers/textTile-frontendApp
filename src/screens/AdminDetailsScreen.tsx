@@ -21,6 +21,7 @@ import {useDispatch, useSelector} from 'react-redux';
 import {RootState} from '../redux/store';
 import {logout} from '../redux/authSlice';
 import {useNavigation} from '@react-navigation/native';
+import LottieView from 'lottie-react-native';
 
 type AddNewUserProps = NativeStackScreenProps<AccountStackParamList, 'Account'>;
 
@@ -100,8 +101,13 @@ const AdminDetailsScreen = ({navigation}: AddNewUserProps) => {
   if (loading) {
     return (
       <View className="flex-1 justify-center items-center bg-[#FAD9B3]">
-        <ActivityIndicator size="large" color="#DB9245" />
-        <Text className="mt-2 text-black">
+        <LottieView
+          source={require('../assets/lottieanimation1.json')} // Your downloaded .json file
+          autoPlay
+          loop
+          style={{ width: 180, height: 130 }}
+         />
+        <Text className="  font-semibold text-black">
           Loading {currentUser?.type === 'manager' ? 'Admin' : 'User'}{' '}
           Details...
         </Text>
@@ -210,8 +216,8 @@ const AdminDetailsScreen = ({navigation}: AddNewUserProps) => {
             <Pressable
               className="bg-[#DB9245] rounded-md py-3 mb-4 flex-1"
               onPress={() => {
-                navigation.navigate('InsightsEmpty')
-                // ToastAndroid.show('Feature Coming Soon', ToastAndroid.SHORT);
+                // navigation.navigate('InsightsEmpty')
+                ToastAndroid.show('Feature Coming Soon', ToastAndroid.SHORT);
                 // navigation.navigate('InsightsEmpty');
               }}>
               <Text className="text-center text-white font-semibold">
@@ -240,7 +246,7 @@ const AdminDetailsScreen = ({navigation}: AddNewUserProps) => {
         <View className="w-full h-px bg-black mb-1" />
         <View className="flex flex-row justify-between items-center w-[90%]">
           <Text className="text-xs text-gray-500">
-            Version <Text className="font-bold">1.0.1</Text>
+            Version <Text className="font-bold">1.1.0</Text>
           </Text>
           <Text className="text-xs text-gray-500">
             Powered By{' '}

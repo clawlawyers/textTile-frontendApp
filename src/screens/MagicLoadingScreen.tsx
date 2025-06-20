@@ -6,6 +6,7 @@ import Video from 'react-native-video';
 
 const MagicLoadingScreen = () => {
   return (
+    
     <SafeAreaView className="flex-1 bg-[#FAD9B3]">
       {/* Top Icons */}
       <View className="flex-row justify-between px-5 pt-3">

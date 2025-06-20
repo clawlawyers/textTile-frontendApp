@@ -1,5 +1,5 @@
 import React, {useEffect, useRef} from 'react';
-import {View, Image, Text, Animated, ActivityIndicator} from 'react-native';
+import {View, Image, Text, Animated, ActivityIndicator, Platform, KeyboardAvoidingView, SafeAreaView} from 'react-native';
 import {NativeStackScreenProps} from '@react-navigation/native-stack';
 import {HomeStackParamList} from '../stacks/Home';
 import {useSelector} from 'react-redux';
@@ -41,6 +41,10 @@ const SplashScreen = ({navigation}: SplashProps) => {
   }, []);
 
   return (
+    <SafeAreaView className="flex-1 bg-[#FAD8B0]">
+    <KeyboardAvoidingView
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      className="flex-1 bg-[#FAD8B0]">
     <View className="flex-1 bg-[#F5D3AC] items-center justify-center pb-6 relative">
       {/* Animated Logo */}
       <Animated.View
@@ -72,6 +76,8 @@ const SplashScreen = ({navigation}: SplashProps) => {
         </Text>
       </Animated.View>
     </View>
+    </KeyboardAvoidingView>
+    </SafeAreaView>
   );
 };
 

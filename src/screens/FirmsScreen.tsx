@@ -6,6 +6,9 @@ import {
   ScrollView,
   Alert,
   ToastAndroid,
+  Platform,
+  KeyboardAvoidingView,
+  SafeAreaView,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import FontistoIcon from 'react-native-vector-icons/Fontisto';
@@ -117,6 +120,10 @@ const FirmsScreen = ({navigation}: AddNewUserProps) => {
   // }
 
   return (
+    <SafeAreaView className="flex-1 bg-[#FAD8B0]">
+    <KeyboardAvoidingView
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      className="flex-1 bg-[#FAD8B0]">
     <View className="flex-1 bg-[#FAD9B3] px-4 pt-14">
       {/* Header */}
       <View className="flex-row justify-between items-center mb-2">
@@ -220,6 +227,8 @@ const FirmsScreen = ({navigation}: AddNewUserProps) => {
         <Text className="text-white font-semibold text-base">Add New Firm</Text>
       </TouchableOpacity>
     </View>
+    </KeyboardAvoidingView>
+    </SafeAreaView>
   );
 };
 

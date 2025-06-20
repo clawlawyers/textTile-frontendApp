@@ -9,6 +9,9 @@ import {
   Image,
   ScrollView,
   ActivityIndicator,
+  KeyboardAvoidingView,
+  SafeAreaView,
+  Platform,
 } from 'react-native';
 import {HomeStackParamList} from '../stacks/Home';
 
@@ -102,6 +105,10 @@ const EditClientScreen = ({navigation, route}: AddNewUserProps) => {
   };
 
   return (
+    <SafeAreaView className="flex-1 bg-[#FAD8B0]">
+<KeyboardAvoidingView
+  behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+  className="flex-1 bg-[#FAD8B0]">
     <View className="flex-1 bg-[#FAD9B3] px-6 pt-14 pb-8">
       {/* Header */}
       <View className="flex-row justify-between items-center mb-6">
@@ -204,6 +211,8 @@ const EditClientScreen = ({navigation, route}: AddNewUserProps) => {
         )}
       </TouchableOpacity>
     </View>
+    </KeyboardAvoidingView>
+    </SafeAreaView>
   );
 };
 

@@ -8,6 +8,8 @@ import {
   Alert,
   StyleSheet,
   Platform,
+  KeyboardAvoidingView,
+  SafeAreaView,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import DateTimePicker from '@react-native-community/datetimepicker';
@@ -313,6 +315,10 @@ const GenerateInvoiceScreen = ({ navigation }: GenerateInvoiceProps) => {
   };
 
   return (
+    <SafeAreaView className="flex-1 bg-[#FAD8B0]">
+    <KeyboardAvoidingView
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      className="flex-1 bg-[#FAD8B0]">
     <View className="flex-1 bg-[#FBDBB5]">
       <View
         style={{
@@ -519,6 +525,8 @@ const GenerateInvoiceScreen = ({ navigation }: GenerateInvoiceProps) => {
         />
       )}
     </View>
+    </KeyboardAvoidingView>
+    </SafeAreaView>
   );
 };
 

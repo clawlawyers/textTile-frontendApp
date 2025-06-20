@@ -8,6 +8,8 @@ import {
   Alert,
   Platform,
   PermissionsAndroid,
+  SafeAreaView,
+  KeyboardAvoidingView,
 } from 'react-native';
 import Share from 'react-native-share';
 
@@ -218,6 +220,10 @@ const InvoiceDetailScreen = ({navigation, route}: InvoiceDetailScreenProps) => {
   };
 
   return (
+    <SafeAreaView className="flex-1 bg-[#FAD8B0]">
+<KeyboardAvoidingView
+  behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+  className="flex-1 bg-[#FAD8B0]">
     <ScrollView className="flex-1 bg-[#FAD7AF] px-6 pt-12">
       {/* Header */}
       <View className="flex-row justify-between items-center mb-4">
@@ -340,6 +346,8 @@ const InvoiceDetailScreen = ({navigation, route}: InvoiceDetailScreenProps) => {
         </TouchableOpacity>
       </View>
     </ScrollView>
+    </KeyboardAvoidingView>
+    </SafeAreaView>
   );
 };
 

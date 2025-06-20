@@ -16,11 +16,11 @@ const ResetPasswordScreen = ({navigation}: ResetPasswordProps) => {
 
   const handleSendOTP = () => {
     console.log('Send OTP to:', email);
-    navigation.navigate('OptVerification');
+    navigation.navigate('OptVerification',{email});
   };
 
   return (
-    <View className="flex-1 bg-[#FDD9A0] px-6 pt-16">
+    <View className="flex-1 bg-[#FBDBB5] px-6 pt-16">
       {/* Back Button */}
       <TouchableOpacity
         onPress={() => navigation.goBack()}

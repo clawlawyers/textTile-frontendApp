@@ -1,6 +1,4 @@
 /* eslint-disable react-native/no-inline-styles */
-// ProductDetailCard.tsx
-
 import {NativeStackScreenProps} from '@react-navigation/native-stack';
 import React, {useEffect, useState} from 'react';
 import {
@@ -105,12 +103,6 @@ const OrderProductDetailCard = ({navigation, route}: AddNewUserProps) => {
     // Dispatch the new object to Redux
     dispatch(setCurrentClient(updatedClient));
     setLoading(false);
-    // Alert.alert('Success', 'Product added to cart successfully', [
-    //   {
-    //     text: 'OK',
-    //     onPress: () => navigation.goBack(),
-    //   },
-    // ]);
     ToastAndroid.show('Product added to cart successfully', ToastAndroid.SHORT);
 
     navigation.goBack();
@@ -227,14 +219,14 @@ const OrderProductDetailCard = ({navigation, route}: AddNewUserProps) => {
 
         <View className="flex-1 justify-end">
           {/* Download */}
-          <Pressable className="flex-row items-center justify-end mb-4">
+          <Pressable className="flex-row items-center justify-end mb-3">
             <Icon name="download" size={16} color="#000" />
             <Text className="ml-2 text-sm">Download Product Details</Text>
           </Pressable>
 
           <View className="">
             {/* Stock Display */}
-            <View className="rounded-lg px-3 py-2 mb-2 border border-[#292C33]">
+            <View className="rounded-lg px-3 py-2 mb-3 border border-[#292C33]">
               <Text className="text-sm text-center">
                 Available Stock ( Bail Quantity ) :{' '}
                 <Text className="font-semibold">
@@ -243,19 +235,29 @@ const OrderProductDetailCard = ({navigation, route}: AddNewUserProps) => {
               </Text>
             </View>
 
-            {/* Quantity Input */}
-            <View className="rounded-lg mb-4 text-base flex-row items-center border border-[#292C33]">
-              <Text className="bg-[#292C33] rounded-md h-full text-white text-sm pt-2 px-4">
-                Bail Quantity
-              </Text>
-
-              <TextInput
-                value={quantity}
-                onChangeText={setQuantity}
-                keyboardType="numeric"
-                placeholder="Bail Quantity"
-                className="flex-1 px-4 py-2 text-black"
-              />
+            {/* Quantity Input and Add All Bail Button */}
+            <View className='flex-row gap-2 justify-between mb-3'>
+              <View className="rounded-lg flex-1 text-base flex-row items-center border border-[#292C33]">
+                <Text className="bg-[#292C33] rounded-md h-full text-white font-semibold text-sm pt-2 px-4">
+                  Bail Quantity
+                </Text>
+                <TextInput
+                  value={quantity}
+                  onChangeText={setQuantity}
+                  keyboardType="numeric"
+                  placeholder="Bail Quantity"
+                  className="px-4 py-2 text-black"
+                />
+              </View>
+              <TouchableOpacity
+                className='bg-[#292C33] flex-1 rounded-md'
+                onPress={() => {
+                  setQuantity(productDetails.stock_amount.toString());
+                }}>
+                <Text className='text-white font-semibold text-sm text-center px-10 pt-2'>
+                  Add All Bail
+                </Text>
+              </TouchableOpacity>
             </View>
 
             {/* Add to Cart Button */}

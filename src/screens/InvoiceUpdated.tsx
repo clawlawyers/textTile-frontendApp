@@ -25,6 +25,7 @@ type InvoiceUpdatedProps = NativeStackScreenProps<
 
 const InvoiceUpdated = ({ navigation, route }: InvoiceUpdatedProps) => {
   const { invoice } = route.params;
+  console.log(invoice);
   const currentUser = useSelector((state: RootState) => state.auth.user);
   const [downloading, setDownloading] = useState(false);
 

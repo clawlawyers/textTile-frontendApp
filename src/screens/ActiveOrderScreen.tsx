@@ -232,6 +232,9 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   TextInput,
+  KeyboardAvoidingView,
+  SafeAreaView,
+  Platform,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/Feather';
 import LinearGradient from 'react-native-linear-gradient';
@@ -242,6 +245,7 @@ import {RootState} from '../redux/store';
 import {NODE_API_ENDPOINT} from '../utils/util';
 import {setCurrentClient} from '../redux/commonSlice';
 import {useFocusEffect} from '@react-navigation/native';
+import LottieView from 'lottie-react-native';
 
 type CompletedOrderProps = NativeStackScreenProps<
   OrderHistoryParamList,
@@ -379,13 +383,21 @@ const ActiveOrdersScreen = ({navigation}: CompletedOrderProps) => {
   if (loading) {
     return (
       <View className="flex-1 justify-center items-center bg-[#FAD9B3]">
-        <ActivityIndicator size="large" color="#DB9245" />
-        <Text className="mt-2 text-black">Loading Orders...</Text>
+        <LottieView
+          source={require('../assets/lottieanimation1.json')} // Your downloaded .json file
+          autoPlay
+          loop
+          style={{ width: 180, height: 130 }}
+    />
+    <Text className='text-black text-sm font-semibold text-center '>Loading Orders...</Text>
       </View>
     );
   }
-
   return (
+    <SafeAreaView className="flex-1 bg-[#FAD8B0]">
+<KeyboardAvoidingView
+  behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+  className="flex-1 bg-[#FAD8B0]">
     <View className="flex-1 bg-[#FAD7AF] px-6 pt-12">
       {/* Fixed Header */}
       <View className="flex-row justify-between items-center mb-4">
@@ -465,6 +477,8 @@ const ActiveOrdersScreen = ({navigation}: CompletedOrderProps) => {
         )}
       </ScrollView>
     </View>
+    </KeyboardAvoidingView>
+    </SafeAreaView>
   );
 };
 

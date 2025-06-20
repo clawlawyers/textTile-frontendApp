@@ -34,8 +34,10 @@ const AddNewFirmScreen = ({navigation}: AddNewFirmScreenProps) => {
   const currentUser = useSelector((state: RootState) => state.auth.user);
 
   const [loading, setLoading] = React.useState(false);
+  const isFormValid = formdata.name.trim() && formdata.address.trim() && formdata.GSTNumber.trim();
+
   const addNewFirmHandler = async () => {
-    if (!formdata.name || !formdata.address || !formdata.GSTNumber) {
+    if (!isFormValid) {
       ToastAndroid.show('Please fill all the fields', ToastAndroid.SHORT);
       return;
     }
@@ -52,6 +54,7 @@ const AddNewFirmScreen = ({navigation}: AddNewFirmScreenProps) => {
       });
 
       if (!response.ok) {
+        const data = await response.json();
         throw new Error(data?.message || 'Failed to add new firm');
       }
       const data = await response.json();
@@ -69,6 +72,7 @@ const AddNewFirmScreen = ({navigation}: AddNewFirmScreenProps) => {
       setLoading(false);
     }
   };
+
   return (
     <ScrollView className="flex-1 bg-[#FAD9B3] px-6 pt-12">
       {/* Top Navigation */}
@@ -78,16 +82,6 @@ const AddNewFirmScreen = ({navigation}: AddNewFirmScreenProps) => {
           className="w-10 h-10 rounded-full border border-[#292C33] justify-center items-center mb-6">
           <Icon name="arrow-left" size={20} color="#292C33" />{' '}
         </TouchableOpacity>
-        {/* <TouchableOpacity
-          className="mb-8"
-          onPress={() => {
-            navigation.navigate('Notification');
-          }}>
-          <View className="relative">
-            <FontistoIcon name="bell" size={25} color={'#DB9245'} />
-            <View className="absolute top-0 left-6 right-0 w-2 h-2 rounded-full bg-green-500" />
-          </View>
-        </TouchableOpacity> */}
       </View>
 
       {/* Logo */}
@@ -131,8 +125,9 @@ const AddNewFirmScreen = ({navigation}: AddNewFirmScreenProps) => {
 
       {/* Submit Button */}
       <TouchableOpacity
-        className="bg-[#D6872A] py-4 rounded-xl items-center justify-center"
-        onPress={() => addNewFirmHandler()}>
+        className={`bg-[#D6872A] py-4 rounded-xl items-center justify-center ${!isFormValid || loading ? 'opacity-50' : 'opacity-100'}`}
+        onPress={addNewFirmHandler}
+        disabled={!isFormValid || loading}>
         <Text className="text-white font-semibold text-base">
           {loading ? <ActivityIndicator color="#fff" /> : 'Save New Firm'}
         </Text>

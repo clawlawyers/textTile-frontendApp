@@ -31,6 +31,12 @@ const AddNewUserScreen = ({navigation}: AddNewUserProps) => {
     email: '',
   });
 
+  const [errors, setErrors] = React.useState({
+    name: '',
+    phone: '',
+    email: '',
+  });
+
   const currentUser = useSelector((state: RootState) => state.auth.user);
 
   const [loading, setLoading] = React.useState(false);
@@ -136,30 +142,69 @@ const AddNewUserScreen = ({navigation}: AddNewUserProps) => {
       </Text>
 
       {/* Input Fields */}
-      <TextInput
-        onChangeText={text => setFormData({...formdata, name: text})}
-        value={formdata.name}
-        placeholder="Enter User Name"
-        placeholderTextColor="#666666"
-        className="border border-[#D9A676] rounded-md px-4 py-3 mb-4 text-[#666666]"
-      />
-      <TextInput
-        onChangeText={text => setFormData({...formdata, phone: text})}
-        value={formdata.phone}
-        placeholder="Enter User Contact Number"
-        placeholderTextColor="#666666"
-        keyboardType="phone-pad"
-        className="border border-[#D9A676] rounded-md px-4 py-3 mb-4 text-[#666666]"
-      />
-      <TextInput
-        onChangeText={text => setFormData({...formdata, email: text})}
-        value={formdata.email}
-        placeholder="Enter User Email ID"
-        placeholderTextColor="#666666"
-        keyboardType="email-address"
-        className="border border-[#D9A676] rounded-md px-4 py-3 mb-10 text-[#666666]"
-      />
-
+      <View className="mb-4">
+        <View className="flex-row items-center mb-1">
+          <Text className="text-[#666666] text-sm">Enter User Name</Text>
+          <Text className={`text-sm ${ errors.name ? 'text-red-500':'text-[#666666]' }`}>*</Text>
+        </View>
+        <TextInput
+          onChangeText={text => {
+            setFormData({...formdata, name: text});
+            setErrors({...errors, name: text.trim() ? '' : 'This field is required'});
+          }}
+          value={formdata.name}
+          placeholder=""
+          placeholderTextColor="#666666"
+          className={`border rounded-md px-4 py-3 text-[#666666] ${
+            errors.name ? 'border-red-500' : 'border-[#D9A676]'
+          }`}
+        />
+        {errors.name ? (
+          <Text className="text-red-500 text-xs mt-1">{errors.name}</Text>
+        ) : null}
+      </View>
+      <View className="mb-4">
+        <View className="flex-row items-center mb-1">
+          <Text className="text-[#666666] text-sm">Enter User Contact Number</Text>
+          <Text className={`text-sm ${ errors.phone ? 'text-red-500':'text-[#666666]' }`}>*</Text>
+        </View>
+        <TextInput
+          onChangeText={text => {
+            setFormData({...formdata, phone: text});
+            setErrors({...errors, phone: text.trim() ? '' : 'This field is required'});
+          }}
+          value={formdata.phone}
+          placeholder=""
+          placeholderTextColor="#666666"
+          className={`border rounded-md px-4 py-3 text-[#666666] ${
+            errors.phone ? 'border-red-500' : 'border-[#D9A676]'
+          }`}
+        />
+        {errors.phone ? (
+          <Text className="text-red-500 text-xs mt-1">{errors.phone}</Text>
+        ) : null}
+      </View>
+      <View className="mb-4">
+        <View className="flex-row items-center mb-1">
+          <Text className="text-[#666666] text-sm">Enter User Email ID</Text>
+          <Text className={`text-sm ${ errors.email ? 'text-red-500':'text-[#666666]' }`}>*</Text>
+        </View>
+        <TextInput
+          onChangeText={text => {
+            setFormData({...formdata, email: text});
+            setErrors({...errors, email: text.trim() ? '' : 'This field is required'});
+          }}
+          value={formdata.email}
+          placeholder=""
+          placeholderTextColor="#666666"
+          className={`border rounded-md px-4 py-3 text-[#666666] ${
+            errors.email ? 'border-red-500' : 'border-[#D9A676]'
+          }`}
+        />
+        {errors.email ? (
+          <Text className="text-red-500 text-xs mt-1">{errors.email}</Text>
+        ) : null}
+      </View>
       {/* Submit Button */}
       <TouchableOpacity
         className="bg-[#D6872A] py-4 rounded-xl items-center justify-center"

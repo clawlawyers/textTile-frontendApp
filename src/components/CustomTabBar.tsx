@@ -16,6 +16,7 @@ const {width} = Dimensions.get('window');
 
 const iconsMap: Record<string, {icon: string; label: string}> = {
   Home: {icon: 'home', label: 'Home'},
+  YourClients:{icon: 'user-tie', label:'Your Clients'},
   AddNewUser: {icon: 'user-plus', label: 'Add User'},
   OrderHistory: {icon: 'list-alt', label: 'Order History'},
   Account: {icon: 'user-cog', label: 'Account'},
@@ -64,7 +65,8 @@ const HIDDEN_ROUTES = [
   'InvoicePaymentScreen',
   'ActiveInvoiceScreen',
   'ActiveInvoiceItems',
-  'ActiveInvoicePaymentScreen'
+  'ActiveInvoicePaymentScreen',
+  'NewInventoryscreen'
 
 ];
 
@@ -153,7 +155,7 @@ const CustomTabBar: React.FC<BottomTabBarProps> = ({
               }`}>
               <FontAwesome
                 name={icon}
-                size={20}
+                size={18}
                 color={isFocused ? 'white' : 'white'}
               />
             </View>

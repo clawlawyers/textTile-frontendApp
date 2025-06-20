@@ -23,8 +23,8 @@ import { NODE_API_ENDPOINT, checkPermission } from '../utils/util';
 import { useFocusEffect } from '@react-navigation/native';
 import RNFetchBlob from 'react-native-blob-util';
 import { verticalScale } from '../utils/scaling';
-import { AreaChart, XAxis, YAxis } from 'react-native-svg-charts';
-import * as shape from 'd3-shape';
+// import { AreaChart, XAxis, YAxis } from 'react-native-svg-charts';
+// import * as shape from 'd3-shape';
 import { AccountStackParamList } from '../stacks/Account';
 
 type LeftoverstockDesignwiseScreenProps = NativeStackScreenProps<

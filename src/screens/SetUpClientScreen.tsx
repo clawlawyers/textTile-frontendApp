@@ -1,5 +1,5 @@
 import React from 'react';
-import {View, Text, TouchableOpacity, Image} from 'react-native';
+import {View, Text, TouchableOpacity, Image, KeyboardAvoidingView, SafeAreaView, Platform} from 'react-native';
 import FontistoIcon from 'react-native-vector-icons/Fontisto';
 import Icon1 from 'react-native-vector-icons/Feather';
 import {NativeStackScreenProps} from '@react-navigation/native-stack';
@@ -12,6 +12,10 @@ type AddNewUserProps = NativeStackScreenProps<
 
 const SetUpClientScreen = ({navigation}: AddNewUserProps) => {
   return (
+    <SafeAreaView className="flex-1 bg-[#FAD8B0]">
+    <KeyboardAvoidingView
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      className="flex-1 bg-[#FAD8B0]">
     <View className="flex-1 bg-[#FAD9B3] px-6 pt-14 pb-8">
       {/* Header */}
       <View className="flex-row justify-between items-center mb-6">
@@ -64,6 +68,8 @@ const SetUpClientScreen = ({navigation}: AddNewUserProps) => {
         </TouchableOpacity>
       </View>
     </View>
+    </KeyboardAvoidingView>
+    </SafeAreaView>
   );
 };
 

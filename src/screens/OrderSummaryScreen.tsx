@@ -14,6 +14,9 @@ import {
   StatusBar,
   ActivityIndicator,
   ToastAndroid,
+  TouchableWithoutFeedback,
+  KeyboardAvoidingView,
+  Keyboard,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/Feather';
 import {HomeStackParamList} from '../stacks/Home';
@@ -489,6 +492,11 @@ const OrderSummaryScreen = ({navigation}: AddNewUserProps) => {
         backgroundColor: '#F4D5B2',
         paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0,
       }}>
+        <KeyboardAvoidingView
+    style={{ flex: 1 }}
+    behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+    keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : StatusBar.currentHeight || 0}
+  ><TouchableWithoutFeedback onPress={Keyboard.dismiss}>
       <View className="flex-1 px-3 py-2">
         {/* Header */}
         <View className="flex-row justify-between items-center mb-4 mt-4">
@@ -522,7 +530,7 @@ const OrderSummaryScreen = ({navigation}: AddNewUserProps) => {
                 Product Name
               </Text>
               <Text
-                style={{fontSize, width: '15%'}}
+                style={{fontSize, width: '12%'}}
                 className="text-white font-semibold">
                 Bale No
               </Text>
@@ -532,12 +540,12 @@ const OrderSummaryScreen = ({navigation}: AddNewUserProps) => {
                 Qty
               </Text>
               <Text
-                style={{fontSize, width: '15%'}}
+                style={{fontSize, width: '23%'}}
                 className="text-white font-semibold text-center">
                 Rate
               </Text>
               <Text
-                style={{fontSize, width: '15%'}}
+                style={{fontSize, width: '10%'}}
                 className="text-white font-semibold text-center">
                 Action
               </Text>
@@ -559,7 +567,7 @@ const OrderSummaryScreen = ({navigation}: AddNewUserProps) => {
                       {item.inventoryProduct?.category_code ?? ''}
                     </Text>
                     <Text
-                      style={{fontSize, width: '15%'}}
+                      style={{fontSize, width: '12%'}}
                       className="text-white text-wrap">
                       {item.inventoryProduct?.bail_number ?? ''}
                     </Text>
@@ -568,18 +576,18 @@ const OrderSummaryScreen = ({navigation}: AddNewUserProps) => {
                       className="text-white text-wrap text-center">
                       {item.quantity}
                     </Text>
-                    <View style={{width: '15%'}} className="px-1">
+                    <View style={{width: '23%'}} className="px-1">
                       <TextInput
                         style={{fontSize}}
                         className="border border-white rounded-md px-2 py-1 text-white text-wrap text-center"
-                        value={item.inventoryProduct?.price?.toString() ?? ''}
+                        value={item.inventoryProduct?.price ? item.inventoryProduct.price.toString() : ''}
                         onChangeText={text => handlePriceChange(index, text)}
                         keyboardType="numeric"
                         editable={true}
                       />
                     </View>
                     <TouchableOpacity
-                      style={{width: '15%'}}
+                      style={{width: '10%'}}
                       className="items-center"
                       onPress={() =>
                         handleRemoveItem(item?.inventoryProduct?._id)
@@ -764,6 +772,8 @@ const OrderSummaryScreen = ({navigation}: AddNewUserProps) => {
           </>
         )}
       </View>
+      </TouchableWithoutFeedback>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 };

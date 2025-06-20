@@ -6,6 +6,9 @@ import {
   ScrollView,
   ToastAndroid,
   Clipboard,
+  KeyboardAvoidingView,
+  SafeAreaView,
+  Platform,
 } from 'react-native';
 import FontistoIcon from 'react-native-vector-icons/Fontisto';
 import Ionicons from 'react-native-vector-icons/Feather';
@@ -66,6 +69,10 @@ const UserDetailsScreen = ({navigation, route}: AddNewUserProps) => {
   console.log(userDetails);
 
   return (
+    <SafeAreaView className="flex-1 bg-[#FAD8B0]">
+    <KeyboardAvoidingView
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      className="flex-1 bg-[#FAD8B0]">
     <View className="flex-1 bg-[#FAD9B3] px-4 pt-14 pb-6">
       {/* Header */}
       <View className="flex-row justify-between items-center mb-2">
@@ -172,6 +179,8 @@ const UserDetailsScreen = ({navigation, route}: AddNewUserProps) => {
         </Text>
       </TouchableOpacity>
     </View>
+    </KeyboardAvoidingView>
+    </SafeAreaView>
   );
 };
 

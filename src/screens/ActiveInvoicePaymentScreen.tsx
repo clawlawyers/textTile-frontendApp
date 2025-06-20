@@ -1,5 +1,5 @@
 /* eslint-disable react-native/no-inline-styles */
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import {
   View,
   Text,
@@ -7,7 +7,11 @@ import {
   TextInput,
   ScrollView,
   Dimensions,
+  Platform,
+  KeyboardAvoidingView,
+  SafeAreaView,
   Alert,
+  PermissionsAndroid,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/Feather';
 import { AccountStackParamList } from '../stacks/Account';
@@ -15,8 +19,9 @@ import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useSelector, useDispatch } from 'react-redux';
 import { RootState } from '../redux/store';
 import { scale, verticalScale } from '../utils/scaling';
+import { setPaymentDetails } from '../redux/customInvoiceSlice';
+import RNFetchBlob from 'rn-fetch-blob';
 import { NODE_API_ENDPOINT } from '../utils/util';
-import { setPaymentDetails, setLoading, setError } from '../redux/customInvoiceSlice';
 
 type ActiveInvoicePaymentProps = NativeStackScreenProps<
   AccountStackParamList,
@@ -40,85 +45,87 @@ const modeOptions = [
 const ActiveInvoicePaymentScreen = ({ navigation, route }: ActiveInvoicePaymentProps) => {
   const dispatch = useDispatch();
   const currentUser = useSelector((state: RootState) => state.auth.user);
-  const { invoice } = route.params;
+  const { invoice, totalAmount, dueAmount, paymentHistory } = route.params;
   const paymentDetails = useSelector((state: RootState) => state.customInvoice.paymentDetails);
-  
+
   const [paymentData, setPaymentData] = useState<PaymentItem[]>([]);
-  const [downloading,setDownloading] =useState(false);
   const [paymentAmount, setPaymentAmount] = useState('');
+  const [pendingAmounts, setPendingAmounts] = useState<{ [key: string]: string }>({});
   const [openDropdownId, setOpenDropdownId] = useState<string | null>(null);
-  const [loading, setLocalLoading] = useState(false);
+  const [currentDueAmount, setCurrentDueAmount] = useState<number>(() => {
+    const dueAmountStr = dueAmount?.toString() || '0';
+    return parseFloat(dueAmountStr.replace(/[₹,\s]/g, '')) || 0;
+  });
 
   const { height } = Dimensions.get('window');
   const headerHeight = height * 0.15;
-  console.log(invoice._id)
+  const historyMaxHeight = height * 0.3;
 
-  // Initialize payment data and fetch real-time invoice data
+  // Memoize paymentHistory IDs
+  const historyPaymentIds = useMemo(() => (paymentHistory || []).map((p: any) => p._id), [paymentHistory]);
+
+  // Track initialization to prevent redundant updates
+  const isInitialized = useRef(false);
+
+  // Initialize paymentData and paymentDetails only once
   useEffect(() => {
-    const fetchInvoiceData = async () => {
-      if (!currentUser?.token) {
-        Alert.alert('Error', 'User not authenticated. Please log in.');
-        navigation.navigate('LoginScreen');
-        return;
-      }
-      console.log(invoice)
+    if (isInitialized.current) return;
 
-      setLocalLoading(true);
-      try {
-        const response = await fetch(`${NODE_API_ENDPOINT}/custom-orders/${invoice._id}`, {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${currentUser.token}`,
-          },
-        });
+    const totalAmountNum = parseFloat((totalAmount?.toString() || '0').replace(/[₹,\s]/g, '')) || 0;
+    const dueAmountNum = parseFloat((dueAmount?.toString() || '0').replace(/[₹,\s]/g, '')) || 0;
 
-        if (response.status === 401) {
-          Alert.alert('Session Expired', 'Please log in again.');
-          navigation.navigate('LoginScreen');
-          return;
-        }
-
-        if (!response.ok) {
-          throw new Error('Failed to fetch invoice data');
-        }
-
-        const updatedInvoice = await response.json();
-        
-        // Update Redux store with latest payment details
-        dispatch(setPaymentDetails({
-          totalAmount: updatedInvoice.totalAmount,
-          dueAmount: updatedInvoice.dueAmount,
-          payments: updatedInvoice.payments,
+    // Initialize paymentData from paymentDetails, excluding paymentHistory
+    if (paymentDetails?.payments?.length > 0) {
+      const newPaymentData = paymentDetails.payments
+        .filter((p: any) => !historyPaymentIds.includes(p._id))
+        .map((p: any, index: number) => ({
+          id: `payment-${Date.now()}-${index}`,
+          amount: `₹ ${p.amount.toLocaleString('en-IN')}`,
+          mode: p.paymentMethod,
         }));
+      setPaymentData(newPaymentData);
+    }
 
-        // Update local payment data
-        setPaymentData(
-          updatedInvoice.payments?.map((p: any, index: number) => ({
-            id: `payment-${p._id || Date.now()}-${index}`,
-            amount: `₹ ${p.amount.toLocaleString('en-IN')}`,
-            mode: p.paymentMethod,
-          })) || []
-        );
-      } catch (error) {
-        console.error('Error fetching invoice:', error);
-        dispatch(setError(error.message));
-        Alert.alert('Error', `Failed to fetch invoice: ${error.message}`);
-      } finally {
-        setLocalLoading(false);
-      }
-    };
+    // Initialize Redux paymentDetails
+    const historyPayments = (paymentHistory || []).map((p: any) => ({
+      amount: p.amount,
+      paymentMethod: p.paymentMethod,
+      _id: p._id,
+    }));
 
-    fetchInvoiceData();
-  }, [currentUser?.token, invoice._id, dispatch, navigation]);
+    dispatch(setPaymentDetails({
+      totalAmount: totalAmountNum,
+      dueAmount: dueAmountNum,
+      payments: historyPayments,
+    }));
 
-  // Calculate completion status from Redux store
-  const isCompleted = paymentDetails?.dueAmount === 0 || 
-    (paymentDetails?.totalAmount || 0) <= 
-    (paymentDetails?.payments?.reduce((sum, payment) => sum + (payment.amount || 0), 0) || 0);
+    isInitialized.current = true;
+  }, [paymentDetails?.payments, historyPaymentIds, totalAmount, dueAmount, paymentHistory, dispatch]);
+
+  // Update currentDueAmount based on paymentData
+  useEffect(() => {
+    const totalAmountNum = parseFloat((totalAmount?.toString() || '0').replace(/[₹,\s]/g, '')) || 0;
+    const totalPaid = paymentData.reduce((sum, item) => {
+      const amount = parseFloat(item.amount.replace(/[₹,\s]/g, '')) || 0;
+      return sum + amount;
+    }, 0);
+
+    const historyPaid = (paymentHistory || []).reduce(
+      (sum: number, payment: { amount: number }) => sum + (payment.amount || 0),
+      0
+    );
+
+    let newDueAmount;
+    if (dueAmount !== totalAmount) {
+      newDueAmount = Math.max(0, dueAmount - totalPaid);
+    } else {
+      newDueAmount = Math.max(0, totalAmountNum - (totalPaid + historyPaid));
+    }
+
+    setCurrentDueAmount(newDueAmount);
+  }, [paymentData, totalAmount, dueAmount, paymentHistory]);
 
   const handleModeChange = (index: number, value: string) => {
-    if (isCompleted) return;
     const updatedData = [...paymentData];
     updatedData[index].mode = value;
     setPaymentData(updatedData);
@@ -126,323 +133,391 @@ const ActiveInvoicePaymentScreen = ({ navigation, route }: ActiveInvoicePaymentP
   };
 
   const toggleDropdown = (id: string) => {
-    if (isCompleted) return;
     setOpenDropdownId(openDropdownId === id ? null : id);
   };
 
+  const handleAmountChange = (id: string, value: string) => {
+    const cleanValue = value.replace(/[₹,\s]/g, '');
+    setPendingAmounts((prev) => ({ ...prev, [id]: cleanValue }));
+  };
+
+  const handleAmountConfirm = (index: number, id: string) => {
+    const cleanValue = pendingAmounts[id] || '0';
+    const parsedValue = parseFloat(cleanValue) || 0;
+
+    if (parsedValue > currentDueAmount) {
+      Alert.alert('Error', `Amount exceeds due amount (₹${currentDueAmount.toLocaleString('en-IN')}).`);
+      setPendingAmounts((prev) => ({ ...prev, [id]: '' }));
+      return;
+    }
+
+    const updatedData = [...paymentData];
+    updatedData[index].amount = cleanValue ? `₹ ${parseFloat(cleanValue).toLocaleString('en-IN')}` : `₹ 0`;
+    setPaymentData(updatedData);
+    setPendingAmounts((prev) => ({ ...prev, [id]: '' }));
+  };
+
   const addPaymentOption = () => {
-    if (isCompleted) return;
-    const newId = `payment-${Date.now()}`;
+    const newId = Date.now().toString();
     let defaultAmount = paymentAmount;
     if (!defaultAmount) {
-      defaultAmount = `₹ ${(paymentDetails?.dueAmount || 0).toLocaleString('en-IN')}`;
+      defaultAmount = `₹ 0`;
     } else if (!defaultAmount.startsWith('₹')) {
       defaultAmount = `₹ ${defaultAmount}`;
     }
 
-    setPaymentData([
-      ...paymentData,
-      { id: newId, amount: defaultAmount, mode: 'Advance' },
-    ]);
+    const parsedAmount = parseFloat(defaultAmount.replace(/[₹,\s]/g, '')) || 0;
+    if (parsedAmount > currentDueAmount) {
+      Alert.alert('Error', `Payment amount exceeds due amount (₹${currentDueAmount.toLocaleString('en-IN')}).`);
+      return;
+    }
+
+    setPaymentData([...paymentData, { id: newId, amount: defaultAmount, mode: 'Advance' }]);
     setPaymentAmount('');
   };
 
-  const handleAmountChange = (index: number, value: string) => {
-    if (isCompleted) return;
-    const updatedData = [...paymentData];
-    updatedData[index].amount = value.startsWith('₹') ? value : `₹ ${value}`;
-    setPaymentData(updatedData);
-  };
-
   const handleDeletePayment = (id: string) => {
-    if (isCompleted) return;
-    setPaymentData(paymentData.filter(item => item.id !== id));
+    setPaymentData(paymentData.filter((item) => item.id !== id));
+    setPendingAmounts((prev) => {
+      const updated = { ...prev };
+      delete updated[id];
+      return updated;
+    });
   };
 
-  const handleUpdatePayment = async () => {
-    if (isCompleted) {
-      navigation.navigate('ActiveInvoiceItems', { invoice });
-      return;
-    }
-  
-    if (!currentUser?.token) {
-      Alert.alert('Error', 'User not authenticated. Please log in.');
-      navigation.navigate('LoginScreen');
-      return;
-    }
-  
-    setLocalLoading(true);
-    dispatch(setLoading(true));
-  
-    // Step 1: Prepare new payment objects
-    const formattedPayments = paymentData
-      .filter(item => parseFloat(item.amount.replace(/[₹,\s]/g, '')) > 0)
-      .map(item => ({
-        amount: parseFloat(item.amount.replace(/[₹,\s]/g, '')),
-        paymentMethod: item.mode,
-        paymentReference: `TXN-${Date.now()}`,
-        paymentDate: new Date().toISOString(),
-        notes: paymentDetails?.dueAmount === 0 ? 'complete' : 'active',
-        receivedBy: currentUser?.id || 'unknown',
-        receivedByType: 'Manager',
-        status: 'confirmed',
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      }));
-  
-    const totalPaid = formattedPayments.reduce((sum, item) => sum + item.amount, 0);
-    const updatedDueAmount = Math.max(0, (paymentDetails?.totalAmount || 0) - totalPaid);
-  
-    // Step 2: Refetch the latest invoice from server (for optimistic concurrency control)
-    let latestInvoice;
-    try {
-      const latestResponse = await fetch(`${NODE_API_ENDPOINT}/custom-orders/${invoice._id}`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${currentUser?.token}`,
-        },
-      });
-  
-      if (!latestResponse.ok) {
-        throw new Error(`HTTP ${latestResponse.status}`);
-      }
-  
-      latestInvoice = await latestResponse.json();
-    } catch (err) {
-      console.error('❌ Failed to refetch latest invoice:', err);
-      Alert.alert('Network Error', 'Unable to fetch latest invoice. Check your internet or session.');
-      dispatch(setLoading(false));
-      setLocalLoading(false);
-      return;
-    }
-  
-    // Step 3: Construct updated invoice with latest data and new payments
+  const handleUpdatePayment = () => {
+    const formattedPayments = paymentData.map((item) => ({
+      amount: parseFloat(item.amount.replace(/[₹,\s]/g, '')) || 0,
+      paymentMethod: item.mode,
+    }));
+
     const updatedInvoice = {
-      ...latestInvoice, // spread the latest version to avoid version mismatch
-      payments: formattedPayments,
-      dueAmount: updatedDueAmount,
-      updatedAt: new Date().toISOString(),
+      ...invoice,
+      payments: [
+        ...(paymentHistory || []),
+        ...formattedPayments.map((p) => ({
+          ...p,
+          _id: `temp-${Date.now()}`,
+          paymentReference: `TXN-${Date.now()}`,
+          paymentDate: new Date().toISOString(),
+          notes: currentDueAmount - p.amount === 0 ? 'complete' : 'active',
+          receivedBy: currentUser?.id || 'unknown',
+          receivedByType: 'Manager',
+          status: 'confirmed',
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        })),
+      ],
+      dueAmount: currentDueAmount,
     };
+
+    dispatch(setPaymentDetails({
+      totalAmount: parseFloat((totalAmount?.toString() || '0').replace(/[₹,\s]/g, '')) || 0,
+      dueAmount: currentDueAmount,
+      payments: [...(paymentHistory || []), ...formattedPayments],
+    }));
+
+    navigation.navigate('ActiveInvoiceItems', { invoice: updatedInvoice });
+  };
+
+  const totalPaidAmount = invoice.payments.reduce(
+    (sum: number, payment: { amount: number }) => sum + (payment.amount || 0),
+    0,
+  );
+  const isCompleted = totalPaidAmount >= invoice.totalAmount;
+  const [downloading, setDownloading] = useState(false);
+
+  const handleDownloadInvoice = async () => {
+    if (downloading) return;
   
-    // Step 4: PUT updated invoice to backend
     try {
-      const response = await fetch(`${NODE_API_ENDPOINT}/custom-orders/payment/${invoice._id}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${currentUser?.token}`,
+      setDownloading(true);
+  
+      if (!invoice._id || !currentUser?.token) {
+        throw new Error('Missing invoice ID or user token');
+      }
+  
+      // Check permission on Android
+      if (Platform.OS === 'android') {
+        const granted = await PermissionsAndroid.request(
+          PermissionsAndroid.PERMISSIONS.WRITE_EXTERNAL_STORAGE,
+          {
+            title: 'Storage Permission Required',
+            message: 'App needs access to your storage to download invoices',
+            buttonNeutral: 'Ask Me Later',
+            buttonNegative: 'Cancel',
+            buttonPositive: 'OK',
+          },
+        );
+        if (granted !== PermissionsAndroid.RESULTS.GRANTED) {
+          Alert.alert('Permission Denied', 'Cannot download without storage permission.');
+          return;
+        }
+      }
+  
+      const { dirs } = RNFetchBlob.fs;
+      const dirPath = Platform.OS === 'ios' ? dirs.DocumentDir : dirs.DownloadDir;
+  
+      const timestamp = new Date().getTime();
+      const filePath = `${dirPath}/invoice_${invoice._id}_${timestamp}.pdf`;
+  
+      const apiUrl = `${NODE_API_ENDPOINT}/custom-orders/invoice/${invoice._id}`;
+  
+      const config = {
+        fileCache: true,
+        path: filePath,
+        addAndroidDownloads: {
+          useDownloadManager: true,
+          notification: true,
+          title: 'Invoice Downloaded',
+          description: 'Your invoice has been downloaded',
+          mime: 'application/pdf',
+          mediaScannable: true,
+          path: filePath,
         },
-        body: JSON.stringify(updatedInvoice),
+      };
+  
+      const res = await RNFetchBlob.config(config).fetch('GET', apiUrl, {
+        Authorization: `Bearer ${currentUser.token}`,
       });
   
-      if (response.status === 401) {
-        Alert.alert('Session Expired', 'Please log in again.');
-        navigation.navigate('LoginScreen');
-        return;
+      const status = res.info().status;
+  
+      if (status === 401) {
+        throw new Error('Unauthorized. Please log in again.');
       }
   
-      if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(`Failed to update invoice: ${response.status} ${errorText}`);
+      if (status !== 200) {
+        throw new Error(`Download failed with status ${status}`);
       }
   
-      // Step 5: Update Redux and navigate
-      dispatch(setPaymentDetails({
-        totalAmount: updatedInvoice.totalAmount,
-        dueAmount: updatedDueAmount,
-        payments: formattedPayments,
-      }));
+      const fileExists = await RNFetchBlob.fs.exists(filePath);
+      const fileStats = await RNFetchBlob.fs.stat(filePath);
   
-      Alert.alert('Success', 'Payments updated successfully');
-      navigation.navigate('ActiveInvoiceItems', { invoice: updatedInvoice });
-    } catch (error) {
-      console.error('❌ Error updating invoice:', error);
-      dispatch(setError(error.message));
-      Alert.alert('Error', `Failed to update invoice: ${error.message}`);
+      if (!fileExists || fileStats.size <= 0) {
+        throw new Error('File not saved or is empty');
+      }
+  
+      Alert.alert('Success', 'Invoice downloaded successfully.');
+  
+      if (Platform.OS === 'ios') {
+        RNFetchBlob.ios.openDocument(filePath);
+      } else {
+        RNFetchBlob.android.actionViewIntent(filePath, 'application/pdf');
+      }
+    } catch (err: any) {
+      console.error('Download error:', err);
+      Alert.alert('Error', err.message || 'Failed to download invoice');
     } finally {
-      setLocalLoading(false);
-      dispatch(setLoading(false));
+      setDownloading(false);
     }
   };
-  
+
 
   return (
-    <View className="flex-1 bg-[#F4D5B2] pb-2">
-      <View
-        className="bg-[#292C33] px-4 pt-10"
-        style={{
-          flex: 1,
-          justifyContent: 'center',
-          height: headerHeight,
-          position: 'absolute',
-          top: 0,
-          left: 0,
-          right: 0,
-          zIndex: 10,
-        }}
+    <SafeAreaView className="flex-1 bg-[#F4D5B2] pb-2">
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        className="flex-1 bg-[#F4D5B2]"
       >
-        <View className="flex-row justify-between items-center">
-          <TouchableOpacity
-            onPress={() => navigation.navigate('ActiveInvoiceItems', { invoice })}
-            className="w-10 h-10 rounded-full border border-[#FBDBB5] justify-center items-center"
+        <View className="flex-1 bg-[#F4D5B2] p-4">
+          <View
+            className="bg-[#292C33] px-4 pt-10"
+            style={{
+              flex: 1,
+              justifyContent: 'center',
+              height: headerHeight,
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              right: 0,
+              zIndex: 10,
+            }}
           >
-            <Icon name="arrow-left" size={20} color="#FBDBB5" />
-          </TouchableOpacity>
-          <View className="flex-1 items-end">
-            <Text className="text-sm text-[#FBDBB5]">Invoice ID:</Text>
-            <Text className="text-base font-bold text-[#FBDBB5]">
-              {invoice?._id || 'INV-2025-001'}
-            </Text>
-          </View>
-        </View>
-      </View>
-
-      <ScrollView
-        className="flex-1 bg-[#F4D5B2] p-4"
-        style={{ paddingTop: headerHeight + verticalScale(10) }}
-      >
-        <Text className="text-lg font-semibold text-center mb-4">
-          {isCompleted ? 'View Payment Details' : 'Edit Payment Details'}
-        </Text>
-
-        <View className="flex-row justify-between items-center border border-black rounded-lg mb-2 overflow-hidden">
-          <View className="bg-black px-4 py-4">
-            <Text className="text-white font-semibold">Total Amount</Text>
-          </View>
-          <View className="px-4 py-3 flex-1">
-            <Text className="text-right text-base font-semibold">
-              ₹ {(paymentDetails?.totalAmount || 0).toLocaleString('en-IN')}
-            </Text>
-          </View>
-        </View>
-
-        <View className="flex-row justify-between items-center border border-black rounded-lg mb-6 overflow-hidden">
-          <View className="bg-black px-5 py-4">
-            <Text className="text-white font-semibold">Due Amount</Text>
-          </View>
-          <View className="px-4 py-3 flex-1">
-            <Text className="text-right text-base font-semibold">
-              ₹ {(paymentDetails?.dueAmount || 0).toLocaleString('en-IN')}
-            </Text>
-          </View>
-        </View>
-
-        <Text className="text-base font-semibold mb-2">Payment Modes</Text>
-
-        {paymentData.map((item, index) => (
-          <View key={item.id} className="flex-row items-center mb-3">
-            <TextInput
-              value={item.amount}
-              onChangeText={value => handleAmountChange(index, value)}
-              className="flex-1 border border-[#DB9245] rounded-lg px-4 py-3 mr-2 text-base"
-              keyboardType="numeric"
-              editable={!isCompleted}
-            />
-            <View style={{ width: '35%', marginRight: 8 }}>
+            <View className="flex-row justify-between items-center">
               <TouchableOpacity
-                onPress={() => toggleDropdown(item.id)}
-                style={{
-                  backgroundColor: '#D6872A',
-                  borderRadius: 10,
-                  padding: 12,
-                  flexDirection: 'row',
-                  justifyContent: 'space-between',
-                  alignItems: 'center',
-                }}
-                disabled={isCompleted}
+                onPress={() => navigation.navigate('ActiveInvoiceItems', { invoice })}
+                className="w-10 h-10 rounded-full border border-[#FBDBB5] justify-center items-center"
               >
-                <Text style={{ color: '#fff', fontSize: 14 }}>{item.mode}</Text>
-                <Icon
-                  name={openDropdownId === item.id ? 'chevron-up' : 'chevron-down'}
-                  size={18}
-                  color="#fff"
-                />
+                <Icon name="arrow-left" size={20} color="#FBDBB5" />
               </TouchableOpacity>
-              {openDropdownId === item.id && (
-                <View
-                  style={{
-                    position: 'absolute',
-                    top: 48,
-                    left: 0,
-                    right: 0,
-                    backgroundColor: '#D6872A',
-                    borderRadius: 10,
-                    zIndex: 1000,
-                    elevation: 5,
-                    shadowColor: '#000',
-                    shadowOffset: { width: 0, height: 2 },
-                    shadowOpacity: 0.25,
-                    shadowRadius: 3.84,
-                  }}
-                >
-                  {modeOptions.map(option => (
-                    <TouchableOpacity
-                      key={option.value}
-                      style={{
-                        paddingVertical: 12,
-                        paddingHorizontal: 12,
-                        borderBottomWidth: 1,
-                        borderBottomColor: 'rgba(255,255,255,0.3)',
-                      }}
-                      onPress={() => handleModeChange(index, option.value)}
-                    >
-                      <Text style={{ color: '#fff', fontSize: 14 }}>
-                        {option.label}
-                      </Text>
-                    </TouchableOpacity>
-                  ))}
-                </View>
-              )}
-            </View>
-            <TouchableOpacity
-              onPress={() => handleDeletePayment(item.id)}
-              className="w-8 h-8 rounded-full border border-[#DB9245] justify-center items-center"
-              disabled={isCompleted}
-            >
-              <Icon name="trash-2" size={16} color={isCompleted ? "#999" : "#DB9245"} />
-            </TouchableOpacity>
-          </View>
-        ))}
-
-        <TouchableOpacity
-          onPress={addPaymentOption}
-          className="flex-row items-center justify-center bg-[#FBDBB5] rounded-lg py-3 mb-6"
-          disabled={isCompleted}
-        >
-          <Icon name="plus" size={18} color={isCompleted ? "#999" : "#292C33"} />
-          <Text className={`ml-2 text-${isCompleted ? '[#999]' : '[#292C33]'} font-medium`}>
-            Add Payment Option
-          </Text>
-        </TouchableOpacity>
-
-        {paymentDetails && paymentDetails.payments && paymentDetails.payments.length > 0 && (
-          <>
-            <Text className="text-base font-semibold mb-2">Payment History</Text>
-            {paymentDetails.payments.map((item: any, index: number) => (
-              <View key={index} className="flex-row items-center mb-3">
-                <Text className="flex-1 border border-[#DB9245] rounded-lg px-4 py-3 mr-2 text-base">
-                  ₹ {item.amount.toLocaleString('en-IN')}
-                </Text>
-                <Text className="flex-1 border border-[#DB9245] bg-[#DB9245] rounded-lg px-4 py-3 mr-2 text-base text-white">
-                  {item.paymentMethod}
+              <View className="flex-1 items-end">
+                <Text className="text-sm text-[#FBDBB5]">Invoice ID:</Text>
+                <Text className="text-base font-bold text-[#FBDBB5]">
+                  {invoice?._id || 'INV-2025-001'}
                 </Text>
               </View>
-            ))}
-          </>
-        )}
-      </ScrollView>
+            </View>
+          </View>
 
-      <TouchableOpacity
-        className="bg-[#D1853A] py-3 rounded-lg items-center mt-auto mb-10 mx-4"
-        onPress={handleUpdatePayment}
-        disabled={loading}
-      >
-        <Text className="text-white font-semibold text-base">
-          {isCompleted ? 'Back to Items' : (loading ? 'Updating...' : 'Update Payment')}
-        </Text>
-      </TouchableOpacity>
-    </View>
+          <ScrollView
+            className="flex-1 bg-[#F4D5B2] p-4"
+            style={{ paddingTop: headerHeight + verticalScale(10) }}
+            showsVerticalScrollIndicator={false}
+          >
+            <Text className="text-lg font-semibold text-center mb-4">
+              {isCompleted ? 'View Payment Details' : 'Edit Payment Details'}
+            </Text>
+
+            <View className="flex-row justify-between items-center border border-black rounded-lg mb-2 overflow-hidden">
+              <View className="bg-black px-4 py-4">
+                <Text className="text-white font-semibold">Total Amount</Text>
+              </View>
+              <View className="px-4 py-3 flex-1">
+                <Text className="text-right text-base font-semibold">
+                  ₹ {(totalAmount || paymentDetails?.totalAmount || 0).toLocaleString('en-IN')}
+                </Text>
+              </View>
+            </View>
+
+            <View className="flex-row justify-between items-center border border-black rounded-lg mb-6 overflow-hidden">
+              <View className="bg-black px-5 py-4">
+                <Text className="text-white font-semibold">Due Amount</Text>
+              </View>
+              <View className="px-4 py-3 flex-1">
+                <Text className="text-right text-base font-semibold">
+                  ₹ {currentDueAmount.toLocaleString('en-IN')}
+                </Text>
+              </View>
+            </View>
+
+            <Text className="text-base font-semibold mb-2">Add Payments</Text>
+
+            {paymentData.length === 0 ? (
+              <Text className="text-center text-base text-[#292C33] mb-3">No new payments added</Text>
+            ) : (
+              paymentData.map((item, index) => (
+                <View key={item.id} className="flex-row items-center mb-4">
+                  <View className="flex-1 flex-row items-center border border-[#DB9245] rounded-lg px-4  mr-2">
+                    <TextInput
+                      value={pendingAmounts[item.id] || item.amount}
+                      onChangeText={(value) => handleAmountChange(item.id, value)}
+                      className="flex-1 text-base"
+                      keyboardType="numeric"
+                      editable={!isCompleted}
+                    />
+                    <TouchableOpacity
+                      onPress={() => handleAmountConfirm(index, item.id)}
+                      disabled={!pendingAmounts[item.id] || isCompleted}
+                    >
+                      <Icon
+                        name="check"
+                        size={16}
+                        color={pendingAmounts[item.id] && !isCompleted ? '#DB9245' : '#999'}
+                      />
+                    </TouchableOpacity>
+                  </View>
+                  <View style={{ width: '35%', marginRight: 8 }}>
+                    <TouchableOpacity
+                      onPress={() => toggleDropdown(item.id)}
+                      style={{
+                        backgroundColor: '#D6872A',
+                        borderRadius: 10,
+                        padding: 12,
+                        flexDirection: 'row',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        width: '100%',
+                      }}
+                      disabled={isCompleted}
+                    >
+                      <Text style={{ color: '#fff', fontSize: 14 }}>{item.mode}</Text>
+                      <Icon
+                        name={openDropdownId === item.id ? 'chevron-up' : 'chevron-down'}
+                        size={18}
+                        color="#fff"
+                      />
+                    </TouchableOpacity>
+                    {openDropdownId === item.id && (
+                      <View
+                        style={{
+                          position: 'absolute',
+                          top: 48,
+                          left: 0,
+                          right: 0,
+                          backgroundColor: '#D6872A',
+                          borderRadius: 10,
+                          zIndex: 1000,
+                          elevation: 5,
+                          shadowColor: '#000',
+                          shadowOffset: { width: 0, height: 2 },
+                          shadowOpacity: 0.25,
+                          shadowRadius: 3.84,
+                        }}
+                      >
+                        {modeOptions.map((option) => (
+                          <TouchableOpacity
+                            key={option.value}
+                            style={{
+                              paddingVertical: 12,
+                              paddingHorizontal: 12,
+                              borderBottomWidth: 1,
+                              borderBottomColor: 'rgba(255,255,255,0.3)',
+                            }}
+                            onPress={() => handleModeChange(index, option.value)}
+                          >
+                            <Text style={{ color: '#fff', fontSize: 14 }}>{option.label}</Text>
+                          </TouchableOpacity>
+                        ))}
+                      </View>
+                    )}
+                  </View>
+                  <TouchableOpacity
+                    onPress={() => handleDeletePayment(item.id)}
+                    className="w-8 h-8 rounded-full border border-[#DB9245] justify-center items-center"
+                    disabled={isCompleted}
+                  >
+                    <Icon name="trash-2" size={16} color={isCompleted ? '#999' : '#DB9245'} />
+                  </TouchableOpacity>
+                </View>
+              ))
+            )}
+
+            <TouchableOpacity
+              onPress={addPaymentOption}
+              className="flex-row items-center justify-center bg-[#D1853A] rounded-lg py-3 mb-6"
+              disabled={isCompleted}
+            >
+              <Icon name="plus" size={18} color='#fff' />
+              <Text className={`ml-2 text-white font-medium`}>
+                Add Payment Option
+              </Text>
+            </TouchableOpacity>
+
+            {paymentHistory && paymentHistory.length > 0 && (
+              <>
+                <Text className="text-base font-semibold mb-2">Payment History</Text>
+                <ScrollView
+                  style={{ maxHeight: historyMaxHeight, marginBottom: 20 }}
+                  showsVerticalScrollIndicator={true}
+                >
+                  {paymentHistory.map((item: any, index: number) => (
+                    <View key={item._id || index} className="flex-row items-center mb-3">
+                      <Text className="flex-1 border border-[#DB9245] rounded-lg px-4 py-3 mr-2 text-base">
+                        ₹ {item.amount.toLocaleString('en-IN')}
+                      </Text>
+                      <Text className="flex-1 border border-[#DB9245] bg-[#DB9245] rounded-lg px-4 py-3 mr-2 text-base text-white">
+                        {item.paymentMethod || item.modeOfPayment}
+                      </Text>
+                    </View>
+                  ))}
+                </ScrollView>
+              </>
+            )}
+          </ScrollView>
+          
+          <TouchableOpacity
+            className="bg-[#D1853A] py-3 rounded-lg items-center mt-auto mb-2 mx-4"
+            
+            onPress={handleUpdatePayment}
+          >
+            <Text className="text-white font-semibold text-base">
+              {isCompleted ? 'Back to Items' : 'Update Payment'}
+            </Text>
+          </TouchableOpacity>
+        </View>
+      </KeyboardAvoidingView>
+    </SafeAreaView>
   );
 };
 

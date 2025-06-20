@@ -7,6 +7,7 @@ import UserPermissionScreen from '../screens/UserPermissionScreen';
 import AddNewUserAdded from '../screens/NewUserAddedScreen';
 import {useSelector} from 'react-redux';
 import {RootState} from '../redux/store';
+import { CardStyleInterpolators } from '@react-navigation/stack';
 // import Cart from '../screens/CartScreen';
 // import Checkout from '../screens/CheckoutScreen';
 // import PaymentMethods from '../screens/PaymentMethodsScreen';
@@ -58,7 +59,10 @@ function AddNewUserStackNavigator() {
   }
 
   return (
-    <BagStack.Navigator>
+    <BagStack.Navigator 
+    screenOptions={{
+      animation: 'slide_from_right',
+    }}>
       <BagStack.Screen
         name="AddNewUser"
         component={AddNewUserScreen}

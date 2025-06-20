@@ -8,6 +8,8 @@ import {
   Alert,
   Platform,
   ActivityIndicator,
+  KeyboardAvoidingView,
+  SafeAreaView,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/Feather';
 import {pick, types} from '@react-native-documents/picker';
@@ -122,6 +124,10 @@ const UploadCSVScreen = ({navigation}: AddNewUserProps) => {
   };
 
   return (
+    <SafeAreaView className="flex-1 bg-[#FAD8B0]">
+    <KeyboardAvoidingView
+  behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+  className="flex-1 bg-[#FAD8B0]">
     <View className="flex-1 bg-[#FAD9B3] px-6 pt-12">
       <StatusBar barStyle="dark-content" backgroundColor="#FAD9B3" />
 
@@ -183,6 +189,8 @@ const UploadCSVScreen = ({navigation}: AddNewUserProps) => {
         )}
       </TouchableOpacity>
     </View>
+    </KeyboardAvoidingView>
+    </SafeAreaView>
   );
 };
 

@@ -8,6 +8,8 @@ import {
   ScrollView,
   Image,
   ActivityIndicator,
+  KeyboardAvoidingView,
+  Platform,
 } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import Ionicons from 'react-native-vector-icons/Ionicons';
@@ -21,6 +23,8 @@ import {useDispatch, useSelector} from 'react-redux';
 import {RootState} from '../redux/store';
 import {setCurrentClient} from '../redux/commonSlice';
 import PermissionDeniedDialog from '../components/PermissionDeniedDialog';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import LottieView from 'lottie-react-native';
 
 const clients = [
   {id: '1', name: 'Ram Enterprice', owner: 'Rameswaram Das'},
@@ -129,14 +133,23 @@ const ClientListScreen = ({navigation}: AddNewUserProps) => {
   if (getLoading) {
     return (
       <View className="flex-1 justify-center items-center bg-[#FAD9B3]">
-        <ActivityIndicator size="large" color="#DB9245" />
-        <Text className="mt-2 text-black">Loading Client List...</Text>
+        <LottieView
+          source={require('../assets/lottieanimation1.json')} // Your downloaded .json file
+          autoPlay
+          loop
+          style={{ width: 180, height: 130 }}
+         />
+        <Text className="fobt-semibold text-black">Loading Client List...</Text>
       </View>
     );
   }
 
   return (
-    <View className="flex-1 bg-[#FAD9B3] px-4 pt-14 pb-12">
+    <SafeAreaView className="flex-1 bg-[#FAD8B0]">
+<KeyboardAvoidingView
+  behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+  className="flex-1 bg-[#FAD8B0]">
+    <View className="flex-1 bg-[#FAD9B3] px-4 ">
       {/* Header */}
       <View className="flex-row justify-between items-center mb-6">
         <TouchableOpacity
@@ -278,7 +291,7 @@ const ClientListScreen = ({navigation}: AddNewUserProps) => {
 
       {/* Add New Client */}
       <TouchableOpacity
-        className="bg-[#1F1F1F] py-4 rounded-xl items-center my-3"
+        className="bg-[#1F1F1F] py-4 rounded-xl items-center my-2"
         onPress={() => {
           if (
             !currentUser?.permissions?.addClient &&
@@ -294,6 +307,8 @@ const ClientListScreen = ({navigation}: AddNewUserProps) => {
         </Text>
       </TouchableOpacity>
     </View>
+    </KeyboardAvoidingView>
+    </SafeAreaView>
   );
 };
 

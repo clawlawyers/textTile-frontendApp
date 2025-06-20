@@ -155,12 +155,7 @@ const LoginScreen = ({navigation}: LoginProps) => {
           flexGrow: 1,
         }}>
         {/* Back Button */}
-        <TouchableOpacity
-          onPress={() => navigation.goBack()}
-          className="w-10 h-10 rounded-full border border-[#292C33] justify-center items-center mb-6">
-          <Icon name="arrow-left" size={20} color="#292C33" />
-        </TouchableOpacity>
-
+  
         {/* Logo */}
         <View className="place-items-start mb-8 mt-4">
           <Image

@@ -7,11 +7,15 @@ import {
   TouchableOpacity,
   Dimensions,
   ActivityIndicator,
+  SafeAreaView,
+  KeyboardAvoidingView,
+  Platform,
 } from 'react-native';
 import {HomeStackParamList} from '../stacks/Home';
 import {NativeStackScreenProps} from '@react-navigation/native-stack';
 import {useSelector} from 'react-redux';
 import {RootState} from '../redux/store';
+import LottieView from 'lottie-react-native';
 
 const {width} = Dimensions.get('window');
 
@@ -51,12 +55,12 @@ const OnboardingScreen = ({navigation}: OnboardingProps) => {
   if (loading === 'loading') {
     return (
       <View className="flex-1 justify-center items-center bg-[#FAD9B3]">
-        <ActivityIndicator
-          size="large"
-          color="#DB9245"
-          // eslint-disable-next-line react-native/no-inline-styles
-          style={{flex: 1, justifyContent: 'center'}}
-        />
+         <LottieView
+          source={require('../assets/lottieanimation1.json')} // Your downloaded .json file
+          autoPlay
+          loop
+          style={{ width: 180, height: 130 }}
+         />
       </View>
     );
   }
@@ -84,6 +88,10 @@ const OnboardingScreen = ({navigation}: OnboardingProps) => {
   };
 
   return (
+    <SafeAreaView className="flex-1 bg-[#FAD8B0]">
+    <KeyboardAvoidingView
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      className="flex-1 bg-[#FAD8B0]">
     <View className="flex-1 bg-[#F5D3AC]">
       <FlatList
         data={onboardingData}
@@ -150,6 +158,8 @@ const OnboardingScreen = ({navigation}: OnboardingProps) => {
         )}
       />
     </View>
+    </KeyboardAvoidingView>
+    </SafeAreaView>
   );
 };
 

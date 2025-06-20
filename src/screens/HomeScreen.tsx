@@ -210,6 +210,7 @@ const HomeScreen = ({navigation}: HomeProps) => {
   };
 
   return (
+    
     <View style={{flex: 1, position: 'relative'}}>
       <ScrollView className="flex-1 bg-[#FAD9B3] px-4 pt-6">
         {/* Header */}
@@ -439,7 +440,7 @@ const HomeScreen = ({navigation}: HomeProps) => {
           </TouchableOpacity>
           <TouchableOpacity
             className="items-center py-6 px-5 bg-[#FAD9B3] rounded-lg"
-            onPress={() => navigation.navigate('AlertSendScreen')}>
+            onPress={() => navigation.navigate('NewInventoryscreen')}>
             <Feather name="alert-triangle" size={24} color="#292C33" />
             <Text className="text-[#292C33] mt-1 text-xs">Alert Invoice</Text>
           </TouchableOpacity>

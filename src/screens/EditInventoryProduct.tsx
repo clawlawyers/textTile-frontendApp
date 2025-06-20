@@ -12,6 +12,7 @@ import {
   Platform,
   KeyboardAvoidingView,
   Keyboard,
+  SafeAreaView,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/Feather';
 import {HomeStackParamList} from '../stacks/Home';
@@ -259,11 +260,12 @@ const EditInventoryProduct = ({navigation, route}: AddNewUserProps) => {
   };
 
   return (
+    <SafeAreaView className="flex-1 bg-[#FAD8B0]">
     <KeyboardAvoidingView
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       className="flex-1 bg-[#FAD9B3]">
       <ScrollView
-        className="flex-1 px-4 py-6"
+        className="flex-1 px-4 py-6 pt-10"
         contentContainerStyle={{paddingBottom: keyboardVisible ? 200 : 20}}
         showsVerticalScrollIndicator={false}>
         {/* Header */}
@@ -411,6 +413,7 @@ const EditInventoryProduct = ({navigation, route}: AddNewUserProps) => {
         </TouchableOpacity>
       </View>
     </KeyboardAvoidingView>
+    </SafeAreaView>
   );
 };
 

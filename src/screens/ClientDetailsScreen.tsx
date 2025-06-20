@@ -7,6 +7,9 @@ import {
   StatusBar,
   ActivityIndicator,
   ToastAndroid,
+  SafeAreaView,
+  Platform,
+  KeyboardAvoidingView,
 } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 
@@ -22,6 +25,7 @@ import {RootState} from '../redux/store';
 import {NODE_API_ENDPOINT} from '../utils/util';
 import DeleteConfirmation from '../components/DeleteConfirmation';
 import PermissionDeniedDialog from '../components/PermissionDeniedDialog';
+import LottieView from 'lottie-react-native';
 
 // const orders = [
 //   {date: '25/05/2025', orderNo: '325698565478', status: 'Active'},
@@ -151,13 +155,22 @@ const ClientDetailsScreen = ({navigation, route}: AddNewUserProps) => {
   if (loading) {
     return (
       <View className="flex-1 justify-center items-center bg-[#FAD9B3]">
-        <ActivityIndicator size="large" color="#DB9245" />
-        <Text className="mt-2 text-black">Loading Client Details...</Text>
+        <LottieView
+          source={require('../assets/lottieanimation1.json')} // Your downloaded .json file
+          autoPlay
+          loop
+          style={{ width: 180, height: 130 }}
+         />
+        <Text className="font-semibold text-black">Loading Client Details...</Text>
       </View>
     );
   }
 
   return (
+    <SafeAreaView className="flex-1 bg-[#FAD8B0]">
+<KeyboardAvoidingView
+  behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+  className="flex-1 bg-[#FAD8B0]">
     <View className="flex-1 bg-[#FAD9B3] pt-14 px-4 pb-12">
       <StatusBar barStyle="dark-content" backgroundColor="#FBD7A2" />
 
@@ -334,6 +347,8 @@ const ClientDetailsScreen = ({navigation, route}: AddNewUserProps) => {
         </TouchableOpacity>
       </View>
     </View>
+    </KeyboardAvoidingView>
+    </SafeAreaView>
   );
 };
 

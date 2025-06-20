@@ -1,6 +1,6 @@
 /* eslint-disable react-native/no-inline-styles */
 import {NativeStackScreenProps} from '@react-navigation/native-stack';
-import React, {useEffect, useState, useMemo} from 'react';
+import React, {useEffect, useState, useMemo, useCallback} from 'react';
 import {
   View,
   Text,
@@ -14,6 +14,9 @@ import {
   StatusBar,
   ActivityIndicator,
   ToastAndroid,
+  KeyboardAvoidingView,
+  TouchableWithoutFeedback,
+  Keyboard,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/Feather';
 import {HomeStackParamList} from '../stacks/Home';
@@ -23,6 +26,7 @@ import {NODE_API_ENDPOINT} from '../utils/util';
 import {setCurrentClient, setPaymentDetails} from '../redux/commonSlice';
 import Icon1 from 'react-native-vector-icons/Feather';
 import {verticalScale} from '../utils/scaling';
+import { useFocusEffect } from '@react-navigation/native';
 
 type AddNewUserProps = NativeStackScreenProps<
   HomeStackParamList,
@@ -65,6 +69,61 @@ const PendingOrderScreen = ({navigation, route}: AddNewUserProps) => {
   );
 
   console.log(route.params.orderDetails.dueAmount);
+  const [order, setOrder] = useState(null);
+  
+
+const activeFirm = useSelector((state: RootState) => state.common.activeFirm);
+
+    const getOrderDetails = async () => {
+      const orderId = route.params.orderDetails._id;
+      if (!orderId) {
+        ToastAndroid.show('No order ID provided.', ToastAndroid.SHORT);
+        setLoading(false);
+        return;
+      }
+
+      setLoading(true);
+      try {
+        console.log('Fetching order with ID:', orderId);
+        console.log('NODE_API_ENDPOINT:', NODE_API_ENDPOINT);
+        console.log('Authorization token present:', !!currentUser?.token);
+
+        const response = await fetch(
+          `${NODE_API_ENDPOINT}/orders/${orderId}`,
+          {
+            method: 'GET',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${currentUser?.token}`,
+            },
+          },
+        );
+
+        if (!response.ok) {
+          let errorText;
+          try {
+            errorText = await response.text();
+          } catch {
+            errorText = 'No response body';
+          }
+          console.error('API error response:', errorText);
+          ToastAndroid.show('Failed to fetch order details.', ToastAndroid.SHORT);
+          throw new Error(
+            `Failed to fetch order: ${response.status} ${errorText}`,
+          );
+        }
+
+        const data = await response.json();
+        console.log('Fetched Order Details:', data);
+        setOrder(data);
+      } catch (error) {
+        console.error('Error fetching order details:', error.message);
+        ToastAndroid.show('Error fetching order details.', ToastAndroid.SHORT);
+      } finally {
+        setLoading(false);
+      }
+    };
+
 
   // Add useEffect to update the due amount when payment details change
   useEffect(() => {
@@ -355,11 +414,16 @@ const PendingOrderScreen = ({navigation, route}: AddNewUserProps) => {
 
   return (
     <SafeAreaView
-      style={{
-        flex: 1,
-        backgroundColor: '#F4D5B2',
-        paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0,
-      }}>
+    style={{
+      flex: 1,
+      backgroundColor: '#F4D5B2',
+      paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0,
+    }}>
+      <KeyboardAvoidingView
+  style={{ flex: 1 }}
+  behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+  keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : StatusBar.currentHeight || 0}
+><TouchableWithoutFeedback onPress={Keyboard.dismiss}>
       <View className="flex-1 px-3 py-2">
         {/* Header */}
         <View className="flex-row justify-between items-center mb-4 mt-8">
@@ -468,7 +532,7 @@ const PendingOrderScreen = ({navigation, route}: AddNewUserProps) => {
                 <Text className="text-sm font-medium text-black">%</Text>
               </TouchableOpacity>
               <TouchableOpacity
-                // onPress={() => setMode('rupees')}
+               onPress={getOrderDetails}
                 className={`flex-1 items-center justify-center px-4 rounded-md ${
                   route.params.orderDetails.discountValue !== 0
                     ? 'bg-[#DB9245]'
@@ -479,7 +543,7 @@ const PendingOrderScreen = ({navigation, route}: AddNewUserProps) => {
             </View>
 
             {/* Input Box */}
-            <View className="flex-row items-center justify-center bg-[#FAD9B3] rounded-md px-3 py-1.4 w-[45%]">
+            <View className="flex-row items-center justify-center bg-[#FAD9B3] rounded-md px-3 w-[45%]">
               {route.params.orderDetails.discountValue !== 0 && (
                 <Text className="text-sm text-[#292C33] font-medium">₹</Text>
               )}
@@ -495,7 +559,7 @@ const PendingOrderScreen = ({navigation, route}: AddNewUserProps) => {
                 placeholderTextColor="black"
                 keyboardType="numeric"
                 placeholderClassName="text-[#000000] text-sm font-medium text-right min-w-[40px] flex-1 leading-[0.55rem]"
-                className="text-[#000000] text-sm font-medium flex-1 text-right leading-[0.55rem]"
+                className="text-[#000000] text-sm font-medium flex-1 text-right "
                 style={{minWidth: 40}}
               />
 
@@ -534,7 +598,7 @@ const PendingOrderScreen = ({navigation, route}: AddNewUserProps) => {
                 placeholderTextColor="#000000"
                 placeholderClassName="text-[#000000] text-sm font-medium text-right min-w-[40px] flex-1 leading-[0.55rem]"
                 keyboardType="numeric"
-                className="text-[#000000] text-sm font-medium text-right min-w-[40px] flex-1 leading-[0.55rem]"
+                className="text-[#000000] text-sm font-medium text-right min-w-[40px] flex-1 "
               />
               <Text className="text-sm text-[#292C33] font-medium ml-1">%</Text>
               {/* <Icon
@@ -623,6 +687,8 @@ const PendingOrderScreen = ({navigation, route}: AddNewUserProps) => {
           </View>
         </View>
       </View>
+      </TouchableWithoutFeedback>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 };

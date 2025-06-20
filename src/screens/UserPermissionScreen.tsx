@@ -15,6 +15,7 @@ import {AddNewUserStackParamList} from '../stacks/AddNewUser';
 import {NODE_API_ENDPOINT} from '../utils/util';
 import {RootState} from '../redux/store';
 import {useSelector} from 'react-redux';
+import EditInventoryProduct from './EditInventoryProduct';
 
 type UserPermissionsProps = NativeStackScreenProps<
   AddNewUserStackParamList,
@@ -130,6 +131,7 @@ const UserPermissionScreen = ({navigation, route}: UserPermissionsProps) => {
   ) => {
     const isChecked = permissions ? permissions[permissionKey] : false;
 
+
     return (
       <TouchableOpacity
         key={label}
@@ -144,6 +146,38 @@ const UserPermissionScreen = ({navigation, route}: UserPermissionsProps) => {
       </TouchableOpacity>
     );
   };
+
+  const handleSelectAllInventory = ()=>{
+    if(permissions){
+      setPermissions({
+        ...permissions,
+        viewInventory:true,
+        addInvetory:true,
+        editInventory:true,
+      })
+    }
+  }
+
+  const handleSelectclientmanagement = ()=>{
+    if(permissions){
+      setPermissions({
+        ...permissions,
+        addClient:true,
+        editClient:true,
+        deleteClient:true,
+      })
+    }
+  }
+
+  const handleSelectordermanagement = ()=>{
+    if(permissions){
+      setPermissions({
+        ...permissions,
+        createOrder:true,
+        generateInvoice:true,
+      })
+    }
+  }
 
   return (
     <ScrollView className="flex-1 bg-[#FAD7AF] px-6 pt-12">
@@ -191,7 +225,17 @@ const UserPermissionScreen = ({navigation, route}: UserPermissionsProps) => {
       {/* Client Management Section */}
       <View className="bg-[#1E1E1E] rounded-xl p-4 mb-2">
         <View className="text-[#FAD7AF] font-semibold flex flex-row">
-          <View className="w-4 h-4 border border-[#DB9245] rounded-full mr-3" />
+        <TouchableOpacity onPress={handleSelectclientmanagement}>
+          <View
+            className={`w-4 h-4 border border-[#DB9245] rounded-full mr-3 ${
+              permissions?.addClient &&
+              permissions?.editClient &&
+              permissions?.deleteClient
+                ? 'bg-[#DB9245]'
+                : ''
+            }`}
+          />
+        </TouchableOpacity>
           <View>
             <Text className="text-[#CA6800] font-semibold mb-2 ">
               Client Management
@@ -206,7 +250,16 @@ const UserPermissionScreen = ({navigation, route}: UserPermissionsProps) => {
       {/* Order Management Section */}
       <View className="bg-[#1E1E1E] rounded-xl p-4 mb-2">
         <View className="text-[#FAD7AF] font-semibold flex flex-row">
-          <View className="w-4 h-4 border border-[#DB9245] rounded-full mr-3" />
+        <TouchableOpacity onPress={handleSelectordermanagement}>
+          <View
+            className={`w-4 h-4 border border-[#DB9245] rounded-full mr-3 ${
+              permissions?.createOrder &&
+              permissions?.generateInvoice 
+                ? 'bg-[#DB9245]'
+                : ''
+            }`}
+          />
+        </TouchableOpacity>
           <View>
             <Text className="text-[#CA6800] font-semibold mb-2 ">
               Order Management
@@ -220,7 +273,17 @@ const UserPermissionScreen = ({navigation, route}: UserPermissionsProps) => {
       {/* Inventory Management Section */}
       <View className="bg-[#1E1E1E] rounded-xl p-4 mb-5">
         <View className="text-[#FAD7AF] font-semibold flex flex-row">
-          <View className="w-4 h-4 border border-[#DB9245] rounded-full mr-3" />
+        <TouchableOpacity onPress={handleSelectAllInventory}>
+          <View
+            className={`w-4 h-4 border border-[#DB9245] rounded-full mr-3 ${
+              permissions?.viewInventory &&
+              permissions?.addInvetory &&
+              permissions?.editInventory
+                ? 'bg-[#DB9245]'
+                : ''
+            }`}
+          />
+        </TouchableOpacity>
           <View>
             <Text className="text-[#CA6800] font-semibold mb-2 ">
               Inventory Management

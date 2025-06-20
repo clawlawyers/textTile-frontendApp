@@ -61,6 +61,8 @@ import WalletScreen from '../screens/WalletScreen';
 import TestHomeScreen from '../screens/TestHomeScreenn';
 import MagicLoadingScreen from '../screens/MagicLoadingScreen';
 import {useNavigation} from '@react-navigation/native';
+import NewInventoryscreen from '../screens/NewInventoryscreen';
+import { CardStyleInterpolators } from '@react-navigation/stack';
 
 // Params for Home Stack
 export type HomeStackParamList = {
@@ -72,13 +74,13 @@ export type HomeStackParamList = {
   ClientListScreen: undefined;
   SetUpClientScreen: undefined;
   ClientDetailsScreen: {clientId: string};
-  NewPassword: undefined;
+  NewPassword: {email:string};
   OrderConfirmationScreen: {orderId: string};
   OrderUpdateConfirmationScreen: {orderId: string};
   SetUpInventoryScreen: undefined;
   OrderProductSelectionScreen: {clientName: string};
   OrderSummaryScreen: undefined;
-  OptVerification: undefined;
+  OptVerification: {email:string};
   ResetPassword: undefined;
   ClientFabricDetailsScreen: undefined;
   AddClientScreen: undefined;
@@ -119,6 +121,7 @@ export type HomeStackParamList = {
   EditPaletteScreen: undefined;
   MagicLoadingScreen: undefined;
   Wallet: undefined;
+  NewInventoryscreen:{invetoryName:string}
 };
 
 const HomeStack = createNativeStackNavigator<HomeStackParamList>();
@@ -136,7 +139,10 @@ function HomeStackNavigator() {
   return (
     // <HomeStack.Navigator initialRouteName={currentUser ? 'Home' : 'Login'}>
     <HomeStack.Navigator
-      initialRouteName={currentUser ? 'LandingScreen' : 'Splash'}>
+      initialRouteName={currentUser ? 'LandingScreen' : 'Splash'}
+      screenOptions={{
+        animation: 'slide_from_right',
+      }}>
       <HomeStack.Screen
         name="Splash"
         component={SplashScreen}
@@ -177,6 +183,11 @@ function HomeStackNavigator() {
       <HomeStack.Screen
         name="Signup"
         component={Signup}
+        options={{headerShown: false}}
+      />
+      <HomeStack.Screen
+        name="NewInventoryscreen"
+        component={NewInventoryscreen}
         options={{headerShown: false}}
       />
       <HomeStack.Screen

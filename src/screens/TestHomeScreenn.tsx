@@ -212,6 +212,26 @@ const TestHomeScreen = ({navigation}: HomeProps) => {
             paddingBottom: verticalScale(20),
             gap: verticalScale(18),
           }}>
+            {currentUser?.companies?.length === 0 && (
+            <TouchableOpacity
+              style={{
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: 0,
+                backgroundColor: 'rgba(0, 0, 0, 0.25)',
+                zIndex: 10,
+              }}
+              activeOpacity={1}
+              onPress={() =>
+                ToastAndroid.show(
+                  'Please create a new firm first',
+                  ToastAndroid.SHORT
+                )
+              }
+            />
+          )}
           {/* Header Section */}
           <View
             style={{
@@ -385,6 +405,12 @@ const TestHomeScreen = ({navigation}: HomeProps) => {
                     alignItems: 'center',
                     justifyContent: 'center',
                     gap: scale(12),
+                    zIndex: 10, // Above overlay
+                    shadowColor: currentUser?.companies?.length === 0 ? '#000' : 'transparent',
+                    shadowOffset: {width: 0, height: 1},
+                    shadowOpacity: 0.3,
+                    shadowRadius: 4,
+                    elevation: currentUser?.companies?.length === 0 ? 3 : 0, 
                   }}
                   onPress={() => {
                     if (currentUser?.type !== 'manager') {
@@ -431,6 +457,12 @@ const TestHomeScreen = ({navigation}: HomeProps) => {
                   alignItems: 'center',
                   justifyContent: 'center',
                   gap: scale(12),
+                  zIndex: 10, // Above overlay
+                  shadowColor: currentUser?.companies?.length === 0 ? '#000' : 'transparent',
+                  shadowOffset: {width: 0, height: 1},
+                  shadowOpacity: 0.3,
+                  shadowRadius: 4,
+                  elevation: currentUser?.companies?.length === 0 ? 3 : 0, // Android shadow
                 }}
                 onPress={() => {
                   if (currentUser?.type !== 'manager') {
@@ -686,8 +718,9 @@ const TestHomeScreen = ({navigation}: HomeProps) => {
                   return;
                 }
                 activeFirm?.inventory
-                  ? showToastOfAlert()
-                  : navigation.navigate('SetUpInventoryScreen');
+                  // ? showToastOfAlert()
+                  // : 
+                  navigation.navigate('SetUpInventoryScreen');
               }}>
               <SimpleLineIcons
                 name="cloud-upload"

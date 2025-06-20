@@ -8,6 +8,7 @@ import {
   Alert,
   StyleSheet,
   Platform,
+  PermissionsAndroid,
 } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
@@ -221,123 +222,92 @@ const ActiveInvoiceScreen = ({ navigation, route }: ActiveInvoiceProps) => {
     }
   };
 
-  const handleDownloadInvoice = async () => {
-    if (downloading) return;
-
-    // Check for storage permission on Android
-    if (Platform.OS === 'android') {
-      const hasPermission = await checkPermission();
-      if (!hasPermission) {
-        Alert.alert(
-          'Permission Denied',
-          'Storage permission is required to download invoices',
-        );
-        return;
-      }
-    }
-
-    setDownloading(true);
-
-    try {
-      // Validate invoice ID and user token
-      const invoiceId = invoice?._id;
-      if (!invoiceId) {
-        throw new Error('Invalid invoice ID');
-      }
-      if (!currentUser?.token) {
-        throw new Error('User not authenticated');
-      }
-
-      // Set download path based on platform
-      const { dirs } = RNFetchBlob.fs;
-      const dirPath = Platform.OS === 'ios' ? dirs.DocumentDir : dirs.DownloadDir;
-
-      // Create filename with timestamp
-      const timestamp = new Date().getTime();
-      const filename = `invoice_${invoiceId}_${timestamp}.pdf`;
-      const filePath = `${dirPath}/${filename}`;
-
-      const apiUrl = `${NODE_API_ENDPOINT}/custom-orders/${invoiceId}`;
-      console.log(`Downloading invoice from: ${apiUrl}`);
-
-      // For Android, check if the directory exists
-      if (Platform.OS === 'android') {
-        const exists = await RNFetchBlob.fs.exists(dirPath);
-        if (!exists) {
-          await RNFetchBlob.fs.mkdir(dirPath);
-        }
-      }
-
-      // Configure download with notification for Android
-      const downloadConfig =
-        Platform.OS === 'android'
-          ? {
-              fileCache: true,
-              path: filePath,
-              addAndroidDownloads: {
-                useDownloadManager: true,
-                notification: true,
-                title: 'Invoice Downloaded',
-                description: 'Your invoice has been downloaded successfully',
-                mime: 'application/pdf',
-                mediaScannable: true,
+          const handleDownloadInvoice = async () => {
+            if (downloading) return;
+          
+            try {
+              setDownloading(true);
+          
+              if (!invoice._id || !currentUser?.token) {
+                throw new Error('Missing invoice ID or user token');
+              }
+          
+              // Check permission on Android
+              if (Platform.OS === 'android') {
+                const granted = await PermissionsAndroid.request(
+                  PermissionsAndroid.PERMISSIONS.WRITE_EXTERNAL_STORAGE,
+                  {
+                    title: 'Storage Permission Required',
+                    message: 'App needs access to your storage to download invoices',
+                    buttonNeutral: 'Ask Me Later',
+                    buttonNegative: 'Cancel',
+                    buttonPositive: 'OK',
+                  },
+                );
+                if (granted !== PermissionsAndroid.RESULTS.GRANTED) {
+                  Alert.alert('Permission Denied', 'Cannot download without storage permission.');
+                  return;
+                }
+              }
+          
+              const { dirs } = RNFetchBlob.fs;
+              const dirPath = Platform.OS === 'ios' ? dirs.DocumentDir : dirs.DownloadDir;
+          
+              const timestamp = new Date().getTime();
+              const filePath = `${dirPath}/invoice_${invoice._id}_${timestamp}.pdf`;
+          
+              const apiUrl = `${NODE_API_ENDPOINT}/custom-orders/invoice/${invoice._id}`;
+          
+              const config = {
+                fileCache: true,
                 path: filePath,
-              },
+                addAndroidDownloads: {
+                  useDownloadManager: true,
+                  notification: true,
+                  title: 'Invoice Downloaded',
+                  description: 'Your invoice has been downloaded',
+                  mime: 'application/pdf',
+                  mediaScannable: true,
+                  path: filePath,
+                },
+              };
+          
+              const res = await RNFetchBlob.config(config).fetch('GET', apiUrl, {
+                Authorization: `Bearer ${currentUser.token}`,
+              });
+          
+              const status = res.info().status;
+          
+              if (status === 401) {
+                throw new Error('Unauthorized. Please log in again.');
+              }
+          
+              if (status !== 200) {
+                throw new Error(`Download failed with status ${status}`);
+              }
+          
+              const fileExists = await RNFetchBlob.fs.exists(filePath);
+              const fileStats = await RNFetchBlob.fs.stat(filePath);
+          
+              if (!fileExists || fileStats.size <= 0) {
+                throw new Error('File not saved or is empty');
+              }
+          
+              Alert.alert('Success', 'Invoice downloaded successfully.');
+          
+              if (Platform.OS === 'ios') {
+                RNFetchBlob.ios.openDocument(filePath);
+              } else {
+                RNFetchBlob.android.actionViewIntent(filePath, 'application/pdf');
+              }
+            } catch (err: any) {
+              console.error('Download error:', err);
+              Alert.alert('Error', err.message || 'Failed to download invoice');
+            } finally {
+              setDownloading(false);
             }
-          : {
-              fileCache: true,
-              path: filePath,
-            };
-
-      // Download the file
-      const res = await RNFetchBlob.config(downloadConfig).fetch('GET', apiUrl, {
-        Authorization: `Bearer ${currentUser?.token}`,
-      });
-
-      // Check response status
-      if (res.info().status === 401) {
-        throw new Error('401: Session expired');
-      }
-      if (res.info().status !== 200) {
-        throw new Error(`Download failed: HTTP ${res.info().status}`);
-      }
-
-      // Check if the file exists and has content
-      const fileExists = await RNFetchBlob.fs.exists(filePath);
-      if (!fileExists) {
-        throw new Error('File does not exist after download');
-      }
-
-      const fileSize = await RNFetchBlob.fs.stat(filePath).then(stats => stats.size);
-      console.log(`File exists: ${fileExists}, size: ${fileSize}B`);
-
-      if (fileSize <= 0) {
-        throw new Error('Downloaded file is empty (0B)');
-      }
-
-      // Show success message
-      Alert.alert('Success', 'Invoice downloaded successfully');
-
-      // Open the PDF
-      if (Platform.OS === 'ios') {
-        RNFetchBlob.ios.openDocument(filePath);
-      } else {
-        RNFetchBlob.android.actionViewIntent(filePath, 'application/pdf');
-      }
-    } catch (error) {
-      console.error('Error downloading invoice:', error);
-
-      // Handle specific error cases
-      if (String(error).includes('401')) {
-        Alert.alert('Session Expired', 'Please log in again.');
-        navigation.navigate('LoginScreen');
-      } else {
-        Alert.alert('Error', `Failed to download invoice: ${error.message}`);
-      }
-    } finally {
-      setDownloading(false);
-    }
-  };
+          };
+          
 
   return (
     <View className="flex-1 bg-[#FBDBB5]">
