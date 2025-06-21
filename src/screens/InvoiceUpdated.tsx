@@ -154,7 +154,7 @@ const InvoiceUpdated = ({ navigation, route }: InvoiceUpdatedProps) => {
         <View className="flex-row justify-between items-center px-4 mt-6">
           <TouchableOpacity
             onPress={() =>
-              navigation.navigate('GenerateInvoiceScreen', {
+              navigation.replace('GenerateInvoiceScreen', {
                 invoiceStatus: 'new',
                 orderId: undefined,
                 testOrderId: undefined,

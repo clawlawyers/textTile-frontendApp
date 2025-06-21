@@ -145,27 +145,27 @@ const ActiveInvoiceItemScreen = ({ navigation, route }: ActiveInvoiceItemsProps)
       const twoMinutesAgo = new Date(currentTime.getTime() - 2 * 60 * 1000); // 2 minutes ago
 
       const sortedPayments = [...paymentDetails.payments].sort((a, b) => b.amount - a.amount);
-      console.log('Sorted Payments:', sortedPayments);
+      // console.log('Sorted Payments:', sortedPayments);
 
       for (const payment of sortedPayments) {
         const paymentCreatedAt = new Date(payment.createdAt);
-        console.log('Checking payment:', payment, 'Created At:', paymentCreatedAt);
+        // console.log('Checking payment:', payment, 'Created At:', paymentCreatedAt);
 
         // Skip payments older than 2 minutes or without a valid createdAt
         if (!payment.createdAt || paymentCreatedAt < twoMinutesAgo) {
-          console.log('Skipping payment: older than 2 minutes or invalid createdAt', payment);
+          // console.log('Skipping payment: older than 2 minutes or invalid createdAt', payment);
           continue;
         }
 
         // Skip already processed payments
         if (payment._id && !payment._id.startsWith('temp-')) {
-          console.log('Skipping payment with non-temp _id:', payment._id);
+          // console.log('Skipping payment with non-temp _id:', payment._id);
           continue;
         }
 
         // Validate payment amount
         if (payment.amount <= 0) {
-          console.log('Skipping invalid payment amount:', payment.amount);
+          // console.log('Skipping invalid payment amount:', payment.amount);
           ToastAndroid.show('Invalid payment amount detected.', ToastAndroid.SHORT);
           continue;
         }
@@ -201,13 +201,13 @@ const ActiveInvoiceItemScreen = ({ navigation, route }: ActiveInvoiceItemsProps)
           } catch {
             errorObj = { message: errorText };
           }
-          console.error('Payment API error:', response.status, errorObj.message);
+          // console.error('Payment API error:', response.status, errorObj.message);
           ToastAndroid.show(`Failed to process payment: ${errorObj.message}`, ToastAndroid.SHORT);
           continue;
         }
 
         const paymentData = await response.json();
-        console.log('Payment created:', paymentData);
+        // console.log('Payment created:', paymentData);
         newPayments.push(paymentData);
         remainingDueAmount -= payment.amount;
       }
@@ -549,11 +549,11 @@ const ActiveInvoiceItemScreen = ({ navigation, route }: ActiveInvoiceItemsProps)
                 <View className="bg-[#FBDBB5] px-4 py-2">
                   <View className="flex-row gap-4">
                     <TouchableOpacity
-                      className="flex-1 py-3 rounded-xl items-center justify-center border bg-[#292C33]"
+                      className="flex-1 py-3 rounded-lg items-center justify-center border bg-[#292C33]"
                       onPress={handlePaymentDetails}
                       disabled={!items.length}
                     >
-                      <Text className="font-bold text-center text-white py-2">
+                      <Text className="font-bold text-center text-white ">
                         Payment Details
                       </Text>
                     </TouchableOpacity>
@@ -564,7 +564,7 @@ const ActiveInvoiceItemScreen = ({ navigation, route }: ActiveInvoiceItemsProps)
                             onPress={handleDownloadInvoice}
                             disabled={downloading}
                           >
-                            <Text className="text-center text-white font-bold text-lg">
+                            <Text className="text-center text-white font-bold ">
                               {downloading ? 'Downloading...' : 'Download Invoice'}
                             </Text>
                           </TouchableOpacity>
@@ -575,7 +575,7 @@ const ActiveInvoiceItemScreen = ({ navigation, route }: ActiveInvoiceItemsProps)
                             onPress={handleUpdatePayment}
                             disabled={loading}
                           >
-                            <Text className="text-center text-white font-bold text-lg">
+                            <Text className="text-center text-white font-bold ">
                               {loading ? 'Saving...' : 'Save Invoice'}
                             </Text>
                           </TouchableOpacity>

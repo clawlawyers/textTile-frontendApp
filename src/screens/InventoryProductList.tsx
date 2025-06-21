@@ -639,7 +639,7 @@ const InventoryProductList = ({navigation, route}: AddNewUserProps) => {
           renderItem={({ item }) => (
             <TouchableOpacity
               key={item._id}
-              className="w-[48%] bg-white rounded-lg mb-4 overflow-hidden border border-[#DB9245]"
+              className="w-[48%] bg-[#DB9245] rounded-lg mb-4 overflow-hidden border border-[#DB9245]"
               onPress={() =>
                 navigation.navigate('InventoryProductDetails', {
                   productDetails: item,
@@ -668,8 +668,7 @@ const InventoryProductList = ({navigation, route}: AddNewUserProps) => {
               <Text className="text-sm font-semibold text-black">Design Code:</Text>
               <Text className="text-sm font-semibold text-white mb-1">{item.design_code}</Text>
               <View
-                className="bg-[#FAD9B3] rounded-md flex-1 self-center px-2 py-1 mt-2"
-                style={{ width: 70 }}>
+                className="bg-[#FAD9B3] rounded-md flex-1 self-center px-2 py-1 mt-2">
                 <Text className="text-sm text-black font-semibold text-center">
                   {item.stock_amount ? 'In Stock' : 'Out Of Stock'}
                 </Text>

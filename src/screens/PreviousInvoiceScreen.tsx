@@ -229,6 +229,7 @@ const PreviousInvoiceScreen = ({ navigation }: PreviousInvoiceScreenProps) => {
                     end={{ x: 1, y: 0 }}
                     className="rounded-lg px-4 py-3 flex-row justify-between items-center"
                   >
+
                     <View>
                       <Text className="text-xs text-white">
                         Invoice ID: {order?._id || 'N/A'}
@@ -237,19 +238,23 @@ const PreviousInvoiceScreen = ({ navigation }: PreviousInvoiceScreenProps) => {
                         {order?.billingTo?.firmName || 'Unknown Client'}
                       </Text>
                     </View>
+                    <View className='flex-row'>
                     <View className="flex-row items-center">
                       <Text className="text-md font-semibold text-[#292C33]">
                         {status.charAt(0).toUpperCase() + status.slice(1)}
                       </Text>
                     </View>
-                  </LinearGradient>
-                </TouchableOpacity>
-                <TouchableOpacity
+                    <TouchableOpacity
                   onPress={() => handleDeleteInvoice(order._id)}
-                  className="ml-2 w-10 h-10 rounded-full justify-center items-center"
+                  className=" w-10 h-10 rounded-full justify-center items-center"
                 >
                   <Icon name="trash-2" size={18} color="#000" />
                 </TouchableOpacity>
+                </View>
+                  </LinearGradient>
+                 
+                </TouchableOpacity>
+                
               </View>
             );
           })

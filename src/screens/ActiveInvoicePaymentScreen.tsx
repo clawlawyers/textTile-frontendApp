@@ -80,7 +80,7 @@ const ActiveInvoicePaymentScreen = ({ navigation, route }: ActiveInvoicePaymentP
         .filter((p: any) => !historyPaymentIds.includes(p._id))
         .map((p: any, index: number) => ({
           id: `payment-${Date.now()}-${index}`,
-          amount: `₹ ${p.amount.toLocaleString('en-IN')}`,
+          amount: `₹ ${typeof p.amount === 'number' ? p.amount.toLocaleString('en-IN') : '0'}`,
           mode: p.paymentMethod,
         }));
       setPaymentData(newPaymentData);
@@ -313,7 +313,6 @@ const ActiveInvoicePaymentScreen = ({ navigation, route }: ActiveInvoicePaymentP
     }
   };
 
-
   return (
     <SafeAreaView className="flex-1 bg-[#F4D5B2] pb-2">
       <KeyboardAvoidingView
@@ -388,7 +387,7 @@ const ActiveInvoicePaymentScreen = ({ navigation, route }: ActiveInvoicePaymentP
             ) : (
               paymentData.map((item, index) => (
                 <View key={item.id} className="flex-row items-center mb-4">
-                  <View className="flex-1 flex-row items-center border border-[#DB9245] rounded-lg px-4  mr-2">
+                  <View className="flex-1 flex-row items-center border border-[#DB9245] rounded-lg px-4 mr-2">
                     <TextInput
                       value={pendingAmounts[item.id] || item.amount}
                       onChangeText={(value) => handleAmountChange(item.id, value)}
@@ -479,7 +478,7 @@ const ActiveInvoicePaymentScreen = ({ navigation, route }: ActiveInvoicePaymentP
               disabled={isCompleted}
             >
               <Icon name="plus" size={18} color='#fff' />
-              <Text className={`ml-2 text-white font-medium`}>
+              <Text className="ml-2 text-white font-medium">
                 Add Payment Option
               </Text>
             </TouchableOpacity>
@@ -494,7 +493,7 @@ const ActiveInvoicePaymentScreen = ({ navigation, route }: ActiveInvoicePaymentP
                   {paymentHistory.map((item: any, index: number) => (
                     <View key={item._id || index} className="flex-row items-center mb-3">
                       <Text className="flex-1 border border-[#DB9245] rounded-lg px-4 py-3 mr-2 text-base">
-                        ₹ {item.amount.toLocaleString('en-IN')}
+                        ₹ {typeof item.amount === 'number' ? item.amount.toLocaleString('en-IN') : '0'}
                       </Text>
                       <Text className="flex-1 border border-[#DB9245] bg-[#DB9245] rounded-lg px-4 py-3 mr-2 text-base text-white">
                         {item.paymentMethod || item.modeOfPayment}
@@ -508,7 +507,6 @@ const ActiveInvoicePaymentScreen = ({ navigation, route }: ActiveInvoicePaymentP
           
           <TouchableOpacity
             className="bg-[#D1853A] py-3 rounded-lg items-center mt-auto mb-2 mx-4"
-            
             onPress={handleUpdatePayment}
           >
             <Text className="text-white font-semibold text-base">

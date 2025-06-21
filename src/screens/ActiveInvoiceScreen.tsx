@@ -9,6 +9,7 @@ import {
   StyleSheet,
   Platform,
   PermissionsAndroid,
+  ScrollView,
 } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
@@ -317,13 +318,13 @@ const ActiveInvoiceScreen = ({ navigation, route }: ActiveInvoiceProps) => {
           justifyContent: 'center',
           alignItems: 'center',
           backgroundColor: '#292C33',
-          marginBottom: 16,
+          marginBottom: verticalScale(14),
           paddingVertical: verticalScale(10),
         }}
       >
         <View className="flex-row justify-between px-8 pt-10 w-full items-center mb-8">
           <TouchableOpacity
-            onPress={() => navigation.navigate('PreviousInvoiceScreen')}
+            onPress={() => navigation.replace('PreviousInvoiceScreen')}
             className="w-10 h-10 rounded-full border bg-[#DB9245] justify-center items-center"
           >
             <Icon name="home" size={20} color="#FBDBB5" />
@@ -346,13 +347,13 @@ const ActiveInvoiceScreen = ({ navigation, route }: ActiveInvoiceProps) => {
             </TouchableOpacity>
           )}
         </View>
-        <View className="pb-1 pt-3">
+        <View className="justify-center items-center align-center pb-2">
           <Text style={styles.title}>{isCompleted ? 'View Invoice' : 'Edit Invoice'}</Text>
           <Text style={styles.invoiceNumber}>Invoice ID: {invoice._id}</Text>
         </View>
       </View>
 
-      <View style={styles.section}>
+      <ScrollView style={styles.section}>
         <View className="bg-[#DB9245] rounded-lg px-4 py-3 mb-2">
           <Text style={styles.label}>Billing From:</Text>
           <TextInput
@@ -439,7 +440,7 @@ const ActiveInvoiceScreen = ({ navigation, route }: ActiveInvoiceProps) => {
             <Icon name="calendar" size={20} color="#FFF" />
           </TouchableOpacity>
         </View>
-      </View>
+      </ScrollView>
       <View className="bg-[#FBDBB5] px-4 py-3">
         <View className="flex-row gap-4">
           <TouchableOpacity
@@ -506,7 +507,7 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   section: {
-    marginBottom: verticalScale(55),
+    marginBottom: 'auto',
     paddingVertical: verticalScale(2),
     paddingHorizontal: scale(12),
     marginTop: verticalScale(1),

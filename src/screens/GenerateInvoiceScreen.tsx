@@ -1,5 +1,5 @@
 /* eslint-disable react-native/no-inline-styles */
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   View,
   Text,
@@ -10,11 +10,12 @@ import {
   Platform,
   KeyboardAvoidingView,
   SafeAreaView,
+  ScrollView,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
-import { scale, verticalScale } from '../utils/scaling';
+import { moderateScale, scale, verticalScale } from '../utils/scaling';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from '../redux/store';
@@ -25,8 +26,10 @@ import {
   setInvoiceNumber,
   setLoading,
   setError,
+  resetInvoice,
 } from '../redux/customInvoiceSlice';
 import { setCurrentClient } from '../redux/commonSlice';
+import { useFocusEffect } from '@react-navigation/native';
 
 type AccountStackParamList = {
   GenerateInvoiceScreen: undefined;
@@ -77,6 +80,8 @@ const GenerateInvoiceScreen = ({ navigation }: GenerateInvoiceProps) => {
   const [localInvoiceNumber, setLocalInvoiceNumber] = useState<string>('A00001');
 
   const invoiceStatus = 'new';
+
+ 
 
   // Generate six-digit invoice number (A00000-Z99999)
   const generateInvoiceNumber = async (increment: boolean = false): Promise<string> => {
@@ -313,6 +318,15 @@ const GenerateInvoiceScreen = ({ navigation }: GenerateInvoiceProps) => {
       dispatch(setLoading(false));
     }
   };
+  useFocusEffect(
+    useCallback(() => {
+      console.log('GenerateInvoiceScreen focused, resetting invoice state');
+      dispatch(resetInvoice());
+      return () => {
+        console.log('GenerateInvoiceScreen unfocused');
+      };
+    }, [dispatch])
+  );
 
   return (
     <SafeAreaView className="flex-1 bg-[#FAD8B0]">
@@ -329,8 +343,9 @@ const GenerateInvoiceScreen = ({ navigation }: GenerateInvoiceProps) => {
           marginBottom: 10,
           paddingVertical: verticalScale(10),
         }}
-      >
-        <View className="flex-row justify-between px-8 pt-10 mt-8 w-full items-center mb-8">
+      >  <View className='flex-1 justify-center'
+      style={{padding:moderateScale(10)}}>
+        <View className="flex-row flex-1 justify-between w-full items-center ">
           <TouchableOpacity
             onPress={() => navigation.navigate('InvoicesScreen')}
             className="w-10 h-10 rounded-full border bg-[#DB9245] justify-center items-center"
@@ -345,13 +360,14 @@ const GenerateInvoiceScreen = ({ navigation }: GenerateInvoiceProps) => {
             <Icon name="download" size={20} color="#FBDBB5" />
           </TouchableOpacity>
         </View>
-        <View className="pb-1 pt-3 mb-8">
+        <View className=" flex-1 items-center justify-center align-center ">
           <Text style={styles.title}>Create New Invoice</Text>
           <Text style={styles.invoiceNumber}>Invoice ID: {invoiceNumber || localInvoiceNumber}</Text>
         </View>
       </View>
+      </View>
 
-      <View style={styles.section}>
+      <ScrollView style={styles.section}>
         <View className="bg-[#DB9245] rounded-lg px-4 py-3 mb-2">
           <Text style={styles.label}>Billing From:</Text>
           <TextInput
@@ -429,11 +445,12 @@ const GenerateInvoiceScreen = ({ navigation }: GenerateInvoiceProps) => {
             <Icon name="calendar" size={20} color="#FFF" />
           </TouchableOpacity>
         </View>
-      </View>
-      <View className="bg-[#FBDBB5] px-4 py-3">
+      </ScrollView>
+      <View className="bg-[#FBDBB5] "
+      style={{padding:moderateScale(8)}}>
         <View className="flex-row gap-4">
           <TouchableOpacity
-            className="bg-[#292C33] rounded-lg justify-center py-3 mb-4 flex-1"
+            className="bg-[#292C33] rounded-lg justify-center py-2 mb-4 flex-1"
             style={{ height: verticalScale(45) }}
             onPress={() => {
               if (
@@ -503,7 +520,7 @@ const GenerateInvoiceScreen = ({ navigation }: GenerateInvoiceProps) => {
             </Text>
           </TouchableOpacity>
           <TouchableOpacity
-            className="bg-[#DB9245] rounded-lg py-3 mb-4 flex-1 justify-center"
+            className="bg-[#DB9245] rounded-lg py-2 mb-4 flex-1 justify-center"
             style={{ height: verticalScale(45) }}
             onPress={handleSaveInvoice}
             disabled={loading}
@@ -521,7 +538,7 @@ const GenerateInvoiceScreen = ({ navigation }: GenerateInvoiceProps) => {
           mode="date"
           display={Platform.OS === 'android' ? 'default' : 'inline'}
           onChange={handleDateChange}
-          maximumDate={new Date()}
+          
         />
       )}
     </View>
@@ -544,10 +561,11 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   section: {
-    marginBottom: verticalScale(45),
+    flex:1,
+    marginBottom: verticalScale(2),
     paddingVertical: verticalScale(2),
     paddingHorizontal: scale(12),
-    marginTop: verticalScale(8),
+    
   },
   label: {
     fontSize: 16,
@@ -570,4 +588,3 @@ const styles = StyleSheet.create({
 });
 
 export default GenerateInvoiceScreen;
-

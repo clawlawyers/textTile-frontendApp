@@ -376,17 +376,17 @@ const OrderProductSelectionScreen = ({navigation, route}: AddNewUserProps) => {
 
       {/* Product Grid */}
       <FlatList
-        className="mb-20 rounded-lg"
+        className="mb-20 rounded-lg bg-#DB9245]"
         data={filteredProducts.length > 0 ? filteredProducts : products}
         keyExtractor={(_, i) => i.toString()}
         numColumns={2}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingBottom: 100, paddingHorizontal: 4 }}
-        columnWrapperStyle={{ justifyContent: 'space-between' }}
+        columnWrapperStyle={{ justifyContent: 'space-between',  }}
         renderItem={({ item }) => (
           <TouchableOpacity
             key={item._id}
-            className="w-[48%] bg-white rounded-lg mb-4 overflow-hidden border border-[#DB9245]"
+            className="w-[48%]  rounded-lg mb-4 overflow-hidden bg-[#DB9245] "
             onPress={() =>
               navigation.navigate('OrderProductDetailCard', {
                 productDetails: item,
@@ -414,8 +414,7 @@ const OrderProductSelectionScreen = ({navigation, route}: AddNewUserProps) => {
               <Text className="text-sm font-semibold text-black">Design Code:</Text>
               <Text className="text-sm font-semibold text-white mb-1">{item.design_code}</Text>
               <View
-                className="bg-[#FAD9B3] rounded-md flex-1 self-center px-2 py-1 mt-2"
-                style={{ width: 70 }}>
+                className="bg-[#FAD9B3] rounded-md flex-1 self-center px-2 py-1 mt-2">
                 <Text className="text-sm text-black font-semibold text-center">
                   {item.stock_amount ? 'In Stock' : 'Out Of Stock'}
                 </Text>
